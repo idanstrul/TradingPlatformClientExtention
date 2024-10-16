@@ -523,9 +523,6 @@ namespace IB_TradingPlatformExtention1
         {
             Console.WriteLine("ScannerData. "+reqId+" - Rank: "+rank+", Symbol: "+contractDetails.Contract.Symbol+", SecType: "+contractDetails.Contract.SecType+", Currency: "+contractDetails.Contract.Currency
                 +", Distance: "+distance+", Benchmark: "+benchmark+", Projection: "+projection+", Legs String: "+legsStr);
-
-            string strScanner = reqId + "," + rank + "," + contractDetails.Contract.Symbol + "," + distance + "," + benchmark;
-            myform.AddScannerItemScanner(strScanner);
         }
         //! [scannerdata]
 

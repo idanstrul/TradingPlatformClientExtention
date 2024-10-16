@@ -49,10 +49,7 @@ namespace IB_TradingPlatformExtention1
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            for (int i = 0; i < 10; i++)
-            {
-                dataGridView1.Rows.Add();
-            }
+
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
@@ -87,72 +84,6 @@ namespace IB_TradingPlatformExtention1
             getData();
         }
 
-        delegate void SetTextCallbackScanner(string strScanner);
-
-        public void AddScannerItemScanner(string strScanner)
-        {
-            if (this.tbLast.InvokeRequired)
-            {
-                SetTextCallbackScanner d = new SetTextCallbackScanner(AddScannerItemScanner);
-                try
-                {
-                    this.Invoke(d, new object[] { strScanner });
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("this is from _tickPrice ", e);
-                }
-            }
-            else
-            {
-                string[] scanner = new string[] { strScanner };
-                scanner = strScanner.Split(',');
-                int position = Convert.ToInt32(scanner[1]);
-
-
-                // this creates 10 rows in our datagridview to hold the list of stocks that the scanner finds
-                if (position == 0)
-                {
-                    for (int i = 0; i < dataGridView1.Columns.Count; i++)
-                    {
-                        for (int j = 0; j < dataGridView1.Rows.Count; j++)
-                        {
-                            dataGridView1.Rows[j].Cells[i].Value = DBNull.Value;
-                        }
-                    }
-                }
-
-                // adds the value for the position in the first cell in the datagrid column
-                // adds one to the value so it does not show 0 in the first row
-                dataGridView1.Rows[position].Cells[0].Value = position + 1;
-                // adds the stock symbol in the second column (symbol)
-                dataGridView1.Rows[position].Cells[1].Value = scanner[2];
-                // cancels the market data for that position
-                ibClient.ClientSocket.cancelMktData(position);
-
-                // create a contract for streaming data
-                IBApi.Contract contract = new IBApi.Contract();
-                // Create a new TagValue List object (for API version 9.71 and later) 
-                List<IBApi.TagValue> mktDataOptiones = new List<IBApi.TagValue>();
-                // Set stock symbol that the scanner found
-                contract.Symbol = scanner[2];
-                // Set the Security type to STK for a Stock
-                contract.SecType = "STK";
-                // Use "SMART" as the general exchange
-                contract.Exchange = "SMART";
-                // Set the primary exchange (sometimes called Listing exchange)
-                // Use either NYSE or ISLAND
-                contract.PrimaryExch = "ISLAND";
-                // Set the currency to USD
-                contract.Currency = "USD";
-
-                ibClient.ClientSocket.reqMarketDataType(3); // Should be 1 if live data
-
-                ibClient.ClientSocket.reqMktData(position, contract, "", false, false, mktDataOptiones);
-
-            }
-        }
-
         public void AddTextBoxItemTickPrice(string _tickPrice)
         {
             if (this.tbLast.InvokeRequired)
@@ -173,23 +104,23 @@ namespace IB_TradingPlatformExtention1
                 string[] tickerPrice = new string[] { _tickPrice };
                 tickerPrice = _tickPrice.Split(',');
 
-                if (Convert.ToInt32(tickerPrice[0]) == 87)
+                if (Convert.ToInt32(tickerPrice[0]) == 1)
                 {
-                    if (Convert.ToInt32(tickerPrice[1]) == 68)// Delayed Last quote 68, if you want realtime use tickerPrice == 4
+                    if (Convert.ToInt32(tickerPrice[1]) == 4)// Delayed Last quote 68, if you want realtime use tickerPrice == 4
                     {
                         // Add the text string to the list box
 
                         this.tbLast.Text = tickerPrice[2];
 
                     }
-                    else if (Convert.ToInt32(tickerPrice[1]) == 67)  // Delayed Ask quote 67, if you want realtime use tickerPrice == 2
+                    else if (Convert.ToInt32(tickerPrice[1]) == 2)  // Delayed Ask quote 67, if you want realtime use tickerPrice == 2
                     {
                         // Add the text string to the list box
 
                         this.tbAsk.Text = tickerPrice[2];
 
                     }
-                    else if (Convert.ToInt32(tickerPrice[1]) == 66)  // Delayed Bid quote 66, if you want realtime use tickerPrice == 1
+                    else if (Convert.ToInt32(tickerPrice[1]) == 1)  // Delayed Bid quote 66, if you want realtime use tickerPrice == 1
                     {
                         // Add the text string to the list box
 
@@ -197,107 +128,12 @@ namespace IB_TradingPlatformExtention1
 
                     }
                 }
-
-                switch (Convert.ToInt32(tickerPrice[0]))
-                {
-                    case 0:
-                        if (Convert.ToInt32(tickerPrice[1]) == 4)
-                        {
-                            double tick_price = Convert.ToDouble(tickerPrice[2]);
-                            tick_price = Math.Round(tick_price, 2);
-                            dataGridView1[2, 0].Value = tick_price.ToString();
-                            break;
-                        }
-                        break;
-                    case 1:
-                        if (Convert.ToInt32(tickerPrice[1]) == 4)
-                        {
-                            double tick_price = Convert.ToDouble(tickerPrice[2]);
-                            tick_price = Math.Round(tick_price, 2);
-                            dataGridView1[2, 1].Value = tick_price.ToString();
-                            break;
-                        }
-
-                        break;
-                    case 2:
-                        if (Convert.ToInt32(tickerPrice[1]) == 4)
-                        {
-                            double tick_price = Convert.ToDouble(tickerPrice[2]);
-                            tick_price = Math.Round(tick_price, 2);
-                            dataGridView1[2, 2].Value = tick_price.ToString();
-                            break;
-                        }
-                        break;
-                    case 3:
-                        if (Convert.ToInt32(tickerPrice[1]) == 4)
-                        {
-                            double tick_price = Convert.ToDouble(tickerPrice[2]);
-                            tick_price = Math.Round(tick_price, 2);
-                            dataGridView1[2, 3].Value = tick_price.ToString();
-                            break;
-                        }
-                        break;
-                    case 4:
-                        if (Convert.ToInt32(tickerPrice[1]) == 4)
-                        {
-                            double tick_price = Convert.ToDouble(tickerPrice[2]);
-                            tick_price = Math.Round(tick_price, 2);
-                            dataGridView1[2, 4].Value = tick_price.ToString();
-                            break;
-                        }
-                        break;
-                    case 5:
-                        if (Convert.ToInt32(tickerPrice[1]) == 4)
-                        {
-                            double tick_price = Convert.ToDouble(tickerPrice[2]);
-                            tick_price = Math.Round(tick_price, 2);
-                            dataGridView1[2, 5].Value = tick_price.ToString();
-                            break;
-                        }
-                        break;
-                    case 6:
-                        if (Convert.ToInt32(tickerPrice[1]) == 4)
-                        {
-                            double tick_price = Convert.ToDouble(tickerPrice[2]);
-                            tick_price = Math.Round(tick_price, 2);
-                            dataGridView1[2, 6].Value = tick_price.ToString();
-                            break;
-                        }
-                        break;
-                    case 7:
-                        if (Convert.ToInt32(tickerPrice[1]) == 4)
-                        {
-                            double tick_price = Convert.ToDouble(tickerPrice[2]);
-                            tick_price = Math.Round(tick_price, 2);
-                            dataGridView1[2, 7].Value = tick_price.ToString();
-                            break; ;
-                        }
-                        break;
-                    case 8:
-                        if (Convert.ToInt32(tickerPrice[1]) == 4)
-                        {
-                            double tick_price = Convert.ToDouble(tickerPrice[2]);
-                            tick_price = Math.Round(tick_price, 2);
-                            dataGridView1[2, 8].Value = tick_price.ToString();
-                            break;
-                        }
-                        break;
-                    case 9:
-                        if (Convert.ToInt32(tickerPrice[1]) == 4)
-                        {
-                            double tick_price = Convert.ToDouble(tickerPrice[2]);
-                            tick_price = Math.Round(tick_price, 2);
-                            dataGridView1[2, 9].Value = tick_price.ToString();
-                            break;
-                        }
-                        break;
-                }
             }
         }
 
         private void getData()
         {
-            ibClient.ClientSocket.cancelMktData(87); // cancel market data
+            ibClient.ClientSocket.cancelMktData(1); // cancel market data
 
             // used to clear the contents of the listView
             listViewTns.Items.Clear();
@@ -321,12 +157,12 @@ namespace IB_TradingPlatformExtention1
 
             // If using delayed market data subscription un-comment 
             // the line below to request delayed data
-            ibClient.ClientSocket.reqMarketDataType(3);  // delayed data = 3 live = 1
+            ibClient.ClientSocket.reqMarketDataType(1);  // delayed data = 3 live = 1
 
             // Kick off the subscription for real-time data (add the mktDataOptions list for API v9.71)
 
             // For API v9.72 and higher, add one more parameter for regulatory snapshot
-            ibClient.ClientSocket.reqMktData(87, contract, "233", false, false, mktDataOptions);
+            ibClient.ClientSocket.reqMktData(1, contract, "233", false, false, mktDataOptions);
 
             timer1.Start();
         }
@@ -660,63 +496,6 @@ namespace IB_TradingPlatformExtention1
                 timer1_counter = 5;// resets timer counter back to 5
             }
             timer1_counter--; // subtract 1 every time their is a tick
-        }
-
-        private void btnScan_Click(object sender, EventArgs e)
-        {
-            // Create a new TagValue List object (for API version 9.71) 
-            //List TagValue = new List();
-
-            // these are codes from the Scanner Parameters output.
-            TagValue t1 = new TagValue("avgVolumeAbove", "10000000");
-            TagValue t2 = new TagValue("priceAbove", "2");
-            //TagValue t3 = new TagValue("priceBelow", "100");
-
-            // Create a Scanner Subscription
-            ScannerSubscription scsScanner = new ScannerSubscription();
-
-            // Number of rows the scanner should retrieve (max 50)
-            scsScanner.NumberOfRows = 10;
-            // Scanner will look for Stocks
-            scsScanner.Instrument = "STK";
-            // Scanner will look at all US major stocks
-            // other examples are: STK.US , STK.US.MAJOR , STK.MINOR , STK.NASDAQ , STK.NYSE , STK.AMEX
-            scsScanner.LocationCode = "STK.US.MAJOR";
-            // Indicate a pre-defined Market Scanner
-            scsScanner.ScanCode = "TOP_PERC_GAIN";
-            // Only look for Corporate stocks (not ADRs or ETFs)
-            //scsScanner.StockTypeFilter = "CORP";
-
-            //scsScanner.AboveVolume = 500000;
-
-            //create a list to hold all the scanner parameters
-            List<TagValue> TagValues = new List<TagValue> { t1, t2 };
-            // Launch the Scanner
-            ibClient.ClientSocket.reqScannerSubscription(87, scsScanner, null, TagValues);
-
-            // will display all the scanner parameter in the console in xml format
-            //ibClient.ClientSocket.reqScannerParameters();
-        }
-
-        private void btnStopScan_Click(object sender, EventArgs e)
-        {
-            // cancels scanner data subscription
-            ibClient.ClientSocket.cancelScannerSubscription(87);
-
-            // cancels each symbol streaming data in the scanner datagridview
-            for (int i = 0; i < 9; i++)
-            {
-                ibClient.ClientSocket.cancelMktData(i);
-            }
-        }
-
-        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex == -1) return; //check if row index is not selected
-            if (dataGridView1.CurrentCell.ColumnIndex.Equals(1))
-                if (dataGridView1.CurrentCell != null && dataGridView1.CurrentCell.Value != null)
-                    cbSymbol.Text = Convert.ToString(dataGridView1.CurrentCell.Value);
-            getData();
         }
     }
 }
