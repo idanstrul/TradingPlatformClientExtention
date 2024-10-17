@@ -22,21 +22,6 @@ namespace IB_TradingPlatformExtention1
         int order_id = 0;
         int timer1_counter = 5;
 
-        public void AddListBoxItem(string text)
-        {
-            // See if a new invocation is required form a different thread            
-            if (this.lbData.InvokeRequired)
-            {
-                SetTextCallback d = new SetTextCallback(AddListBoxItem);
-                this.Invoke(d, new object[] { text });
-            }
-            else
-            {
-                // Add the text string to the list box
-                this.lbData.Items.Add(text);
-            }
-        }
-
         // Create the ibClient object to represent the connection
         IB_TradingPlatformExtention1.EWrapperImpl ibClient;
         public Form1()
@@ -76,8 +61,6 @@ namespace IB_TradingPlatformExtention1
             // Set up the form object in the EWrapper
             ibClient.myform = (Form1)Application.OpenForms[0];
 
-            // gets the next order id and puts it in the textbox 
-            tbValid_id.Text = ibClient.NextOrderId.ToString();
             // updates the order_id value
             order_id = ibClient.NextOrderId;
 
@@ -358,7 +341,6 @@ namespace IB_TradingPlatformExtention1
 
             // increase the order id value
             order_id++;
-            tbValid_id.Text = Convert.ToString(order_id);
         }
 
         private void tbBid_Click(object sender, EventArgs e)

@@ -31,7 +31,6 @@
             this.components = new System.ComponentModel.Container();
             this.btnConnect = new System.Windows.Forms.Button();
             this.cbSymbol = new System.Windows.Forms.ComboBox();
-            this.lbData = new System.Windows.Forms.ListBox();
             this.numQuantity = new System.Windows.Forms.NumericUpDown();
             this.numPrice = new System.Windows.Forms.NumericUpDown();
             this.cbMarket = new System.Windows.Forms.ComboBox();
@@ -53,8 +52,6 @@
             this.tbBid = new System.Windows.Forms.TextBox();
             this.tbAsk = new System.Windows.Forms.TextBox();
             this.tbLast = new System.Windows.Forms.TextBox();
-            this.tbValid_id = new System.Windows.Forms.TextBox();
-            this.label12 = new System.Windows.Forms.Label();
             this.btnDisconnect = new System.Windows.Forms.Button();
             this.btnSell = new System.Windows.Forms.Button();
             this.btnBuy = new System.Windows.Forms.Button();
@@ -71,7 +68,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.numPrice)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
-            this.tabPage2.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -99,15 +95,6 @@
             this.cbSymbol.SelectedIndexChanged += new System.EventHandler(this.cbSymbol_SelectedIndexChanged);
             this.cbSymbol.KeyDown += new System.Windows.Forms.KeyEventHandler(this.cbSymbol_KeyDown);
             this.cbSymbol.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cbSymbol_KeyPress);
-            // 
-            // lbData
-            // 
-            this.lbData.FormattingEnabled = true;
-            this.lbData.ItemHeight = 16;
-            this.lbData.Location = new System.Drawing.Point(9, 35);
-            this.lbData.Name = "lbData";
-            this.lbData.Size = new System.Drawing.Size(315, 196);
-            this.lbData.TabIndex = 2;
             // 
             // numQuantity
             // 
@@ -331,23 +318,6 @@
             this.tbLast.Text = "0.00";
             this.tbLast.Click += new System.EventHandler(this.tbLast_Click);
             // 
-            // tbValid_id
-            // 
-            this.tbValid_id.Location = new System.Drawing.Point(141, 6);
-            this.tbValid_id.Name = "tbValid_id";
-            this.tbValid_id.Size = new System.Drawing.Size(100, 22);
-            this.tbValid_id.TabIndex = 24;
-            this.tbValid_id.Text = "0";
-            // 
-            // label12
-            // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(6, 9);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(115, 16);
-            this.label12.TabIndex = 25;
-            this.label12.Text = "Next valid order id";
-            // 
             // btnDisconnect
             // 
             this.btnDisconnect.Location = new System.Drawing.Point(137, 10);
@@ -483,9 +453,6 @@
             // 
             // tabPage2
             // 
-            this.tabPage2.Controls.Add(this.lbData);
-            this.tabPage2.Controls.Add(this.label12);
-            this.tabPage2.Controls.Add(this.tbValid_id);
             this.tabPage2.Location = new System.Drawing.Point(4, 25);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
@@ -510,8 +477,6 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
-            this.tabPage2.ResumeLayout(false);
-            this.tabPage2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -520,7 +485,6 @@
 
         private System.Windows.Forms.Button btnConnect;
         private System.Windows.Forms.ComboBox cbSymbol;
-        private System.Windows.Forms.ListBox lbData;
         private System.Windows.Forms.NumericUpDown numQuantity;
         private System.Windows.Forms.NumericUpDown numPrice;
         private System.Windows.Forms.ComboBox cbMarket;
@@ -542,8 +506,6 @@
         private System.Windows.Forms.TextBox tbBid;
         private System.Windows.Forms.TextBox tbAsk;
         private System.Windows.Forms.TextBox tbLast;
-        private System.Windows.Forms.TextBox tbValid_id;
-        private System.Windows.Forms.Label label12;
         private System.Windows.Forms.Button btnDisconnect;
         private System.Windows.Forms.Button btnSell;
         private System.Windows.Forms.Button btnBuy;

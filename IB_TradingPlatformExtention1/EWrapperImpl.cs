@@ -93,17 +93,11 @@ namespace IB_TradingPlatformExtention1
             Console.WriteLine("Tick Price. Ticker Id:" + tickerId + ", Field: " + field + ", Price: " + Util.DoubleMaxString(price) + ", CanAutoExecute: " + attribs.CanAutoExecute + 
                 ", PastLimit: " + attribs.PastLimit + ", PreOpen: " + attribs.PreOpen);
 
-            string strData = "Tick Price. Ticker Id:" + tickerId + ", Field: " + field +
-            ", Price: " + price + ", CanAutoExecute: " + attribs.CanAutoExecute;
-
             string _tickPrice = tickerId + "," + field +
             "," + price + "," + attribs.CanAutoExecute;
 
             // sends the string to Form1
             myform.AddTextBoxItemTickPrice(_tickPrice);
-
-            // Add this tick price to the form by calling the AddListBoxItem delegate
-            myform.AddListBoxItem(strData);
         }
         //! [tickprice]
         
@@ -111,12 +105,6 @@ namespace IB_TradingPlatformExtention1
         public virtual void tickSize(int tickerId, int field, decimal size)
         {
             Console.WriteLine("Tick Size. Ticker Id:" + tickerId + ", Field: " + field + ", Size: " + Util.DecimalMaxString(size));
-
-            string strData = "Tick Size. Ticker Id:" + tickerId + ", Field: " + field + ", Size: " + Util.DecimalMaxString(size);
-
-
-            // Add this tick price to the form by calling the AddListBoxItem delegate
-            myform.AddListBoxItem(strData);
         }
         //! [ticksize]
         
