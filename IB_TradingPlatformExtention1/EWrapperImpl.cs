@@ -124,14 +124,6 @@ namespace IB_TradingPlatformExtention1
         public virtual void tickString(int tickerId, int tickType, string value)
         {
             Console.WriteLine("Tick string. Ticker Id:" + tickerId + ", Type: " + tickType + ", Value: " + value);
-            // Contains Last Price, Trade Size, Trade Time, Total Volume, VWAP, single trade flag true, or false 6 items all together
-            // example 701.28;1;1348075471534;67854;701.46918464;true
-            if (tickType == 48) // used for time and sales (RTVolume)
-            {
-                string _tickString = value;
-                myform.AddListViewItemTickString(_tickString);
-            }
-
         }
         //! [tickstring]
 

@@ -135,9 +135,6 @@ namespace IB_TradingPlatformExtention1
         {
             ibClient.ClientSocket.cancelMktData(1); // cancel market data
 
-            // used to clear the contents of the listView
-            listViewTns.Items.Clear();
-
             // Create a new contract to specify the security we are searching for
             IBApi.Contract contract = new IBApi.Contract();
             // Create a new TagValueList object (for API version 9.71 and later) 
@@ -162,116 +159,9 @@ namespace IB_TradingPlatformExtention1
             // Kick off the subscription for real-time data (add the mktDataOptions list for API v9.71)
 
             // For API v9.72 and higher, add one more parameter for regulatory snapshot
-            ibClient.ClientSocket.reqMktData(1, contract, "233", false, false, mktDataOptions);
+            ibClient.ClientSocket.reqMktData(1, contract, "", false, false, mktDataOptions);
 
             timer1.Start();
-        }
-
-        delegate void SetTextCallbackTickString(string _tickString);
-
-        public void AddListViewItemTickString(string _tickString)
-        {
-            if (this.listViewTns.InvokeRequired)
-            {
-                try
-                {
-                    SetTextCallbackTickString d = new SetTextCallbackTickString(AddListViewItemTickString);
-                    this.Invoke(d, new object[] { _tickString });
-                }
-                catch (Exception)
-                {
-
-                }
-            }
-            else
-            {
-                try
-                {
-                    // get the bid price from the textbox Bid
-                    double theBid = Convert.ToDouble(tbBid.Text);
-                    // gets the ask price from the textbox Ask
-                    double theAsk = Convert.ToDouble(tbAsk.Text);
-
-                    // Contains Last Price, Trade Size, Trade Time, Total Volume, VWAP, 
-                    // single trade flag true, or false.
-                    // 6 items all together
-                    // example 701.28;1;1348075471534;67854;701.46918464;true
-                    // extract each value from string and store it in a string list
-                    string[] listTimeSales = _tickString.Split(';');
-
-                    // get the first value form the list convert it to a double this value is the last price
-                    double last_price = Convert.ToDouble(listTimeSales[0]);
-
-                    int trade_size = Convert.ToInt32(listTimeSales[1]);
-
-                    double trade_time = Convert.ToDouble(listTimeSales[2]);
-
-                    // adds 2 zeros to the trade size
-                    int share_size = trade_size * 100;
-
-                    // formats a string to commas
-                    string strShareSize = share_size.ToString("###,####,##0");
-
-                    DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                    epoch = epoch.AddMilliseconds(trade_time);
-                    // *************************************************
-                    epoch = epoch.AddHours(-5);   //Daylight saving time use -4 Summer otherwise use -5 Winter
-
-                    string strSaleTime = epoch.ToString("h:mm:ss:ff");
-
-                    double myMeanPrice = ((theAsk - theBid) / 2);
-                    double myMean = (theBid + myMeanPrice);
-
-                    ListViewItem lx = new ListViewItem();
-
-                    // string dt = String.Format("{0:hh:mm:ss}", dnt);
-
-                    // if the last price is the same as the ask change the color to green
-                    if (last_price == theAsk)
-                    {
-                        lx.ForeColor = Color.Green; // listview foreground color
-                        lx.Text = (listTimeSales[0]); // last price
-                        lx.SubItems.Add(strShareSize); // share size
-                        lx.SubItems.Add(strSaleTime); // time
-                        listViewTns.Items.Insert(0, lx); // use Insert instead of Add listView.Items.Add(li); 
-                    }
-                    // if the last price is the same as the bid change the color to red
-                    else if (last_price == theBid)
-                    {
-                        lx.ForeColor = Color.Red;
-                        lx.Text = (listTimeSales[0]);
-                        lx.SubItems.Add(strShareSize);
-                        lx.SubItems.Add(strSaleTime);
-                        listViewTns.Items.Insert(0, lx);
-
-                        lbData.Items.Insert(0, strSaleTime);
-                    }
-                    // if the last price in greater than the mean price and
-                    // less than the ask price change the color to lime green
-                    else if (last_price > myMean && last_price < theAsk)
-                    {
-                        lx.ForeColor = Color.Lime;
-                        lx.Text = (listTimeSales[0]);
-                        lx.SubItems.Add(strShareSize);
-                        lx.SubItems.Add(strSaleTime);
-                        listViewTns.Items.Insert(0, lx);
-
-                        lbData.Items.Add(epoch);
-                    }
-                    else
-                    {
-                        lx.ForeColor = Color.DarkRed;
-                        lx.Text = (listTimeSales[0]);
-                        lx.SubItems.Add(strShareSize);
-                        lx.SubItems.Add(strSaleTime);
-                        listViewTns.Items.Insert(0, lx);
-                    }
-                }
-                catch
-                {
-
-                }
-            }
         }
 
         private void cbSymbol_SelectedIndexChanged(object sender, EventArgs e)
