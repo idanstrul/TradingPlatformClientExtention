@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.btnConnect = new System.Windows.Forms.Button();
             this.cbSymbol = new System.Windows.Forms.ComboBox();
             this.numQuantity = new System.Windows.Forms.NumericUpDown();
@@ -56,7 +55,6 @@
             this.btnSell = new System.Windows.Forms.Button();
             this.btnBuy = new System.Windows.Forms.Button();
             this.chkOutside = new System.Windows.Forms.CheckBox();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.label13 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.tbPtofitTarget = new System.Windows.Forms.TextBox();
@@ -366,10 +364,6 @@
             this.chkOutside.Text = "OutsideRTH";
             this.chkOutside.UseVisualStyleBackColor = true;
             // 
-            // timer1
-            // 
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
             // label13
             // 
             this.label13.AutoSize = true;
@@ -534,7 +528,6 @@
         private System.Windows.Forms.Button btnSell;
         private System.Windows.Forms.Button btnBuy;
         private System.Windows.Forms.CheckBox chkOutside;
-        private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.TextBox tbPtofitTarget;

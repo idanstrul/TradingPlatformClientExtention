@@ -144,7 +144,6 @@ namespace IB_TradingPlatformExtention1
             // For API v9.72 and higher, add one more parameter for regulatory snapshot
             ibClient.ClientSocket.reqMktData(1, contract, "", false, false, mktDataOptions);
 
-            timer1.Start();
         }
 
         private void cbSymbol_SelectedIndexChanged(object sender, EventArgs e)
@@ -356,18 +355,6 @@ namespace IB_TradingPlatformExtention1
         private void tbLast_Click(object sender, EventArgs e)
         {
             numPrice.Value = Convert.ToDecimal(tbLast.Text);
-        }
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            if (timer1_counter == 0)
-            {
-                timer1.Stop(); // stop the timer
-                //add the bid price to the limit box
-                numPrice.Value = Convert.ToDecimal(tbBid.Text);
-                timer1_counter = 5;// resets timer counter back to 5
-            }
-            timer1_counter--; // subtract 1 every time their is a tick
         }
 
         private void btnCancelLast_Click(object sender, EventArgs e)
