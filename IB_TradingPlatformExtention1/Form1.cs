@@ -189,32 +189,76 @@ namespace IB_TradingPlatformExtention1
         private void btnSell_Click(object sender, EventArgs e)
         {
             string side = "sell";
+            Keys modifierKeys = Form.ModifierKeys;
+            int posSize = 1;
 
-            if (Form.ModifierKeys == Keys.Control)
-            {
-                send_bracket_order(side);
-            }
-            else
-            {
-                send_order(side);
-            }
+            send_order(side, modifierKeys, posSize);
         }
 
         private void btnBuy_Click(object sender, EventArgs e)
         {
             string side = "buy";
+            Keys modifierKeys = Form.ModifierKeys;
+            int posSize = 1;
 
-            if (Form.ModifierKeys == Keys.Control)
-            {
-                send_bracket_order(side);
-            }
-            else
-            {
-                send_order(side);
-            }
+            send_order(side, modifierKeys, posSize);
         }
 
-        public void send_bracket_order(string side)
+
+        public void send_order(string side, Keys modifierKeys, int posSize)
+        {
+            // Create a new contract to specify the security we are searching for
+            Contract contract = new Contract();
+
+            // Set the underlying stock symbol from the cbSymbol combobox
+            contract.Symbol = cbSymbol.Text;
+            // Set the Security type to STK for a Stock
+            contract.SecType = "STK";
+            // Use "SMART" as the general exchange
+            contract.Exchange = cbMarket.Text;
+            // Set the primary exchange (sometimes called Listing exchange)
+            // Use either NYSE or ISLAND
+            contract.PrimaryExch = "ISLAND";
+            // Set the currency to USD
+            contract.Currency = "USD";
+
+            //if (Form.ModifierKeys == Keys.Control)
+            //{
+            //    send_bracket_order(side);
+            //}
+            //else
+            //{
+            //    send_order(side);
+            //}
+
+            Order order = new Order();
+            // gets the next order id from the text box
+            order.OrderId = order_id;
+            // gets the side of the order (BUY, or SELL)
+            order.Action = side;
+            // gets order type from combobox market or limit order(MKT, or LMT)
+            order.OrderType = (modifierKeys == Keys.Control) ? "MKT" : "LMT";
+            // number of shares from Quantity
+            order.TotalQuantity = Convert.ToDecimal(numQuantity.Value);
+            // Value from limit price
+            order.LmtPrice = Convert.ToDouble(numPrice.Value);
+            // checks for a stop order
+            //if (orderType == "STP")
+            //{
+            //    // Stop order value from the limit textbox
+            //    order.AuxPrice = Convert.ToDouble(numPrice.Value);
+            //}
+            //order.OutsideRth = cbOutsideRTH.Checked;
+            order.OutsideRth = chkOutside.Checked;
+
+            // Place the order
+            ibClient.ClientSocket.placeOrder(order_id, contract, order);
+
+            // increase the order id value
+            order_id++;
+        }
+
+        public void send_bracket_order(string side, string orderType)
         {
             // create a new contract
             Contract contract = new Contract();
@@ -232,7 +276,7 @@ namespace IB_TradingPlatformExtention1
 
             // order_id, action (Buy or Sell), Quantity, entryPrice, targetPrice, stopLoss, order_type
 
-            string order_type = cbOrderType.Text; // order type LMT or STP from the combobox
+            string order_type = orderType; // order type LMT or STP from the combobox
             string action = side; // side (BUY or SELL) passed on from the button click event
             decimal quantity = Convert.ToDecimal(numQuantity.Value); // number of shares
             double lmtPrice = Convert.ToDouble(numPrice.Text);  // limit price from numeric up down box on the form
@@ -293,50 +337,6 @@ namespace IB_TradingPlatformExtention1
             bracketOrder.Add(takeProfit);
             bracketOrder.Add(stopLoss);
             return bracketOrder;
-        }
-
-        public void send_order(string side)
-        {
-            // Create a new contract to specify the security we are searching for
-            Contract contract = new Contract();
-
-            // Set the underlying stock symbol from the cbSymbol combobox
-            contract.Symbol = cbSymbol.Text;
-            // Set the Security type to STK for a Stock
-            contract.SecType = "STK";
-            // Use "SMART" as the general exchange
-            contract.Exchange = cbMarket.Text;
-            // Set the primary exchange (sometimes called Listing exchange)
-            // Use either NYSE or ISLAND
-            contract.PrimaryExch = "ISLAND";
-            // Set the currency to USD
-            contract.Currency = "USD";
-
-            Order order = new Order();
-            // gets the next order id from the text box
-            order.OrderId = order_id;
-            // gets the side of the order (BUY, or SELL)
-            order.Action = side;
-            // gets order type from combobox market or limit order(MKT, or LMT)
-            order.OrderType = cbOrderType.Text;
-            // number of shares from Quantity
-            order.TotalQuantity = Convert.ToDecimal(numQuantity.Value);
-            // Value from limit price
-            order.LmtPrice = Convert.ToDouble(numPrice.Value);
-            // checks for a stop order
-            if (cbOrderType.Text == "STP")
-            {
-                // Stop order value from the limit textbox
-                order.AuxPrice = Convert.ToDouble(numPrice.Value);
-            }
-            //order.OutsideRth = cbOutsideRTH.Checked;
-            order.OutsideRth = chkOutside.Checked;
-
-            // Place the order
-            ibClient.ClientSocket.placeOrder(order_id, contract, order);
-
-            // increase the order id value
-            order_id++;
         }
 
         private void tbBid_Click(object sender, EventArgs e)

@@ -60,8 +60,6 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.numPrice = new System.Windows.Forms.NumericUpDown();
             this.label3 = new System.Windows.Forms.Label();
-            this.cbOrderType = new System.Windows.Forms.ComboBox();
-            this.label5 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -352,7 +350,6 @@
             this.tabPage1.Controls.Add(this.numPrice);
             this.tabPage1.Controls.Add(this.label13);
             this.tabPage1.Controls.Add(this.cbMarket);
-            this.tabPage1.Controls.Add(this.cbOrderType);
             this.tabPage1.Controls.Add(this.chkOutside);
             this.tabPage1.Controls.Add(this.cbTif);
             this.tabPage1.Controls.Add(this.btnBuy);
@@ -361,7 +358,6 @@
             this.tabPage1.Controls.Add(this.label3);
             this.tabPage1.Controls.Add(this.label4);
             this.tabPage1.Controls.Add(this.tbLast);
-            this.tabPage1.Controls.Add(this.label5);
             this.tabPage1.Controls.Add(this.tbAsk);
             this.tabPage1.Controls.Add(this.tbBid);
             this.tabPage1.Controls.Add(this.label7);
@@ -435,29 +431,6 @@
             this.label3.TabIndex = 10;
             this.label3.Text = "Limit Price";
             // 
-            // cbOrderType
-            // 
-            this.cbOrderType.FormattingEnabled = true;
-            this.cbOrderType.Items.AddRange(new object[] {
-            "LMT",
-            "MKT",
-            "STP",
-            "MOC"});
-            this.cbOrderType.Location = new System.Drawing.Point(9, 77);
-            this.cbOrderType.Name = "cbOrderType";
-            this.cbOrderType.Size = new System.Drawing.Size(121, 24);
-            this.cbOrderType.TabIndex = 6;
-            this.cbOrderType.Text = "LMT";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(6, 58);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(39, 16);
-            this.label5.TabIndex = 12;
-            this.label5.Text = "Type";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -512,8 +485,6 @@
         private System.Windows.Forms.Button btnCancelLast;
         private System.Windows.Forms.NumericUpDown numPrice;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.ComboBox cbOrderType;
-        private System.Windows.Forms.Label label5;
     }
 }
 
