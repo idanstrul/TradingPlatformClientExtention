@@ -20,16 +20,15 @@ namespace IB_TradingPlatformExtention1
         delegate void SetTextCallbackTickPrice(string _tickPrice);
 
         int order_id = 0;
-        int timer1_counter = 5;
 
         // Create the ibClient object to represent the connection
-        IB_TradingPlatformExtention1.EWrapperImpl ibClient;
+        EWrapperImpl ibClient;
         public Form1()
         {
             InitializeComponent();
 
             // instantiate the ibClient
-            ibClient = new IB_TradingPlatformExtention1.EWrapperImpl();
+            ibClient = new EWrapperImpl();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -119,9 +118,9 @@ namespace IB_TradingPlatformExtention1
             ibClient.ClientSocket.cancelMktData(1); // cancel market data
 
             // Create a new contract to specify the security we are searching for
-            IBApi.Contract contract = new IBApi.Contract();
+            Contract contract = new Contract();
             // Create a new TagValueList object (for API version 9.71 and later) 
-            List<IBApi.TagValue> mktDataOptions = new List<IBApi.TagValue>();
+            List<TagValue> mktDataOptions = new List<TagValue>();
 
             // Set the underlying stock symbol fromthe cbSymbol combobox            
             contract.Symbol = cbSymbol.Text;
@@ -218,7 +217,7 @@ namespace IB_TradingPlatformExtention1
         public void send_bracket_order(string side)
         {
             // create a new contract
-            IBApi.Contract contract = new IBApi.Contract();
+            Contract contract = new Contract();
             // Set the underlying stock symbol from the cbSymbol combobox
             contract.Symbol = cbSymbol.Text;
             // Set the Security type to STK for a Stock
@@ -240,7 +239,7 @@ namespace IB_TradingPlatformExtention1
             double takeProfit = Convert.ToDouble(tbPtofitTarget.Text);  // take profit amount from text box on the form
             double stopLoss = Convert.ToDouble(tbStopLoss.Text);  // stop loss from the text box on the form
 
-            // side is the either buy or sell
+            // side is either buy or sell
             // calls a BracketOrder function and stores the results in a list variable called bracket
             List<Order> bracket = BracketOrder(order_id++, action, quantity, lmtPrice, takeProfit, stopLoss, order_type);
             foreach (Order o in bracket) // loops through each order in the list
@@ -299,7 +298,7 @@ namespace IB_TradingPlatformExtention1
         public void send_order(string side)
         {
             // Create a new contract to specify the security we are searching for
-            IBApi.Contract contract = new IBApi.Contract();
+            Contract contract = new Contract();
 
             // Set the underlying stock symbol from the cbSymbol combobox
             contract.Symbol = cbSymbol.Text;
@@ -313,7 +312,7 @@ namespace IB_TradingPlatformExtention1
             // Set the currency to USD
             contract.Currency = "USD";
 
-            IBApi.Order order = new IBApi.Order();
+            Order order = new Order();
             // gets the next order id from the text box
             order.OrderId = order_id;
             // gets the side of the order (BUY, or SELL)
@@ -330,8 +329,6 @@ namespace IB_TradingPlatformExtention1
                 // Stop order value from the limit textbox
                 order.AuxPrice = Convert.ToDouble(numPrice.Value);
             }
-            //Visible shares to the market
-            order.DisplaySize = Convert.ToInt32(tbVisible.Text);
             //order.OutsideRth = cbOutsideRTH.Checked;
             order.OutsideRth = chkOutside.Checked;
 

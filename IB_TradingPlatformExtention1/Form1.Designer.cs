@@ -31,22 +31,16 @@
             this.btnConnect = new System.Windows.Forms.Button();
             this.cbSymbol = new System.Windows.Forms.ComboBox();
             this.numQuantity = new System.Windows.Forms.NumericUpDown();
-            this.numPrice = new System.Windows.Forms.NumericUpDown();
             this.cbMarket = new System.Windows.Forms.ComboBox();
-            this.cbOrderType = new System.Windows.Forms.ComboBox();
             this.cbTif = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
-            this.tbVisible = new System.Windows.Forms.TextBox();
             this.tbPrimaryEx = new System.Windows.Forms.TextBox();
             this.tbBid = new System.Windows.Forms.TextBox();
             this.tbAsk = new System.Windows.Forms.TextBox();
@@ -61,13 +55,17 @@
             this.tbStopLoss = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.btnCancelLast = new System.Windows.Forms.Button();
             this.btnCancelAll = new System.Windows.Forms.Button();
+            this.btnCancelLast = new System.Windows.Forms.Button();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.numPrice = new System.Windows.Forms.NumericUpDown();
+            this.label3 = new System.Windows.Forms.Label();
+            this.cbOrderType = new System.Windows.Forms.ComboBox();
+            this.label5 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numPrice)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numPrice)).BeginInit();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -99,7 +97,7 @@
             // numQuantity
             // 
             this.numQuantity.Increment = new decimal(new int[] {
-            100,
+            5,
             0,
             0,
             0});
@@ -113,28 +111,10 @@
             this.numQuantity.Size = new System.Drawing.Size(120, 22);
             this.numQuantity.TabIndex = 3;
             this.numQuantity.Value = new decimal(new int[] {
-            100,
+            30,
             0,
             0,
             0});
-            // 
-            // numPrice
-            // 
-            this.numPrice.DecimalPlaces = 2;
-            this.numPrice.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
-            this.numPrice.Location = new System.Drawing.Point(233, 33);
-            this.numPrice.Maximum = new decimal(new int[] {
-            1000000,
-            0,
-            0,
-            0});
-            this.numPrice.Name = "numPrice";
-            this.numPrice.Size = new System.Drawing.Size(120, 22);
-            this.numPrice.TabIndex = 4;
             // 
             // cbMarket
             // 
@@ -149,20 +129,6 @@
             this.cbMarket.Size = new System.Drawing.Size(121, 24);
             this.cbMarket.TabIndex = 5;
             this.cbMarket.Text = "SMART";
-            // 
-            // cbOrderType
-            // 
-            this.cbOrderType.FormattingEnabled = true;
-            this.cbOrderType.Items.AddRange(new object[] {
-            "LMT",
-            "MKT",
-            "STP",
-            "MOC"});
-            this.cbOrderType.Location = new System.Drawing.Point(9, 77);
-            this.cbOrderType.Name = "cbOrderType";
-            this.cbOrderType.Size = new System.Drawing.Size(121, 24);
-            this.cbOrderType.TabIndex = 6;
-            this.cbOrderType.Text = "LMT";
             // 
             // cbTif
             // 
@@ -194,15 +160,6 @@
             this.label2.TabIndex = 9;
             this.label2.Text = "Quantity";
             // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(230, 12);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(68, 16);
-            this.label3.TabIndex = 10;
-            this.label3.Text = "Limit Price";
-            // 
             // label4
             // 
             this.label4.AutoSize = true;
@@ -211,24 +168,6 @@
             this.label4.Size = new System.Drawing.Size(48, 16);
             this.label4.TabIndex = 11;
             this.label4.Text = "Market";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(6, 58);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(39, 16);
-            this.label5.TabIndex = 12;
-            this.label5.Text = "Type";
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(133, 58);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(48, 16);
-            this.label6.TabIndex = 13;
-            this.label6.Text = "Visible";
             // 
             // label7
             // 
@@ -274,14 +213,6 @@
             this.label11.Size = new System.Drawing.Size(32, 16);
             this.label11.TabIndex = 18;
             this.label11.Text = "Last";
-            // 
-            // tbVisible
-            // 
-            this.tbVisible.Location = new System.Drawing.Point(136, 77);
-            this.tbVisible.Name = "tbVisible";
-            this.tbVisible.Size = new System.Drawing.Size(100, 22);
-            this.tbVisible.TabIndex = 19;
-            this.tbVisible.Text = "100";
             // 
             // tbPrimaryEx
             // 
@@ -432,12 +363,10 @@
             this.tabPage1.Controls.Add(this.tbLast);
             this.tabPage1.Controls.Add(this.label5);
             this.tabPage1.Controls.Add(this.tbAsk);
-            this.tabPage1.Controls.Add(this.label6);
             this.tabPage1.Controls.Add(this.tbBid);
             this.tabPage1.Controls.Add(this.label7);
             this.tabPage1.Controls.Add(this.tbPrimaryEx);
             this.tabPage1.Controls.Add(this.label8);
-            this.tabPage1.Controls.Add(this.tbVisible);
             this.tabPage1.Controls.Add(this.label9);
             this.tabPage1.Controls.Add(this.label11);
             this.tabPage1.Controls.Add(this.label10);
@@ -449,15 +378,15 @@
             this.tabPage1.Text = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
-            // tabPage2
+            // btnCancelAll
             // 
-            this.tabPage2.Location = new System.Drawing.Point(4, 25);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(490, 267);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "tabPage2";
-            this.tabPage2.UseVisualStyleBackColor = true;
+            this.btnCancelAll.Location = new System.Drawing.Point(27, 212);
+            this.btnCancelAll.Name = "btnCancelAll";
+            this.btnCancelAll.Size = new System.Drawing.Size(86, 23);
+            this.btnCancelAll.TabIndex = 36;
+            this.btnCancelAll.Text = "Cancel All";
+            this.btnCancelAll.UseVisualStyleBackColor = true;
+            this.btnCancelAll.Click += new System.EventHandler(this.btnCancelAll_Click);
             // 
             // btnCancelLast
             // 
@@ -469,15 +398,65 @@
             this.btnCancelLast.UseVisualStyleBackColor = true;
             this.btnCancelLast.Click += new System.EventHandler(this.btnCancelLast_Click);
             // 
-            // btnCancelAll
+            // tabPage2
             // 
-            this.btnCancelAll.Location = new System.Drawing.Point(27, 212);
-            this.btnCancelAll.Name = "btnCancelAll";
-            this.btnCancelAll.Size = new System.Drawing.Size(86, 23);
-            this.btnCancelAll.TabIndex = 36;
-            this.btnCancelAll.Text = "Cancel All";
-            this.btnCancelAll.UseVisualStyleBackColor = true;
-            this.btnCancelAll.Click += new System.EventHandler(this.btnCancelAll_Click);
+            this.tabPage2.Location = new System.Drawing.Point(4, 25);
+            this.tabPage2.Name = "tabPage2";
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage2.Size = new System.Drawing.Size(490, 267);
+            this.tabPage2.TabIndex = 1;
+            this.tabPage2.Text = "tabPage2";
+            this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // numPrice
+            // 
+            this.numPrice.DecimalPlaces = 2;
+            this.numPrice.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.numPrice.Location = new System.Drawing.Point(233, 33);
+            this.numPrice.Maximum = new decimal(new int[] {
+            1000000,
+            0,
+            0,
+            0});
+            this.numPrice.Name = "numPrice";
+            this.numPrice.Size = new System.Drawing.Size(120, 22);
+            this.numPrice.TabIndex = 4;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(230, 12);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(68, 16);
+            this.label3.TabIndex = 10;
+            this.label3.Text = "Limit Price";
+            // 
+            // cbOrderType
+            // 
+            this.cbOrderType.FormattingEnabled = true;
+            this.cbOrderType.Items.AddRange(new object[] {
+            "LMT",
+            "MKT",
+            "STP",
+            "MOC"});
+            this.cbOrderType.Location = new System.Drawing.Point(9, 77);
+            this.cbOrderType.Name = "cbOrderType";
+            this.cbOrderType.Size = new System.Drawing.Size(121, 24);
+            this.cbOrderType.TabIndex = 6;
+            this.cbOrderType.Text = "LMT";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(6, 58);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(39, 16);
+            this.label5.TabIndex = 12;
+            this.label5.Text = "Type";
             // 
             // Form1
             // 
@@ -491,10 +470,10 @@
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numPrice)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numPrice)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -504,22 +483,16 @@
         private System.Windows.Forms.Button btnConnect;
         private System.Windows.Forms.ComboBox cbSymbol;
         private System.Windows.Forms.NumericUpDown numQuantity;
-        private System.Windows.Forms.NumericUpDown numPrice;
         private System.Windows.Forms.ComboBox cbMarket;
-        private System.Windows.Forms.ComboBox cbOrderType;
         private System.Windows.Forms.ComboBox cbTif;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.TextBox tbVisible;
         private System.Windows.Forms.TextBox tbPrimaryEx;
         private System.Windows.Forms.TextBox tbBid;
         private System.Windows.Forms.TextBox tbAsk;
@@ -537,6 +510,10 @@
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.Button btnCancelAll;
         private System.Windows.Forms.Button btnCancelLast;
+        private System.Windows.Forms.NumericUpDown numPrice;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ComboBox cbOrderType;
+        private System.Windows.Forms.Label label5;
     }
 }
 
