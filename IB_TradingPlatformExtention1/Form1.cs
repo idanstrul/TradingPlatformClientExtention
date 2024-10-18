@@ -369,5 +369,17 @@ namespace IB_TradingPlatformExtention1
             }
             timer1_counter--; // subtract 1 every time their is a tick
         }
+
+        private void btnCancelLast_Click(object sender, EventArgs e)
+        {
+            // cancels last order
+            ibClient.ClientSocket.cancelOrder(order_id - 1, new OrderCancel());
+        }
+
+        private void btnCancelAll_Click(object sender, EventArgs e)
+        {
+            // cancels all the orders
+            ibClient.ClientSocket.reqGlobalCancel(new OrderCancel());
+        }
     }
 }

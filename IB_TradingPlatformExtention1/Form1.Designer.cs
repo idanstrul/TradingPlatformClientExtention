@@ -64,6 +64,8 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.btnCancelLast = new System.Windows.Forms.Button();
+            this.btnCancelAll = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPrice)).BeginInit();
             this.tabControl1.SuspendLayout();
@@ -371,7 +373,7 @@
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(50, 191);
+            this.label13.Location = new System.Drawing.Point(294, 219);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(80, 16);
             this.label13.TabIndex = 31;
@@ -388,7 +390,7 @@
             // 
             // tbPtofitTarget
             // 
-            this.tbPtofitTarget.Location = new System.Drawing.Point(136, 188);
+            this.tbPtofitTarget.Location = new System.Drawing.Point(380, 216);
             this.tbPtofitTarget.Name = "tbPtofitTarget";
             this.tbPtofitTarget.Size = new System.Drawing.Size(100, 22);
             this.tbPtofitTarget.TabIndex = 33;
@@ -409,11 +411,13 @@
             this.tabControl1.Location = new System.Drawing.Point(26, 52);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(498, 273);
+            this.tabControl1.Size = new System.Drawing.Size(498, 296);
             this.tabControl1.TabIndex = 35;
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.btnCancelAll);
+            this.tabPage1.Controls.Add(this.btnCancelLast);
             this.tabPage1.Controls.Add(this.label1);
             this.tabPage1.Controls.Add(this.tbStopLoss);
             this.tabPage1.Controls.Add(this.cbSymbol);
@@ -446,7 +450,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 25);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(490, 244);
+            this.tabPage1.Size = new System.Drawing.Size(490, 267);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -456,10 +460,30 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 25);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(490, 244);
+            this.tabPage2.Size = new System.Drawing.Size(490, 267);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // btnCancelLast
+            // 
+            this.btnCancelLast.Location = new System.Drawing.Point(27, 188);
+            this.btnCancelLast.Name = "btnCancelLast";
+            this.btnCancelLast.Size = new System.Drawing.Size(86, 23);
+            this.btnCancelLast.TabIndex = 35;
+            this.btnCancelLast.Text = "Cancel Last";
+            this.btnCancelLast.UseVisualStyleBackColor = true;
+            this.btnCancelLast.Click += new System.EventHandler(this.btnCancelLast_Click);
+            // 
+            // btnCancelAll
+            // 
+            this.btnCancelAll.Location = new System.Drawing.Point(27, 212);
+            this.btnCancelAll.Name = "btnCancelAll";
+            this.btnCancelAll.Size = new System.Drawing.Size(86, 23);
+            this.btnCancelAll.TabIndex = 36;
+            this.btnCancelAll.Text = "Cancel All";
+            this.btnCancelAll.UseVisualStyleBackColor = true;
+            this.btnCancelAll.Click += new System.EventHandler(this.btnCancelAll_Click);
             // 
             // Form1
             // 
@@ -518,6 +542,8 @@
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
+        private System.Windows.Forms.Button btnCancelAll;
+        private System.Windows.Forms.Button btnCancelLast;
     }
 }
 
