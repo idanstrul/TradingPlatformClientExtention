@@ -186,56 +186,11 @@ namespace IB_TradingPlatformExtention1
             ibClient.ClientSocket.eDisconnect();
         }
 
-        private void btnSell1_Click(object sender, EventArgs e)
-        {
-            string side = "sell";
-            Keys modifierKeys = Form.ModifierKeys;
-            int posSize = 1;
-
-            send_order(side, modifierKeys, posSize);
-        }
-
-        private void btnSell3_4_Click(object sender, EventArgs e)
-        {
-            string side = "sell";
-            Keys modifierKeys = Form.ModifierKeys;
-            decimal posSize = 0.75m;
-
-            send_order(side, modifierKeys, posSize);
-        }
-
-        private void btnSell1_2_Click(object sender, EventArgs e)
-        {
-            string side = "sell";
-            Keys modifierKeys = Form.ModifierKeys;
-            decimal posSize = 0.5m;
-
-            send_order(side, modifierKeys, posSize);
-        }
-
-        private void btnSell1_4_Click(object sender, EventArgs e)
-        {
-            string side = "sell";
-            Keys modifierKeys = Form.ModifierKeys;
-            decimal posSize = 0.25m;
-
-            send_order(side, modifierKeys, posSize);
-        }
-
         private void btnBuy1_Click(object sender, EventArgs e)
         {
             string side = "buy";
             Keys modifierKeys = Form.ModifierKeys;
             int posSize = 1;
-
-            send_order(side, modifierKeys, posSize);
-        }
-
-        private void btnBuy3_4_Click(object sender, EventArgs e)
-        {
-            string side = "buy";
-            Keys modifierKeys = Form.ModifierKeys;
-            decimal posSize = 0.75m;
 
             send_order(side, modifierKeys, posSize);
         }
@@ -258,6 +213,50 @@ namespace IB_TradingPlatformExtention1
             send_order(side, modifierKeys, posSize);
         }
 
+        private void btnBuy1_8_Click(object sender, EventArgs e)
+        {
+            string side = "buy";
+            Keys modifierKeys = Form.ModifierKeys;
+            decimal posSize = 0.125m;
+
+            send_order(side, modifierKeys, posSize);
+        }
+
+        private void btnSell1_Click(object sender, EventArgs e)
+        {
+            string side = "sell";
+            Keys modifierKeys = Form.ModifierKeys;
+            int posSize = 1;
+
+            send_order(side, modifierKeys, posSize);
+        }
+
+        private void btnSell1_2_Click(object sender, EventArgs e)
+        {
+            string side = "sell";
+            Keys modifierKeys = Form.ModifierKeys;
+            decimal posSize = 0.5m;
+
+            send_order(side, modifierKeys, posSize);
+        }
+
+        private void btnSell1_4_Click(object sender, EventArgs e)
+        {
+            string side = "sell";
+            Keys modifierKeys = Form.ModifierKeys;
+            decimal posSize = 0.25m;
+
+            send_order(side, modifierKeys, posSize);
+        }
+
+        private void btnSell1_8_Click(object sender, EventArgs e)
+        {
+            string side = "sell";
+            Keys modifierKeys = Form.ModifierKeys;
+            decimal posSize = 0.125m;
+
+            send_order(side, modifierKeys, posSize);
+        }
 
         public void send_order(string side, Keys modifierKeys, decimal posSize)
         {
