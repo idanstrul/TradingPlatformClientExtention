@@ -241,13 +241,9 @@ namespace IB_TradingPlatformExtention1
             // number of shares from Quantity
             order.TotalQuantity = Convert.ToDecimal(numQuantity.Value);
             // Value from limit price
-            order.LmtPrice = Convert.ToDouble(numPrice.Value);
-            // checks for a stop order
-            //if (orderType == "STP")
-            //{
-            //    // Stop order value from the limit textbox
-            //    order.AuxPrice = Convert.ToDouble(numPrice.Value);
-            //}
+            order.LmtPrice = (side == "buy" && modifierKeys != Keys.Alt) || (side == "sell" && modifierKeys == Keys.Alt)? 
+                Convert.ToDouble(tbAsk.Text) : Convert.ToDouble(tbBid.Text);
+            
             //order.OutsideRth = cbOutsideRTH.Checked;
             order.OutsideRth = chkOutside.Checked;
 
@@ -279,7 +275,7 @@ namespace IB_TradingPlatformExtention1
             string order_type = orderType; // order type LMT or STP from the combobox
             string action = side; // side (BUY or SELL) passed on from the button click event
             decimal quantity = Convert.ToDecimal(numQuantity.Value); // number of shares
-            double lmtPrice = Convert.ToDouble(numPrice.Text);  // limit price from numeric up down box on the form
+            double lmtPrice = Convert.ToDouble(tbAsk.Text);  // limit price from numeric up down box on the form
             double takeProfit = Convert.ToDouble(tbPtofitTarget.Text);  // take profit amount from text box on the form
             double stopLoss = Convert.ToDouble(tbStopLoss.Text);  // stop loss from the text box on the form
 
@@ -339,20 +335,20 @@ namespace IB_TradingPlatformExtention1
             return bracketOrder;
         }
 
-        private void tbBid_Click(object sender, EventArgs e)
-        {
-            numPrice.Value = Convert.ToDecimal(tbBid.Text);
-        }
+        //private void tbBid_Click(object sender, EventArgs e)
+        //{
+        //    numPrice.Value = Convert.ToDecimal(tbBid.Text);
+        //}
 
-        private void tbAsk_Click(object sender, EventArgs e)
-        {
-            numPrice.Value = Convert.ToDecimal(tbAsk.Text);
-        }
+        //private void tbAsk_Click(object sender, EventArgs e)
+        //{
+        //    numPrice.Value = Convert.ToDecimal(tbAsk.Text);
+        //}
 
-        private void tbLast_Click(object sender, EventArgs e)
-        {
-            numPrice.Value = Convert.ToDecimal(tbLast.Text);
-        }
+        //private void tbLast_Click(object sender, EventArgs e)
+        //{
+        //    numPrice.Value = Convert.ToDecimal(tbLast.Text);
+        //}
 
         private void btnCancelLast_Click(object sender, EventArgs e)
         {

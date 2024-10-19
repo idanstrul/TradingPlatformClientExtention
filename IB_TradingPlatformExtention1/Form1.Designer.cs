@@ -58,12 +58,9 @@
             this.btnCancelAll = new System.Windows.Forms.Button();
             this.btnCancelLast = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.numPrice = new System.Windows.Forms.NumericUpDown();
-            this.label3 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numPrice)).BeginInit();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -227,7 +224,6 @@
             this.tbBid.Size = new System.Drawing.Size(100, 22);
             this.tbBid.TabIndex = 21;
             this.tbBid.Text = "0.00";
-            this.tbBid.Click += new System.EventHandler(this.tbBid_Click);
             // 
             // tbAsk
             // 
@@ -236,7 +232,6 @@
             this.tbAsk.Size = new System.Drawing.Size(100, 22);
             this.tbAsk.TabIndex = 22;
             this.tbAsk.Text = "0.00";
-            this.tbAsk.Click += new System.EventHandler(this.tbAsk_Click);
             // 
             // tbLast
             // 
@@ -245,7 +240,6 @@
             this.tbLast.Size = new System.Drawing.Size(100, 22);
             this.tbLast.TabIndex = 23;
             this.tbLast.Text = "0.00";
-            this.tbLast.Click += new System.EventHandler(this.tbLast_Click);
             // 
             // btnDisconnect
             // 
@@ -347,7 +341,6 @@
             this.tabPage1.Controls.Add(this.tbPtofitTarget);
             this.tabPage1.Controls.Add(this.numQuantity);
             this.tabPage1.Controls.Add(this.label14);
-            this.tabPage1.Controls.Add(this.numPrice);
             this.tabPage1.Controls.Add(this.label13);
             this.tabPage1.Controls.Add(this.cbMarket);
             this.tabPage1.Controls.Add(this.chkOutside);
@@ -355,7 +348,6 @@
             this.tabPage1.Controls.Add(this.btnBuy);
             this.tabPage1.Controls.Add(this.label2);
             this.tabPage1.Controls.Add(this.btnSell);
-            this.tabPage1.Controls.Add(this.label3);
             this.tabPage1.Controls.Add(this.label4);
             this.tabPage1.Controls.Add(this.tbLast);
             this.tabPage1.Controls.Add(this.tbAsk);
@@ -404,33 +396,6 @@
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // numPrice
-            // 
-            this.numPrice.DecimalPlaces = 2;
-            this.numPrice.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
-            this.numPrice.Location = new System.Drawing.Point(233, 33);
-            this.numPrice.Maximum = new decimal(new int[] {
-            1000000,
-            0,
-            0,
-            0});
-            this.numPrice.Name = "numPrice";
-            this.numPrice.Size = new System.Drawing.Size(120, 22);
-            this.numPrice.TabIndex = 4;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(230, 12);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(68, 16);
-            this.label3.TabIndex = 10;
-            this.label3.Text = "Limit Price";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -446,7 +411,6 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numPrice)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -483,8 +447,6 @@
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.Button btnCancelAll;
         private System.Windows.Forms.Button btnCancelLast;
-        private System.Windows.Forms.NumericUpDown numPrice;
-        private System.Windows.Forms.Label label3;
     }
 }
 
