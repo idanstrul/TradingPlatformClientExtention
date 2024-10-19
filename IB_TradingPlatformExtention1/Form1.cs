@@ -186,7 +186,7 @@ namespace IB_TradingPlatformExtention1
             ibClient.ClientSocket.eDisconnect();
         }
 
-        private void btnSell_Click(object sender, EventArgs e)
+        private void btnSell1_Click(object sender, EventArgs e)
         {
             string side = "sell";
             Keys modifierKeys = Form.ModifierKeys;
@@ -195,7 +195,34 @@ namespace IB_TradingPlatformExtention1
             send_order(side, modifierKeys, posSize);
         }
 
-        private void btnBuy_Click(object sender, EventArgs e)
+        private void btnSell3_4_Click(object sender, EventArgs e)
+        {
+            string side = "sell";
+            Keys modifierKeys = Form.ModifierKeys;
+            decimal posSize = 0.75m;
+
+            send_order(side, modifierKeys, posSize);
+        }
+
+        private void btnSell1_2_Click(object sender, EventArgs e)
+        {
+            string side = "sell";
+            Keys modifierKeys = Form.ModifierKeys;
+            decimal posSize = 0.5m;
+
+            send_order(side, modifierKeys, posSize);
+        }
+
+        private void btnSell1_4_Click(object sender, EventArgs e)
+        {
+            string side = "sell";
+            Keys modifierKeys = Form.ModifierKeys;
+            decimal posSize = 0.25m;
+
+            send_order(side, modifierKeys, posSize);
+        }
+
+        private void btnBuy1_Click(object sender, EventArgs e)
         {
             string side = "buy";
             Keys modifierKeys = Form.ModifierKeys;
@@ -204,8 +231,35 @@ namespace IB_TradingPlatformExtention1
             send_order(side, modifierKeys, posSize);
         }
 
+        private void btnBuy3_4_Click(object sender, EventArgs e)
+        {
+            string side = "buy";
+            Keys modifierKeys = Form.ModifierKeys;
+            decimal posSize = 0.75m;
 
-        public void send_order(string side, Keys modifierKeys, int posSize)
+            send_order(side, modifierKeys, posSize);
+        }
+
+        private void btnBuy1_2_Click(object sender, EventArgs e)
+        {
+            string side = "buy";
+            Keys modifierKeys = Form.ModifierKeys;
+            decimal posSize = 0.5m;
+
+            send_order(side, modifierKeys, posSize);
+        }
+
+        private void btnBuy1_4_Click(object sender, EventArgs e)
+        {
+            string side = "buy";
+            Keys modifierKeys = Form.ModifierKeys;
+            decimal posSize = 0.25m;
+
+            send_order(side, modifierKeys, posSize);
+        }
+
+
+        public void send_order(string side, Keys modifierKeys, decimal posSize)
         {
             // Create a new contract to specify the security we are searching for
             Contract contract = new Contract();
@@ -239,7 +293,7 @@ namespace IB_TradingPlatformExtention1
             // gets order type from combobox market or limit order(MKT, or LMT)
             order.OrderType = (modifierKeys == Keys.Control) ? "MKT" : "LMT";
             // number of shares from Quantity
-            order.TotalQuantity = Convert.ToDecimal(numQuantity.Value);
+            order.TotalQuantity = Math.Floor(posSize * Convert.ToDecimal(numQuantity.Value));
             // Value from limit price
             order.LmtPrice = (side == "buy" && modifierKeys != Keys.Alt) || (side == "sell" && modifierKeys == Keys.Alt)? 
                 Convert.ToDouble(tbAsk.Text) : Convert.ToDouble(tbBid.Text);
@@ -334,21 +388,6 @@ namespace IB_TradingPlatformExtention1
             bracketOrder.Add(stopLoss);
             return bracketOrder;
         }
-
-        //private void tbBid_Click(object sender, EventArgs e)
-        //{
-        //    numPrice.Value = Convert.ToDecimal(tbBid.Text);
-        //}
-
-        //private void tbAsk_Click(object sender, EventArgs e)
-        //{
-        //    numPrice.Value = Convert.ToDecimal(tbAsk.Text);
-        //}
-
-        //private void tbLast_Click(object sender, EventArgs e)
-        //{
-        //    numPrice.Value = Convert.ToDecimal(tbLast.Text);
-        //}
 
         private void btnCancelLast_Click(object sender, EventArgs e)
         {

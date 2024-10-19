@@ -46,8 +46,8 @@
             this.tbAsk = new System.Windows.Forms.TextBox();
             this.tbLast = new System.Windows.Forms.TextBox();
             this.btnDisconnect = new System.Windows.Forms.Button();
-            this.btnSell = new System.Windows.Forms.Button();
-            this.btnBuy = new System.Windows.Forms.Button();
+            this.btnSell1 = new System.Windows.Forms.Button();
+            this.btnBuy1 = new System.Windows.Forms.Button();
             this.chkOutside = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
@@ -58,6 +58,12 @@
             this.btnCancelAll = new System.Windows.Forms.Button();
             this.btnCancelLast = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.btnSell1_4 = new System.Windows.Forms.Button();
+            this.btnSell1_2 = new System.Windows.Forms.Button();
+            this.btnSell3_4 = new System.Windows.Forms.Button();
+            this.btnBuy1_2 = new System.Windows.Forms.Button();
+            this.btnBuy1_4 = new System.Windows.Forms.Button();
+            this.btnBuy3_4 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -119,7 +125,7 @@
             "ARCA",
             "BATS",
             "ISLAND"});
-            this.cbMarket.Location = new System.Drawing.Point(359, 31);
+            this.cbMarket.Location = new System.Drawing.Point(233, 31);
             this.cbMarket.Name = "cbMarket";
             this.cbMarket.Size = new System.Drawing.Size(121, 24);
             this.cbMarket.TabIndex = 5;
@@ -131,7 +137,7 @@
             this.cbTif.Items.AddRange(new object[] {
             "DAY",
             "GTC"});
-            this.cbTif.Location = new System.Drawing.Point(359, 75);
+            this.cbTif.Location = new System.Drawing.Point(38, 61);
             this.cbTif.Name = "cbTif";
             this.cbTif.Size = new System.Drawing.Size(121, 24);
             this.cbTif.TabIndex = 7;
@@ -158,7 +164,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(356, 12);
+            this.label4.Location = new System.Drawing.Point(230, 12);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(48, 16);
             this.label4.TabIndex = 11;
@@ -167,7 +173,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(239, 58);
+            this.label7.Location = new System.Drawing.Point(356, 12);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(71, 16);
             this.label7.TabIndex = 14;
@@ -176,7 +182,7 @@
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(356, 56);
+            this.label8.Location = new System.Drawing.Point(6, 64);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(27, 16);
             this.label8.TabIndex = 15;
@@ -185,7 +191,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(133, 103);
+            this.label9.Location = new System.Drawing.Point(6, 92);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(27, 16);
             this.label9.TabIndex = 16;
@@ -194,7 +200,7 @@
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(239, 102);
+            this.label10.Location = new System.Drawing.Point(152, 92);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(30, 16);
             this.label10.TabIndex = 17;
@@ -203,7 +209,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(195, 153);
+            this.label11.Location = new System.Drawing.Point(307, 92);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(32, 16);
             this.label11.TabIndex = 18;
@@ -211,7 +217,7 @@
             // 
             // tbPrimaryEx
             // 
-            this.tbPrimaryEx.Location = new System.Drawing.Point(242, 77);
+            this.tbPrimaryEx.Location = new System.Drawing.Point(359, 31);
             this.tbPrimaryEx.Name = "tbPrimaryEx";
             this.tbPrimaryEx.Size = new System.Drawing.Size(100, 22);
             this.tbPrimaryEx.TabIndex = 20;
@@ -219,7 +225,7 @@
             // 
             // tbBid
             // 
-            this.tbBid.Location = new System.Drawing.Point(136, 122);
+            this.tbBid.Location = new System.Drawing.Point(39, 89);
             this.tbBid.Name = "tbBid";
             this.tbBid.Size = new System.Drawing.Size(100, 22);
             this.tbBid.TabIndex = 21;
@@ -227,7 +233,7 @@
             // 
             // tbAsk
             // 
-            this.tbAsk.Location = new System.Drawing.Point(242, 122);
+            this.tbAsk.Location = new System.Drawing.Point(188, 89);
             this.tbAsk.Name = "tbAsk";
             this.tbAsk.Size = new System.Drawing.Size(100, 22);
             this.tbAsk.TabIndex = 22;
@@ -235,7 +241,7 @@
             // 
             // tbLast
             // 
-            this.tbLast.Location = new System.Drawing.Point(242, 150);
+            this.tbLast.Location = new System.Drawing.Point(345, 89);
             this.tbLast.Name = "tbLast";
             this.tbLast.Size = new System.Drawing.Size(100, 22);
             this.tbLast.TabIndex = 23;
@@ -251,36 +257,36 @@
             this.btnDisconnect.UseVisualStyleBackColor = true;
             this.btnDisconnect.Click += new System.EventHandler(this.btnDisconnect_Click);
             // 
-            // btnSell
+            // btnSell1
             // 
-            this.btnSell.BackColor = System.Drawing.Color.Red;
-            this.btnSell.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSell.ForeColor = System.Drawing.Color.White;
-            this.btnSell.Location = new System.Drawing.Point(9, 110);
-            this.btnSell.Name = "btnSell";
-            this.btnSell.Size = new System.Drawing.Size(97, 37);
-            this.btnSell.TabIndex = 27;
-            this.btnSell.Text = "SELL";
-            this.btnSell.UseVisualStyleBackColor = false;
-            this.btnSell.Click += new System.EventHandler(this.btnSell_Click);
+            this.btnSell1.BackColor = System.Drawing.Color.Red;
+            this.btnSell1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSell1.ForeColor = System.Drawing.Color.White;
+            this.btnSell1.Location = new System.Drawing.Point(9, 170);
+            this.btnSell1.Name = "btnSell1";
+            this.btnSell1.Size = new System.Drawing.Size(79, 37);
+            this.btnSell1.TabIndex = 27;
+            this.btnSell1.Text = "S 1";
+            this.btnSell1.UseVisualStyleBackColor = false;
+            this.btnSell1.Click += new System.EventHandler(this.btnSell1_Click);
             // 
-            // btnBuy
+            // btnBuy1
             // 
-            this.btnBuy.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
-            this.btnBuy.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnBuy.ForeColor = System.Drawing.Color.White;
-            this.btnBuy.Location = new System.Drawing.Point(359, 107);
-            this.btnBuy.Name = "btnBuy";
-            this.btnBuy.Size = new System.Drawing.Size(97, 37);
-            this.btnBuy.TabIndex = 28;
-            this.btnBuy.Text = "BUY";
-            this.btnBuy.UseVisualStyleBackColor = false;
-            this.btnBuy.Click += new System.EventHandler(this.btnBuy_Click);
+            this.btnBuy1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
+            this.btnBuy1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnBuy1.ForeColor = System.Drawing.Color.White;
+            this.btnBuy1.Location = new System.Drawing.Point(9, 127);
+            this.btnBuy1.Name = "btnBuy1";
+            this.btnBuy1.Size = new System.Drawing.Size(79, 37);
+            this.btnBuy1.TabIndex = 28;
+            this.btnBuy1.Text = "B 1";
+            this.btnBuy1.UseVisualStyleBackColor = false;
+            this.btnBuy1.Click += new System.EventHandler(this.btnBuy1_Click);
             // 
             // chkOutside
             // 
             this.chkOutside.AutoSize = true;
-            this.chkOutside.Location = new System.Drawing.Point(9, 153);
+            this.chkOutside.Location = new System.Drawing.Point(165, 63);
             this.chkOutside.Name = "chkOutside";
             this.chkOutside.Size = new System.Drawing.Size(104, 20);
             this.chkOutside.TabIndex = 29;
@@ -290,7 +296,7 @@
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(294, 219);
+            this.label13.Location = new System.Drawing.Point(298, 262);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(80, 16);
             this.label13.TabIndex = 31;
@@ -299,7 +305,7 @@
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(307, 191);
+            this.label14.Location = new System.Drawing.Point(311, 234);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(67, 16);
             this.label14.TabIndex = 32;
@@ -307,7 +313,7 @@
             // 
             // tbPtofitTarget
             // 
-            this.tbPtofitTarget.Location = new System.Drawing.Point(380, 216);
+            this.tbPtofitTarget.Location = new System.Drawing.Point(384, 259);
             this.tbPtofitTarget.Name = "tbPtofitTarget";
             this.tbPtofitTarget.Size = new System.Drawing.Size(100, 22);
             this.tbPtofitTarget.TabIndex = 33;
@@ -315,7 +321,7 @@
             // 
             // tbStopLoss
             // 
-            this.tbStopLoss.Location = new System.Drawing.Point(380, 188);
+            this.tbStopLoss.Location = new System.Drawing.Point(384, 231);
             this.tbStopLoss.Name = "tbStopLoss";
             this.tbStopLoss.Size = new System.Drawing.Size(100, 22);
             this.tbStopLoss.TabIndex = 34;
@@ -328,11 +334,17 @@
             this.tabControl1.Location = new System.Drawing.Point(26, 52);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(498, 296);
+            this.tabControl1.Size = new System.Drawing.Size(498, 324);
             this.tabControl1.TabIndex = 35;
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.btnBuy3_4);
+            this.tabPage1.Controls.Add(this.btnBuy1_4);
+            this.tabPage1.Controls.Add(this.btnBuy1_2);
+            this.tabPage1.Controls.Add(this.btnSell3_4);
+            this.tabPage1.Controls.Add(this.btnSell1_2);
+            this.tabPage1.Controls.Add(this.btnSell1_4);
             this.tabPage1.Controls.Add(this.btnCancelAll);
             this.tabPage1.Controls.Add(this.btnCancelLast);
             this.tabPage1.Controls.Add(this.label1);
@@ -345,9 +357,9 @@
             this.tabPage1.Controls.Add(this.cbMarket);
             this.tabPage1.Controls.Add(this.chkOutside);
             this.tabPage1.Controls.Add(this.cbTif);
-            this.tabPage1.Controls.Add(this.btnBuy);
+            this.tabPage1.Controls.Add(this.btnBuy1);
             this.tabPage1.Controls.Add(this.label2);
-            this.tabPage1.Controls.Add(this.btnSell);
+            this.tabPage1.Controls.Add(this.btnSell1);
             this.tabPage1.Controls.Add(this.label4);
             this.tabPage1.Controls.Add(this.tbLast);
             this.tabPage1.Controls.Add(this.tbAsk);
@@ -361,14 +373,14 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 25);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(490, 267);
+            this.tabPage1.Size = new System.Drawing.Size(490, 295);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // btnCancelAll
             // 
-            this.btnCancelAll.Location = new System.Drawing.Point(27, 212);
+            this.btnCancelAll.Location = new System.Drawing.Point(113, 219);
             this.btnCancelAll.Name = "btnCancelAll";
             this.btnCancelAll.Size = new System.Drawing.Size(86, 23);
             this.btnCancelAll.TabIndex = 36;
@@ -378,7 +390,7 @@
             // 
             // btnCancelLast
             // 
-            this.btnCancelLast.Location = new System.Drawing.Point(27, 188);
+            this.btnCancelLast.Location = new System.Drawing.Point(15, 219);
             this.btnCancelLast.Name = "btnCancelLast";
             this.btnCancelLast.Size = new System.Drawing.Size(86, 23);
             this.btnCancelLast.TabIndex = 35;
@@ -396,11 +408,89 @@
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // btnSell1_4
+            // 
+            this.btnSell1_4.BackColor = System.Drawing.Color.Red;
+            this.btnSell1_4.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSell1_4.ForeColor = System.Drawing.Color.White;
+            this.btnSell1_4.Location = new System.Drawing.Point(264, 170);
+            this.btnSell1_4.Name = "btnSell1_4";
+            this.btnSell1_4.Size = new System.Drawing.Size(79, 37);
+            this.btnSell1_4.TabIndex = 37;
+            this.btnSell1_4.Text = "S 1/4";
+            this.btnSell1_4.UseVisualStyleBackColor = false;
+            this.btnSell1_4.Click += new System.EventHandler(this.btnSell1_4_Click);
+            // 
+            // btnSell1_2
+            // 
+            this.btnSell1_2.BackColor = System.Drawing.Color.Red;
+            this.btnSell1_2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSell1_2.ForeColor = System.Drawing.Color.White;
+            this.btnSell1_2.Location = new System.Drawing.Point(179, 170);
+            this.btnSell1_2.Name = "btnSell1_2";
+            this.btnSell1_2.Size = new System.Drawing.Size(79, 37);
+            this.btnSell1_2.TabIndex = 38;
+            this.btnSell1_2.Text = "S 1/2";
+            this.btnSell1_2.UseVisualStyleBackColor = false;
+            this.btnSell1_2.Click += new System.EventHandler(this.btnSell1_2_Click);
+            // 
+            // btnSell3_4
+            // 
+            this.btnSell3_4.BackColor = System.Drawing.Color.Red;
+            this.btnSell3_4.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSell3_4.ForeColor = System.Drawing.Color.White;
+            this.btnSell3_4.Location = new System.Drawing.Point(94, 170);
+            this.btnSell3_4.Name = "btnSell3_4";
+            this.btnSell3_4.Size = new System.Drawing.Size(79, 37);
+            this.btnSell3_4.TabIndex = 39;
+            this.btnSell3_4.Text = "S 3/4";
+            this.btnSell3_4.UseVisualStyleBackColor = false;
+            this.btnSell3_4.Click += new System.EventHandler(this.btnSell3_4_Click);
+            // 
+            // btnBuy1_2
+            // 
+            this.btnBuy1_2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
+            this.btnBuy1_2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnBuy1_2.ForeColor = System.Drawing.Color.White;
+            this.btnBuy1_2.Location = new System.Drawing.Point(179, 127);
+            this.btnBuy1_2.Name = "btnBuy1_2";
+            this.btnBuy1_2.Size = new System.Drawing.Size(79, 37);
+            this.btnBuy1_2.TabIndex = 40;
+            this.btnBuy1_2.Text = "B 1/2";
+            this.btnBuy1_2.UseVisualStyleBackColor = false;
+            this.btnBuy1_2.Click += new System.EventHandler(this.btnBuy1_2_Click);
+            // 
+            // btnBuy1_4
+            // 
+            this.btnBuy1_4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
+            this.btnBuy1_4.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnBuy1_4.ForeColor = System.Drawing.Color.White;
+            this.btnBuy1_4.Location = new System.Drawing.Point(264, 127);
+            this.btnBuy1_4.Name = "btnBuy1_4";
+            this.btnBuy1_4.Size = new System.Drawing.Size(79, 37);
+            this.btnBuy1_4.TabIndex = 41;
+            this.btnBuy1_4.Text = "B 1/4";
+            this.btnBuy1_4.UseVisualStyleBackColor = false;
+            this.btnBuy1_4.Click += new System.EventHandler(this.btnBuy1_4_Click);
+            // 
+            // btnBuy3_4
+            // 
+            this.btnBuy3_4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
+            this.btnBuy3_4.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnBuy3_4.ForeColor = System.Drawing.Color.White;
+            this.btnBuy3_4.Location = new System.Drawing.Point(94, 127);
+            this.btnBuy3_4.Name = "btnBuy3_4";
+            this.btnBuy3_4.Size = new System.Drawing.Size(79, 37);
+            this.btnBuy3_4.TabIndex = 42;
+            this.btnBuy3_4.Text = "B 3/4";
+            this.btnBuy3_4.UseVisualStyleBackColor = false;
+            this.btnBuy3_4.Click += new System.EventHandler(this.btnBuy3_4_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(546, 360);
+            this.ClientSize = new System.Drawing.Size(546, 388);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.btnDisconnect);
             this.Controls.Add(this.btnConnect);
@@ -435,8 +525,8 @@
         private System.Windows.Forms.TextBox tbAsk;
         private System.Windows.Forms.TextBox tbLast;
         private System.Windows.Forms.Button btnDisconnect;
-        private System.Windows.Forms.Button btnSell;
-        private System.Windows.Forms.Button btnBuy;
+        private System.Windows.Forms.Button btnSell1;
+        private System.Windows.Forms.Button btnBuy1;
         private System.Windows.Forms.CheckBox chkOutside;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label label14;
@@ -447,6 +537,12 @@
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.Button btnCancelAll;
         private System.Windows.Forms.Button btnCancelLast;
+        private System.Windows.Forms.Button btnBuy3_4;
+        private System.Windows.Forms.Button btnBuy1_4;
+        private System.Windows.Forms.Button btnBuy1_2;
+        private System.Windows.Forms.Button btnSell3_4;
+        private System.Windows.Forms.Button btnSell1_2;
+        private System.Windows.Forms.Button btnSell1_4;
     }
 }
 
