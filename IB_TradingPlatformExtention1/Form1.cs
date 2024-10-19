@@ -293,9 +293,10 @@ namespace IB_TradingPlatformExtention1
             order.OrderType = (modifierKeys == Keys.Control) ? "MKT" : "LMT";
             // number of shares from Quantity
             order.TotalQuantity = Math.Floor(posSize * Convert.ToDecimal(numQuantity.Value));
+            double lmtPriceOffset = (double)((side == "buy") ? this.numTradeOffset.Value : - this.numTradeOffset.Value);
             // Value from limit price
-            order.LmtPrice = (side == "buy" && modifierKeys != Keys.Alt) || (side == "sell" && modifierKeys == Keys.Alt)? 
-                Convert.ToDouble(tbAsk.Text) : Convert.ToDouble(tbBid.Text);
+            order.LmtPrice = ((side == "buy" && modifierKeys != Keys.Alt) || (side == "sell" && modifierKeys == Keys.Alt)? 
+                Convert.ToDouble(tbAsk.Text) : Convert.ToDouble(tbBid.Text)) + lmtPriceOffset;
             
             //order.OutsideRth = cbOutsideRTH.Checked;
             order.OutsideRth = chkOutside.Checked;

@@ -64,9 +64,12 @@
             this.btnCancelAll = new System.Windows.Forms.Button();
             this.btnCancelLast = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.numTradeOffset = new System.Windows.Forms.NumericUpDown();
+            this.label3 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).BeginInit();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -339,6 +342,8 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.label3);
+            this.tabPage1.Controls.Add(this.numTradeOffset);
             this.tabPage1.Controls.Add(this.btnBuy1_8);
             this.tabPage1.Controls.Add(this.btnBuy1_4);
             this.tabPage1.Controls.Add(this.btnBuy1_2);
@@ -486,6 +491,33 @@
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // numTradeOffset
+            // 
+            this.numTradeOffset.DecimalPlaces = 2;
+            this.numTradeOffset.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.numTradeOffset.Location = new System.Drawing.Point(373, 170);
+            this.numTradeOffset.Name = "numTradeOffset";
+            this.numTradeOffset.Size = new System.Drawing.Size(86, 22);
+            this.numTradeOffset.TabIndex = 43;
+            this.numTradeOffset.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(370, 148);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(112, 16);
+            this.label3.TabIndex = 44;
+            this.label3.Text = "Trade price offset";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -501,6 +533,7 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -543,6 +576,8 @@
         private System.Windows.Forms.Button btnSell1_8;
         private System.Windows.Forms.Button btnSell1_2;
         private System.Windows.Forms.Button btnSell1_4;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.NumericUpDown numTradeOffset;
     }
 }
 
