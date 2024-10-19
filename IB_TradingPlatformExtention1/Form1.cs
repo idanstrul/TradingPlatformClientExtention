@@ -46,7 +46,8 @@ namespace IB_TradingPlatformExtention1
 
             var reader = new EReader(ibClient.ClientSocket, ibClient.Signal);
             reader.Start();
-            new Thread(() => {
+            new Thread(() =>
+            {
                 while (ibClient.ClientSocket.IsConnected())
                 {
                     ibClient.Signal.waitForSignal();
@@ -275,15 +276,8 @@ namespace IB_TradingPlatformExtention1
             // Set the currency to USD
             contract.Currency = "USD";
 
-            //if (Form.ModifierKeys == Keys.Control)
-            //{
-            //    send_bracket_order(side);
-            //}
-            //else
-            //{
-            //    send_order(side);
-            //}
 
+            // Create a new order
             Order order = new Order();
             // gets the next order id from the text box
             order.OrderId = order_id;
@@ -293,16 +287,50 @@ namespace IB_TradingPlatformExtention1
             order.OrderType = (modifierKeys == Keys.Control) ? "MKT" : "LMT";
             // number of shares from Quantity
             order.TotalQuantity = Math.Floor(posSize * Convert.ToDecimal(numQuantity.Value));
-            double lmtPriceOffset = (double)((side == "buy") ? this.numTradeOffset.Value : - this.numTradeOffset.Value);
+            double lmtPriceOffset = (double)((side == "buy") ? this.numTradeOffset.Value : -this.numTradeOffset.Value);
             // Value from limit price
-            order.LmtPrice = ((side == "buy" && modifierKeys != Keys.Alt) || (side == "sell" && modifierKeys == Keys.Alt)? 
+            order.LmtPrice = ((side == "buy" && modifierKeys != Keys.Alt) || (side == "sell" && modifierKeys == Keys.Alt) ?
                 Convert.ToDouble(tbAsk.Text) : Convert.ToDouble(tbBid.Text)) + lmtPriceOffset;
-            
             //order.OutsideRth = cbOutsideRTH.Checked;
             order.OutsideRth = chkOutside.Checked;
 
+
+            if (this.cbTrailStop.Checked || this.cbStopLoss.Checked)
+            {
+                order.Transmit = false;
+            }
+
             // Place the order
-            ibClient.ClientSocket.placeOrder(order_id, contract, order);
+            ibClient.ClientSocket.placeOrder(order.OrderId, contract, order);
+
+
+            if (this.cbTrailStop.Checked || this.cbStopLoss.Checked)
+            {
+                Order stopLoss = new Order();
+                stopLoss.ParentId = order_id;
+                stopLoss.OrderId = ++order_id;
+                stopLoss.Action = side == "buy" ? "SELL" : "BUY";
+                stopLoss.TriggerMethod = 7;
+                stopLoss.OutsideRth = chkOutside.Checked;
+                if (this.cbTrailStop.Checked)
+                {
+                    stopLoss.OrderType = (chkOutside.Checked) ? "TRAIL LIMIT" : "TRAIL";
+                    stopLoss.TrailStopPrice = 0.00;
+                    stopLoss.AuxPrice = (double)numTrailStop.Value;
+                    if (stopLoss.OrderType == "TRAIL LIMIT") stopLoss.LmtPriceOffset = - 4 * (double)numTradeOffset.Value;
+                }
+                else if (this.cbStopLoss.Checked)
+                {
+                    stopLoss.OrderType = (chkOutside.Checked)? "STP LMT" : "STP"; //or "STP LMT"
+                    stopLoss.AuxPrice = (double)numStopLoss.Value;
+                    if (stopLoss.OrderType == "STP LMT") stopLoss.LmtPrice = (double)numStopLoss.Value - 4 * (double)numTradeOffset.Value;
+                }               
+                stopLoss.TotalQuantity = Math.Floor(posSize * Convert.ToDecimal(numQuantity.Value));
+                //In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true
+                //to activate all its predecessors
+                stopLoss.Transmit = true;
+                ibClient.ClientSocket.placeOrder(stopLoss.OrderId, contract, stopLoss);
+            }
 
             // increase the order id value
             order_id++;
@@ -330,8 +358,8 @@ namespace IB_TradingPlatformExtention1
             string action = side; // side (BUY or SELL) passed on from the button click event
             decimal quantity = Convert.ToDecimal(numQuantity.Value); // number of shares
             double lmtPrice = Convert.ToDouble(tbAsk.Text);  // limit price from numeric up down box on the form
-            double takeProfit = Convert.ToDouble(tbPtofitTarget.Text);  // take profit amount from text box on the form
-            double stopLoss = Convert.ToDouble(tbStopLoss.Text);  // stop loss from the text box on the form
+            double takeProfit = 0; //Convert.ToDouble(tbPtofitTarget.Text);  // take profit amount from text box on the form
+            double stopLoss = 0; // Convert.ToDouble(tbStopLoss.Text);  // stop loss from the text box on the form
 
             // side is either buy or sell
             // calls a BracketOrder function and stores the results in a list variable called bracket
@@ -399,6 +427,22 @@ namespace IB_TradingPlatformExtention1
         {
             // cancels all the orders
             ibClient.ClientSocket.reqGlobalCancel(new OrderCancel());
+        }
+
+        private void cbTrailStop_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbTrailStop.Checked)
+            {
+                this.cbStopLoss.Checked = false;
+            }
+        }
+
+        private void cbStopLoss_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbStopLoss.Checked)
+            {
+                this.cbTrailStop.Checked = false;
+            }
         }
     }
 }
