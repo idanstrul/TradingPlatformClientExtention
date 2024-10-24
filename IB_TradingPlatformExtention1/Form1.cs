@@ -14,6 +14,9 @@ namespace IB_TradingPlatformExtention1
 {
     public partial class Form1 : Form
     {
+
+        private AccountStateManager stateManager;
+
         // This delegate enables asynchronous calls for setting
         // the text property on a ListBox control.
         delegate void SetTextCallback(string text);
@@ -21,17 +24,16 @@ namespace IB_TradingPlatformExtention1
 
         int order_id = 0;
 
-        public List<Position> OpenPositions { get; private set; } = new List<Position>();
-        public List<Order> OpenOrders { get; private set; } = new List<Order>();
-
         // Create the ibClient object to represent the connection
         EWrapperImpl ibClient;
         public Form1()
         {
             InitializeComponent();
 
+            stateManager = new AccountStateManager();
+
             // instantiate the ibClient
-            ibClient = new EWrapperImpl();
+            ibClient = new EWrapperImpl(stateManager);
         }
 
         private void Form1_Load(object sender, EventArgs e)

@@ -15,6 +15,7 @@ namespace IB_TradingPlatformExtention1
     {
     //! [ewrapperimpl]
         private int nextOrderId;
+        private AccountStateManager stateManager;
 
         public Form1 myform;
 
@@ -24,10 +25,11 @@ namespace IB_TradingPlatformExtention1
         //! [socket_declare]
 
         //! [socket_init]
-        public EWrapperImpl()
+        public EWrapperImpl(AccountStateManager stateManager)
         {
             Signal = new EReaderMonitorSignal();
             clientSocket = new EClientSocket(this, Signal);
+            this.stateManager = stateManager;
         }
         //! [socket_init]
 
@@ -218,6 +220,7 @@ namespace IB_TradingPlatformExtention1
             Console.WriteLine("OrderStatus. Id: " + orderId + ", Status: " + status + ", Filled: " + Util.DecimalMaxString(filled) + ", Remaining: " + Util.DecimalMaxString(remaining)
                 + ", AvgFillPrice: " + Util.DoubleMaxString(avgFillPrice) + ", PermId: " + Util.LongMaxString(permId) + ", ParentId: " + Util.IntMaxString(parentId) + 
                 ", LastFillPrice: " + Util.DoubleMaxString(lastFillPrice) + ", ClientId: " + Util.IntMaxString(clientId) + ", WhyHeld: " + whyHeld + ", MktCapPrice: " + Util.DoubleMaxString(mktCapPrice));
+            stateManager.UpdateOrder(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice);
         }
         //! [orderstatus]
 
@@ -234,6 +237,7 @@ namespace IB_TradingPlatformExtention1
                 ", FAGroup: " + order.FaGroup + ", FAMethod: " + order.FaMethod + ", CustAcct: " + order.CustomerAccount + ", ProfCust: " + order.ProfessionalCustomer +
                 ", BondAccruedInterest: " + order.BondAccruedInterest + ", IncludeOvernight: " + order.IncludeOvernight + ", ExtOperator: " + order.ExtOperator + 
                 ", ManualOrderIndicator: " + Util.IntMaxString(order.ManualOrderIndicator));
+            stateManager.UpdateOrder(order, contract);
         }
         //! [openorder]
 
@@ -472,6 +476,7 @@ namespace IB_TradingPlatformExtention1
         {
             Console.WriteLine("Position. " + account + " - Symbol: " + contract.Symbol + ", SecType: " + contract.SecType + ", Currency: " + contract.Currency + 
                 ", Position: " + Util.DecimalMaxString(pos) + ", Avg cost: " + Util.DoubleMaxString(avgCost));
+            stateManager.UpdatePosition(account, contract, pos, avgCost);
         }
         //! [position]
 
