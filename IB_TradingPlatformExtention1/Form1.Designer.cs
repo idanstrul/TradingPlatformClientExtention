@@ -51,6 +51,12 @@
             this.chkOutside = new System.Windows.Forms.CheckBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.numTrailStop = new System.Windows.Forms.NumericUpDown();
+            this.numStopLoss = new System.Windows.Forms.NumericUpDown();
+            this.cbTrailStop = new System.Windows.Forms.CheckBox();
+            this.cbStopLoss = new System.Windows.Forms.CheckBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.numTradeOffset = new System.Windows.Forms.NumericUpDown();
             this.btnBuy1_8 = new System.Windows.Forms.Button();
             this.btnBuy1_4 = new System.Windows.Forms.Button();
             this.btnBuy1_2 = new System.Windows.Forms.Button();
@@ -60,18 +66,13 @@
             this.btnCancelAll = new System.Windows.Forms.Button();
             this.btnCancelLast = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.numTradeOffset = new System.Windows.Forms.NumericUpDown();
-            this.label3 = new System.Windows.Forms.Label();
-            this.cbStopLoss = new System.Windows.Forms.CheckBox();
-            this.cbTrailStop = new System.Windows.Forms.CheckBox();
-            this.numStopLoss = new System.Windows.Forms.NumericUpDown();
-            this.numTrailStop = new System.Windows.Forms.NumericUpDown();
+            this.btnClosePos = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numStopLoss)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTrailStop)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numStopLoss)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).BeginInit();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -310,6 +311,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.btnClosePos);
             this.tabPage1.Controls.Add(this.numTrailStop);
             this.tabPage1.Controls.Add(this.numStopLoss);
             this.tabPage1.Controls.Add(this.cbTrailStop);
@@ -350,6 +352,86 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // numTrailStop
+            // 
+            this.numTrailStop.DecimalPlaces = 2;
+            this.numTrailStop.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
+            this.numTrailStop.Location = new System.Drawing.Point(384, 222);
+            this.numTrailStop.Name = "numTrailStop";
+            this.numTrailStop.Size = new System.Drawing.Size(86, 22);
+            this.numTrailStop.TabIndex = 49;
+            this.numTrailStop.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            65536});
+            // 
+            // numStopLoss
+            // 
+            this.numStopLoss.DecimalPlaces = 2;
+            this.numStopLoss.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
+            this.numStopLoss.Location = new System.Drawing.Point(384, 250);
+            this.numStopLoss.Name = "numStopLoss";
+            this.numStopLoss.Size = new System.Drawing.Size(86, 22);
+            this.numStopLoss.TabIndex = 48;
+            // 
+            // cbTrailStop
+            // 
+            this.cbTrailStop.AutoSize = true;
+            this.cbTrailStop.Location = new System.Drawing.Point(293, 224);
+            this.cbTrailStop.Name = "cbTrailStop";
+            this.cbTrailStop.Size = new System.Drawing.Size(85, 20);
+            this.cbTrailStop.TabIndex = 47;
+            this.cbTrailStop.Text = "Trail stop";
+            this.cbTrailStop.UseVisualStyleBackColor = true;
+            this.cbTrailStop.CheckedChanged += new System.EventHandler(this.cbTrailStop_CheckedChanged);
+            // 
+            // cbStopLoss
+            // 
+            this.cbStopLoss.AutoSize = true;
+            this.cbStopLoss.Location = new System.Drawing.Point(293, 252);
+            this.cbStopLoss.Name = "cbStopLoss";
+            this.cbStopLoss.Size = new System.Drawing.Size(85, 20);
+            this.cbStopLoss.TabIndex = 45;
+            this.cbStopLoss.Text = "Stop loss";
+            this.cbStopLoss.UseVisualStyleBackColor = true;
+            this.cbStopLoss.CheckedChanged += new System.EventHandler(this.cbStopLoss_CheckedChanged);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(370, 148);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(112, 16);
+            this.label3.TabIndex = 44;
+            this.label3.Text = "Trade price offset";
+            // 
+            // numTradeOffset
+            // 
+            this.numTradeOffset.DecimalPlaces = 2;
+            this.numTradeOffset.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.numTradeOffset.Location = new System.Drawing.Point(373, 170);
+            this.numTradeOffset.Name = "numTradeOffset";
+            this.numTradeOffset.Size = new System.Drawing.Size(86, 22);
+            this.numTradeOffset.TabIndex = 43;
+            this.numTradeOffset.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
             // 
             // btnBuy1_8
             // 
@@ -459,85 +541,15 @@
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // numTradeOffset
+            // btnClosePos
             // 
-            this.numTradeOffset.DecimalPlaces = 2;
-            this.numTradeOffset.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
-            this.numTradeOffset.Location = new System.Drawing.Point(373, 170);
-            this.numTradeOffset.Name = "numTradeOffset";
-            this.numTradeOffset.Size = new System.Drawing.Size(86, 22);
-            this.numTradeOffset.TabIndex = 43;
-            this.numTradeOffset.Value = new decimal(new int[] {
-            5,
-            0,
-            0,
-            131072});
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(370, 148);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(112, 16);
-            this.label3.TabIndex = 44;
-            this.label3.Text = "Trade price offset";
-            // 
-            // cbStopLoss
-            // 
-            this.cbStopLoss.AutoSize = true;
-            this.cbStopLoss.Location = new System.Drawing.Point(293, 252);
-            this.cbStopLoss.Name = "cbStopLoss";
-            this.cbStopLoss.Size = new System.Drawing.Size(85, 20);
-            this.cbStopLoss.TabIndex = 45;
-            this.cbStopLoss.Text = "Stop loss";
-            this.cbStopLoss.UseVisualStyleBackColor = true;
-            this.cbStopLoss.CheckedChanged += new System.EventHandler(this.cbStopLoss_CheckedChanged);
-            // 
-            // cbTrailStop
-            // 
-            this.cbTrailStop.AutoSize = true;
-            this.cbTrailStop.Location = new System.Drawing.Point(293, 224);
-            this.cbTrailStop.Name = "cbTrailStop";
-            this.cbTrailStop.Size = new System.Drawing.Size(85, 20);
-            this.cbTrailStop.TabIndex = 47;
-            this.cbTrailStop.Text = "Trail stop";
-            this.cbTrailStop.UseVisualStyleBackColor = true;
-            this.cbTrailStop.CheckedChanged += new System.EventHandler(this.cbTrailStop_CheckedChanged);
-            // 
-            // numStopLoss
-            // 
-            this.numStopLoss.DecimalPlaces = 2;
-            this.numStopLoss.Increment = new decimal(new int[] {
-            5,
-            0,
-            0,
-            131072});
-            this.numStopLoss.Location = new System.Drawing.Point(384, 250);
-            this.numStopLoss.Name = "numStopLoss";
-            this.numStopLoss.Size = new System.Drawing.Size(86, 22);
-            this.numStopLoss.TabIndex = 48;
-            // 
-            // numTrailStop
-            // 
-            this.numTrailStop.DecimalPlaces = 2;
-            this.numTrailStop.Increment = new decimal(new int[] {
-            5,
-            0,
-            0,
-            131072});
-            this.numTrailStop.Location = new System.Drawing.Point(384, 222);
-            this.numTrailStop.Name = "numTrailStop";
-            this.numTrailStop.Size = new System.Drawing.Size(86, 22);
-            this.numTrailStop.TabIndex = 49;
-            this.numTrailStop.Value = new decimal(new int[] {
-            2,
-            0,
-            0,
-            65536});
+            this.btnClosePos.Location = new System.Drawing.Point(15, 252);
+            this.btnClosePos.Name = "btnClosePos";
+            this.btnClosePos.Size = new System.Drawing.Size(101, 23);
+            this.btnClosePos.TabIndex = 50;
+            this.btnClosePos.Text = "Close position";
+            this.btnClosePos.UseVisualStyleBackColor = true;
+            this.btnClosePos.Click += new System.EventHandler(this.btnClosePos_Click);
             // 
             // Form1
             // 
@@ -554,9 +566,9 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numStopLoss)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTrailStop)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numStopLoss)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -601,6 +613,7 @@
         private System.Windows.Forms.CheckBox cbStopLoss;
         private System.Windows.Forms.NumericUpDown numTrailStop;
         private System.Windows.Forms.NumericUpDown numStopLoss;
+        private System.Windows.Forms.Button btnClosePos;
     }
 }
 
