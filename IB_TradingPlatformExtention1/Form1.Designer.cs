@@ -15,6 +15,12 @@
         {
             if (disposing && (components != null))
             {
+                if (client != null)
+                {
+                    client.OnDisconnected -= Client_OnDisconnected;
+                    client.OnConnected -= Client_OnConnected;
+                    client.OnTickPriceUpdated -= Client_OnTickPriceUpdated;
+                }
                 components.Dispose();
             }
             base.Dispose(disposing);
@@ -51,6 +57,7 @@
             this.chkOutside = new System.Windows.Forms.CheckBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.btnClosePos = new System.Windows.Forms.Button();
             this.numTrailStop = new System.Windows.Forms.NumericUpDown();
             this.numStopLoss = new System.Windows.Forms.NumericUpDown();
             this.cbTrailStop = new System.Windows.Forms.CheckBox();
@@ -66,7 +73,6 @@
             this.btnCancelAll = new System.Windows.Forms.Button();
             this.btnCancelLast = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.btnClosePos = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -88,15 +94,10 @@
             // cbSymbol
             // 
             this.cbSymbol.FormattingEnabled = true;
-            this.cbSymbol.Items.AddRange(new object[] {
-            "MSFT ",
-            "TSLA ",
-            "IBM"});
             this.cbSymbol.Location = new System.Drawing.Point(9, 31);
             this.cbSymbol.Name = "cbSymbol";
             this.cbSymbol.Size = new System.Drawing.Size(92, 24);
             this.cbSymbol.TabIndex = 1;
-            this.cbSymbol.Text = "MSFT ";
             this.cbSymbol.SelectedIndexChanged += new System.EventHandler(this.cbSymbol_SelectedIndexChanged);
             this.cbSymbol.KeyDown += new System.Windows.Forms.KeyEventHandler(this.cbSymbol_KeyDown);
             this.cbSymbol.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cbSymbol_KeyPress);
@@ -353,6 +354,16 @@
             this.tabPage1.Text = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // btnClosePos
+            // 
+            this.btnClosePos.Location = new System.Drawing.Point(15, 252);
+            this.btnClosePos.Name = "btnClosePos";
+            this.btnClosePos.Size = new System.Drawing.Size(101, 23);
+            this.btnClosePos.TabIndex = 50;
+            this.btnClosePos.Text = "Close position";
+            this.btnClosePos.UseVisualStyleBackColor = true;
+            this.btnClosePos.Click += new System.EventHandler(this.btnClosePos_Click);
+            // 
             // numTrailStop
             // 
             this.numTrailStop.DecimalPlaces = 2;
@@ -540,16 +551,6 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // btnClosePos
-            // 
-            this.btnClosePos.Location = new System.Drawing.Point(15, 252);
-            this.btnClosePos.Name = "btnClosePos";
-            this.btnClosePos.Size = new System.Drawing.Size(101, 23);
-            this.btnClosePos.TabIndex = 50;
-            this.btnClosePos.Text = "Close position";
-            this.btnClosePos.UseVisualStyleBackColor = true;
-            this.btnClosePos.Click += new System.EventHandler(this.btnClosePos_Click);
             // 
             // Form1
             // 
