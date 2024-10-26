@@ -165,7 +165,7 @@ namespace IB_TradingPlatformExtention1
 
         private void btnBuy1_Click(object sender, EventArgs e)
         {
-            string side = "buy";
+            string side = "BUY";
             Keys modifierKeys = Form.ModifierKeys;
             int posSize = 1;
 
@@ -174,7 +174,7 @@ namespace IB_TradingPlatformExtention1
 
         private void btnBuy1_2_Click(object sender, EventArgs e)
         {
-            string side = "buy";
+            string side = "BUY";
             Keys modifierKeys = Form.ModifierKeys;
             decimal posSize = 0.5m;
 
@@ -183,7 +183,7 @@ namespace IB_TradingPlatformExtention1
 
         private void btnBuy1_4_Click(object sender, EventArgs e)
         {
-            string side = "buy";
+            string side = "BUY";
             Keys modifierKeys = Form.ModifierKeys;
             decimal posSize = 0.25m;
 
@@ -192,7 +192,7 @@ namespace IB_TradingPlatformExtention1
 
         private void btnBuy1_8_Click(object sender, EventArgs e)
         {
-            string side = "buy";
+            string side = "BUY";
             Keys modifierKeys = Form.ModifierKeys;
             decimal posSize = 0.125m;
 
@@ -201,7 +201,7 @@ namespace IB_TradingPlatformExtention1
 
         private void btnSell1_Click(object sender, EventArgs e)
         {
-            string side = "sell";
+            string side = "SELL";
             Keys modifierKeys = Form.ModifierKeys;
             int posSize = 1;
 
@@ -210,7 +210,7 @@ namespace IB_TradingPlatformExtention1
 
         private void btnSell1_2_Click(object sender, EventArgs e)
         {
-            string side = "sell";
+            string side = "SELL";
             Keys modifierKeys = Form.ModifierKeys;
             decimal posSize = 0.5m;
 
@@ -219,7 +219,7 @@ namespace IB_TradingPlatformExtention1
 
         private void btnSell1_4_Click(object sender, EventArgs e)
         {
-            string side = "sell";
+            string side = "SELL";
             Keys modifierKeys = Form.ModifierKeys;
             decimal posSize = 0.25m;
 
@@ -228,7 +228,7 @@ namespace IB_TradingPlatformExtention1
 
         private void btnSell1_8_Click(object sender, EventArgs e)
         {
-            string side = "sell";
+            string side = "SELL";
             Keys modifierKeys = Form.ModifierKeys;
             decimal posSize = 0.125m;
 
@@ -247,8 +247,8 @@ namespace IB_TradingPlatformExtention1
                 Currency = "USD"
             };
 
-            double lmtPriceOffset = (double)((side == "buy") ? this.numTradeOffset.Value : -this.numTradeOffset.Value);
-            double lmtPrice = ((side == "buy" && modifierKeys != Keys.Alt) || (side == "sell" && modifierKeys == Keys.Alt) ?
+            double lmtPriceOffset = (double)((side == "BUY") ? this.numTradeOffset.Value : -this.numTradeOffset.Value);
+            double lmtPrice = ((side == "BUY" && modifierKeys != Keys.Alt) || (side == "SELL" && modifierKeys == Keys.Alt) ?
                 Convert.ToDouble(tbAsk.Text) : Convert.ToDouble(tbBid.Text)) + lmtPriceOffset;
 
             int stopType = 0;
@@ -274,12 +274,31 @@ namespace IB_TradingPlatformExtention1
 
         private void btnCancelLast_Click(object sender, EventArgs e)
         {
-            client.CancelPreviousOrder();
+            myContract currContract = new myContract
+            {
+                Symbol = cbSymbol.Text.Trim(),
+                SecType = "STK",
+                Exchange = "SMART",
+                PrimaryExch = "ISLAND",
+                Currency = "USD"
+            };
+            client.CancelPreviousOrderForContract(currContract);
         }
 
         private void btnCancelAll_Click(object sender, EventArgs e)
         {
-            client.CancelAllOrders();
+            Keys modifierKeys = Form.ModifierKeys;
+            myContract currContract = new myContract
+            {
+                Symbol = cbSymbol.Text.Trim(),
+                SecType = "STK",
+                Exchange = "SMART",
+                PrimaryExch = "ISLAND",
+                Currency = "USD"
+            };
+
+            if (modifierKeys == Keys.Control) client.CancelAllOrders();
+            else client.CancelAllOrdersForContract(currContract);
         }
 
         private void cbTrailStop_CheckedChanged(object sender, EventArgs e)
@@ -295,6 +314,7 @@ namespace IB_TradingPlatformExtention1
             if (cbStopLoss.Checked)
             {
                 this.cbTrailStop.Checked = false;
+                numStopLoss.Value = (decimal.Parse(tbAsk.Text) + decimal.Parse(tbBid.Text)) / 2 ;
             }
         }
 

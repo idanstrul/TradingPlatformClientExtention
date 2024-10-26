@@ -391,6 +391,11 @@
             0,
             131072});
             this.numStopLoss.Location = new System.Drawing.Point(384, 250);
+            this.numStopLoss.Maximum = new decimal(new int[] {
+            1000000,
+            0,
+            0,
+            0});
             this.numStopLoss.Name = "numStopLoss";
             this.numStopLoss.Size = new System.Drawing.Size(86, 22);
             this.numStopLoss.TabIndex = 48;

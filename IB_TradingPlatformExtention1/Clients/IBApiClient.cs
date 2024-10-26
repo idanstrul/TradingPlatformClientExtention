@@ -148,7 +148,7 @@ namespace IB_TradingPlatformExtention1
                 Order stopLoss = new Order();
                 stopLoss.ParentId = orderId;
                 stopLoss.OrderId = ++orderId;
-                stopLoss.Action = o.Action == "buy" ? "SELL" : "BUY";
+                stopLoss.Action = o.Action == "BUY" ? "SELL" : "BUY";
                 stopLoss.TriggerMethod = 7;
                 stopLoss.OutsideRth = o.OutsideRth;
                 if (o.StopType == 2)
@@ -175,9 +175,30 @@ namespace IB_TradingPlatformExtention1
             orderId++;
         }
 
-        public void CancelPreviousOrder()
+        public void CancelPreviousOrderForContract(myContract currContract)
         {
-            wrapper.ClientSocket.cancelOrder(orderId, new OrderCancel());
+            OpenOrder prevOrder = OpenOrders
+            .Where(order => order.Contract.Symbol == currContract.Symbol
+                            && order.Contract.SecType == currContract.SecType
+                            && order.Contract.Exchange == currContract.Exchange)
+            .OrderByDescending(order => order.Order.OrderId)
+            .FirstOrDefault();
+
+            if (prevOrder != null) wrapper.ClientSocket.cancelOrder(prevOrder.Order.OrderId, new OrderCancel());
+        }
+
+        public void CancelAllOrdersForContract(myContract currContract)
+        {
+            var ordersToCancel = OpenOrders
+                .Where(order => order.Contract.Symbol == currContract.Symbol &&
+                                order.Contract.SecType == currContract.SecType &&
+                                order.Contract.Exchange == currContract.Exchange)
+                .ToList();
+
+            foreach (var openOrder in ordersToCancel)
+            {
+                wrapper.ClientSocket.cancelOrder(openOrder.Order.OrderId, new OrderCancel());
+            }
         }
 
         public void CancelAllOrders()
@@ -262,6 +283,12 @@ namespace IB_TradingPlatformExtention1
 
         public void UpdateOrder(int orderId, string status, decimal filled, decimal remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, string whyHeld, double mktCapPrice)
         {
+            if (status == "Filled" || status == "Cancelled")
+            {
+                RemoveOrder(orderId);
+                return;
+            }
+
             var existingOrder = OpenOrders.Find(o => o.Order.OrderId == orderId);
             if (existingOrder != null)
             {
