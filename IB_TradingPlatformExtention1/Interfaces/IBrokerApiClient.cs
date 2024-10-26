@@ -22,7 +22,7 @@ namespace IB_TradingPlatformExtention1.Interfaces
         void Disconnect();
 
         // Market data retrieval
-        void GetData(string symbol, string secType, string exchange, string primaryExch, string currency);
+        void GetData(myContract _contract);
 
         // Order management
         void PlaceOrder(myContract c, myOrder o);

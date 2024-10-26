@@ -68,7 +68,7 @@ namespace IB_TradingPlatformExtention1
             OnDisconnected?.Invoke();
         }
 
-        public void GetData(string symbol, string secType, string exchange, string primaryExch, string currency)
+        public void GetData(myContract _contract)
         {
             wrapper.ClientSocket.cancelMktData(1); // cancel market data
 
@@ -78,16 +78,16 @@ namespace IB_TradingPlatformExtention1
             List<TagValue> mktDataOptions = new List<TagValue>();
 
             // Set the underlying stock symbol fromthe cbSymbol combobox            
-            contract.Symbol = symbol;
+            contract.Symbol = _contract.Symbol;
             // Set the Security type to STK for a Stock
-            contract.SecType = secType;
+            contract.SecType = _contract.SecType;
             // Use "SMART" as the general exchange
-            contract.Exchange = exchange;
+            contract.Exchange = _contract.Exchange;
             // Set the primary exchange (sometimes called Listing exchange)
             // Use either NYSE or ISLAND
-            contract.PrimaryExch = primaryExch;
+            contract.PrimaryExch = _contract.PrimaryExch;
             // Set the currency to USD
-            contract.Currency = currency;
+            contract.Currency = _contract.Currency;
 
             // If using delayed market data subscription un-comment 
             // the line below to request delayed data
@@ -155,7 +155,7 @@ namespace IB_TradingPlatformExtention1
                 {
                     stopLoss.OrderType = (o.OutsideRth) ? "TRAIL LIMIT" : "TRAIL";
                     stopLoss.TrailStopPrice = 0.00;
-                    stopLoss.AuxPrice = (double) o.StopPrice;
+                    stopLoss.AuxPrice = (double)o.StopPrice;
                     if (stopLoss.OrderType == "TRAIL LIMIT") stopLoss.LmtPriceOffset = o.StopLimitPriceOffset;
                 }
                 else if (o.StopType == 1)
@@ -222,7 +222,9 @@ namespace IB_TradingPlatformExtention1
 
         public void UpdatePosition(string account, Contract contract, decimal position, double avgCost)
         {
-            var existingPosition = OpenPositions.Find(p => p.Contract.Symbol == contract.Symbol);
+            var existingPosition = OpenPositions.Find(p => p.Contract.Symbol == contract.Symbol
+                                                                    && p.Contract.SecType == contract.SecType
+                                                                    && p.Contract.Exchange == contract.Exchange);
             if (existingPosition != null)
             {
                 existingPosition.PositionAmount = position;

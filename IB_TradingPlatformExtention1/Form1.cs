@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Diagnostics.Contracts;
 using System.Security.Policy;
+using IBApi;
 
 namespace IB_TradingPlatformExtention1
 {
@@ -42,7 +43,15 @@ namespace IB_TradingPlatformExtention1
         private void Client_OnConnected()
         {
             if (cbSymbol.Text.Trim() == "") return;
-            client.GetData(cbSymbol.Text.Trim(), "STK", "SMART", "ISLAND", "USD");
+            myContract contract = new myContract
+            {
+                Symbol = cbSymbol.Text.Trim(),
+                SecType = "STK",
+                Exchange = "SMART",
+                PrimaryExch = "ISLAND",
+                Currency = "USD"
+            };
+            client.GetData(contract);
 
         }
 
@@ -98,7 +107,15 @@ namespace IB_TradingPlatformExtention1
         private void cbSymbol_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (cbSymbol.Text.Trim() == "") return;
-            client.GetData(cbSymbol.Text.Trim(), "STK", "SMART", "ISLAND", "USD");
+            myContract contract = new myContract
+            {
+                Symbol = cbSymbol.Text.Trim(),
+                SecType = "STK",
+                Exchange = "SMART",
+                PrimaryExch = "ISLAND",
+                Currency = "USD"
+            };
+            client.GetData(contract);
         }
 
         private void cbSymbol_KeyPress(object sender, KeyPressEventArgs e)
@@ -129,7 +146,15 @@ namespace IB_TradingPlatformExtention1
                 }
                 cbSymbol.SelectAll();
 
-                client.GetData(name, "STK", "SMART", "ISLAND", "USD");
+                myContract contract = new myContract
+                {
+                    Symbol = name,
+                    SecType = "STK",
+                    Exchange = "SMART",
+                    PrimaryExch = "ISLAND",
+                    Currency = "USD"
+                };
+                client.GetData(contract);
             }
         }
 
@@ -275,7 +300,45 @@ namespace IB_TradingPlatformExtention1
 
         private void btnClosePos_Click(object sender, EventArgs e)
         {
-            
+            myContract currContract = new myContract
+            {
+                Symbol = cbSymbol.Text.Trim(),
+                SecType = "STK",
+                Exchange = "SMART",
+                PrimaryExch = "ISLAND",
+                Currency = "USD"
+            };
+
+            // Find the position for the given contract
+            var positionToClose = client.OpenPositions.FirstOrDefault(p => p.Contract.Symbol == currContract.Symbol
+                                                                    && p.Contract.SecType == currContract.SecType
+                                                                    && p.Contract.Exchange == currContract.Exchange);
+
+            // If a position exists, proceed to close it
+            if (positionToClose != null && positionToClose.PositionAmount != 0)
+            {
+                string side = positionToClose.PositionAmount > 0 ? "SELL" : "BUY";
+
+                double lmtPriceOffset = (double)((side == "BUY") ? 4 * this.numTradeOffset.Value : -4 * this.numTradeOffset.Value);
+                double lmtPrice = (side == "BUY" ? Convert.ToDouble(tbAsk.Text) : Convert.ToDouble(tbBid.Text)) + lmtPriceOffset;
+
+                // Define a new order to close the position by taking the opposite action
+                myOrder closeOrder = new myOrder
+                {
+                    Action = side, 
+                    OrderType = chkOutside.Checked? "LMT" : "MKT",
+                    TotalQuantity = Math.Abs(positionToClose.PositionAmount), 
+                    LmtPrice = lmtPrice,
+                    OutsideRth = chkOutside.Checked, 
+                    StopType = 0
+                };
+
+                client.PlaceOrder(currContract, closeOrder);
+            }
+            else
+            {
+                Console.WriteLine("No open position found for the specified contract.");
+            }
         }
     }
 
