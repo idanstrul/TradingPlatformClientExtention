@@ -18,7 +18,7 @@ namespace IB_TradingPlatformExtention1
         private EWrapperImpl wrapper;
         private EReader reader;
         private Thread apiThread;
-        private int orderId = 0;
+        public int orderId = 0;
 
 
         // Events to notify the form when data changes
@@ -121,7 +121,7 @@ namespace IB_TradingPlatformExtention1
             // Create a new order
             Order order = new Order();
             // gets the next order id from the text box
-            order.OrderId = orderId;
+            order.OrderId = o.OrderId;
             // gets the side of the order (BUY, or SELL)
             order.Action = o.Action;
             // gets order type from combobox market or limit order(MKT, or LMT)
@@ -134,7 +134,7 @@ namespace IB_TradingPlatformExtention1
             order.OutsideRth = o.OutsideRth;
 
 
-            if (o.StopType > 0)
+            if (o.AttachStop)
             {
                 order.Transmit = false;
             }
@@ -142,63 +142,58 @@ namespace IB_TradingPlatformExtention1
             // Place the order
             wrapper.ClientSocket.placeOrder(order.OrderId, contract, order);
 
-
-            if (o.StopType > 0)
-            {
-                Order stopLoss = new Order();
-                stopLoss.ParentId = orderId;
-                stopLoss.OrderId = ++orderId;
-                stopLoss.Action = o.Action == "BUY" ? "SELL" : "BUY";
-                stopLoss.TriggerMethod = 7;
-                stopLoss.OutsideRth = o.OutsideRth;
-                if (o.StopType == 2)
-                {
-                    stopLoss.OrderType = (o.OutsideRth) ? "TRAIL LIMIT" : "TRAIL";
-                    stopLoss.TrailStopPrice = 0.00;
-                    stopLoss.AuxPrice = (double)o.StopPrice;
-                    if (stopLoss.OrderType == "TRAIL LIMIT") stopLoss.LmtPriceOffset = o.StopLimitPriceOffset;
-                }
-                else if (o.StopType == 1)
-                {
-                    stopLoss.OrderType = (o.OutsideRth) ? "STP LMT" : "STP"; //or "STP LMT"
-                    stopLoss.AuxPrice = o.StopPrice;
-                    if (stopLoss.OrderType == "STP LMT") stopLoss.LmtPrice = o.StopPrice + o.StopLimitPriceOffset;
-                }
-                stopLoss.TotalQuantity = o.TotalQuantity;
-                //In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true
-                //to activate all its predecessors
-                stopLoss.Transmit = true;
-                wrapper.ClientSocket.placeOrder(stopLoss.OrderId, contract, stopLoss);
-            }
-
             // increase the order id value
             orderId++;
         }
 
-        public void CancelPreviousOrderForContract(myContract currContract)
+        public void PlaceStopLossOrder(myContract c, StopLossOrder o)
         {
-            OpenOrder prevOrder = OpenOrders
-            .Where(order => order.Contract.Symbol == currContract.Symbol
-                            && order.Contract.SecType == currContract.SecType
-                            && order.Contract.Exchange == currContract.Exchange)
-            .OrderByDescending(order => order.Order.OrderId)
-            .FirstOrDefault();
+            // Create a new contract to specify the security we are searching for
+            Contract contract = new Contract();
 
-            if (prevOrder != null) wrapper.ClientSocket.cancelOrder(prevOrder.Order.OrderId, new OrderCancel());
+            // Set the underlying stock symbol from the cbSymbol combobox
+            contract.Symbol = c.Symbol;
+            // Set the Security type to STK for a Stock
+            contract.SecType = c.SecType;
+            // Use "SMART" as the general exchange
+            contract.Exchange = c.Exchange;
+            // Set the primary exchange (sometimes called Listing exchange)
+            // Use either NYSE or ISLAND
+            contract.PrimaryExch = c.PrimaryExch;
+            // Set the currency to USD
+            contract.Currency = c.Currency;
+
+            Order stopLoss = new Order();
+            if (o.ParentId > 0) stopLoss.ParentId = o.ParentId;
+            stopLoss.OrderId = o.OrderId;
+            stopLoss.Action = o.Action;
+            stopLoss.TriggerMethod = 7;
+            stopLoss.OutsideRth = o.OutsideRth;
+            stopLoss.TotalQuantity = o.TotalQuantity;
+            if (o.StopType == 2)
+            {
+                stopLoss.OrderType = (o.OutsideRth) ? "TRAIL LIMIT" : "TRAIL";
+                stopLoss.TrailStopPrice = 0.00;
+                stopLoss.AuxPrice = (double)o.StopPrice;
+                if (stopLoss.OrderType == "TRAIL LIMIT") stopLoss.LmtPriceOffset = o.StopLimitPriceOffset;
+            }
+            else if (o.StopType == 1)
+            {
+                stopLoss.OrderType = (o.OutsideRth) ? "STP LMT" : "STP"; //or "STP LMT"
+                stopLoss.AuxPrice = o.StopPrice;
+                if (stopLoss.OrderType == "STP LMT") stopLoss.LmtPrice = o.StopPrice + o.StopLimitPriceOffset;
+            }
+            //In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true
+            //to activate all its predecessors
+            stopLoss.Transmit = true;
+            wrapper.ClientSocket.placeOrder(stopLoss.OrderId, contract, stopLoss);
+
+            orderId++;
         }
 
-        public void CancelAllOrdersForContract(myContract currContract)
+        public void CancelOrder(int orderId)
         {
-            var ordersToCancel = OpenOrders
-                .Where(order => order.Contract.Symbol == currContract.Symbol &&
-                                order.Contract.SecType == currContract.SecType &&
-                                order.Contract.Exchange == currContract.Exchange)
-                .ToList();
-
-            foreach (var openOrder in ordersToCancel)
-            {
-                wrapper.ClientSocket.cancelOrder(openOrder.Order.OrderId, new OrderCancel());
-            }
+            wrapper.ClientSocket.cancelOrder(orderId, new OrderCancel());
         }
 
         public void CancelAllOrders()

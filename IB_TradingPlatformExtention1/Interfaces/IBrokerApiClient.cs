@@ -26,7 +26,6 @@ namespace IB_TradingPlatformExtention1.Interfaces
 
         // Order management
         void PlaceOrder(myContract c, myOrder o);
-        void CancelPreviousOrderForContract(myContract currContract);
         void CancelAllOrders();
 
         // Order and position updates

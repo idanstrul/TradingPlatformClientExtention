@@ -73,6 +73,7 @@
             this.btnCancelAll = new System.Windows.Forms.Button();
             this.btnCancelLast = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.btnStopLossAdj = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -312,6 +313,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.btnStopLossAdj);
             this.tabPage1.Controls.Add(this.btnClosePos);
             this.tabPage1.Controls.Add(this.numTrailStop);
             this.tabPage1.Controls.Add(this.numStopLoss);
@@ -372,7 +374,7 @@
             0,
             0,
             131072});
-            this.numTrailStop.Location = new System.Drawing.Point(384, 222);
+            this.numTrailStop.Location = new System.Drawing.Point(296, 220);
             this.numTrailStop.Name = "numTrailStop";
             this.numTrailStop.Size = new System.Drawing.Size(86, 22);
             this.numTrailStop.TabIndex = 49;
@@ -390,7 +392,7 @@
             0,
             0,
             131072});
-            this.numStopLoss.Location = new System.Drawing.Point(384, 250);
+            this.numStopLoss.Location = new System.Drawing.Point(296, 248);
             this.numStopLoss.Maximum = new decimal(new int[] {
             1000000,
             0,
@@ -403,7 +405,7 @@
             // cbTrailStop
             // 
             this.cbTrailStop.AutoSize = true;
-            this.cbTrailStop.Location = new System.Drawing.Point(293, 224);
+            this.cbTrailStop.Location = new System.Drawing.Point(205, 222);
             this.cbTrailStop.Name = "cbTrailStop";
             this.cbTrailStop.Size = new System.Drawing.Size(85, 20);
             this.cbTrailStop.TabIndex = 47;
@@ -414,7 +416,7 @@
             // cbStopLoss
             // 
             this.cbStopLoss.AutoSize = true;
-            this.cbStopLoss.Location = new System.Drawing.Point(293, 252);
+            this.cbStopLoss.Location = new System.Drawing.Point(205, 250);
             this.cbStopLoss.Name = "cbStopLoss";
             this.cbStopLoss.Size = new System.Drawing.Size(85, 20);
             this.cbStopLoss.TabIndex = 45;
@@ -557,6 +559,16 @@
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // btnStopLossAdj
+            // 
+            this.btnStopLossAdj.Location = new System.Drawing.Point(388, 234);
+            this.btnStopLossAdj.Name = "btnStopLossAdj";
+            this.btnStopLossAdj.Size = new System.Drawing.Size(75, 23);
+            this.btnStopLossAdj.TabIndex = 51;
+            this.btnStopLossAdj.Text = "Adjust";
+            this.btnStopLossAdj.UseVisualStyleBackColor = true;
+            this.btnStopLossAdj.Click += new System.EventHandler(this.btnStopLossAdj_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -620,6 +632,7 @@
         private System.Windows.Forms.NumericUpDown numTrailStop;
         private System.Windows.Forms.NumericUpDown numStopLoss;
         private System.Windows.Forms.Button btnClosePos;
+        private System.Windows.Forms.Button btnStopLossAdj;
     }
 }
 

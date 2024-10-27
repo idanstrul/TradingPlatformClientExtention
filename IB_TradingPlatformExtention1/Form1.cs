@@ -74,13 +74,13 @@ namespace IB_TradingPlatformExtention1
 
                 switch (field)
                 {
-                    case "Last": 
-                        this.tbLast.Text = price; 
+                    case "Last":
+                        this.tbLast.Text = price;
                         break;
-                    case "Ask": 
+                    case "Ask":
                         this.tbAsk.Text = price;
                         break;
-                    case "Bid": 
+                    case "Bid":
                         this.tbBid.Text = price;
                         break;
                     default:
@@ -252,23 +252,40 @@ namespace IB_TradingPlatformExtention1
                 Convert.ToDouble(tbAsk.Text) : Convert.ToDouble(tbBid.Text)) + lmtPriceOffset;
 
             int stopType = 0;
-            
+
             if (this.cbStopLoss.Checked) stopType = 1;
             if (this.cbTrailStop.Checked) stopType = 2;
 
             myOrder order = new myOrder
             {
+                AttachStop = stopType > 0,
+                OrderId = client.orderId,
                 Action = side,
                 OrderType = (modifierKeys == Keys.Control) ? "MKT" : "LMT",
                 TotalQuantity = Math.Floor(posSize * Convert.ToDecimal(numQuantity.Value)),
                 LmtPrice = lmtPrice,
                 OutsideRth = chkOutside.Checked,
-                StopType = stopType,
-                StopPrice = (double)numTrailStop.Value,
-                StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
             };
 
             client.PlaceOrder(contract, order);
+
+            if (stopType > 0)
+            {
+                StopLossOrder stopLossOrder = new StopLossOrder
+                {
+                    ParentId = client.orderId - 1,
+                    OrderId = client.orderId,
+                    Action = side == "BUY" ? "SELL" : "BUY",
+                    TotalQuantity = Math.Floor(posSize * Convert.ToDecimal(numQuantity.Value)),
+                    OutsideRth = chkOutside.Checked,
+                    StopType = stopType,
+                    StopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value,
+                    StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
+                };
+
+                client.PlaceStopLossOrder(contract, stopLossOrder);
+
+            }
 
         }
 
@@ -282,7 +299,15 @@ namespace IB_TradingPlatformExtention1
                 PrimaryExch = "ISLAND",
                 Currency = "USD"
             };
-            client.CancelPreviousOrderForContract(currContract);
+
+            OpenOrder prevOrder = client.OpenOrders
+           .Where(order => order.Contract.Symbol == currContract.Symbol
+                           && order.Contract.SecType == currContract.SecType
+                           && order.Contract.Exchange == currContract.Exchange)
+           .OrderByDescending(order => order.Order.OrderId)
+           .FirstOrDefault();
+
+            if (prevOrder != null) client.CancelOrder(prevOrder.Order.OrderId);
         }
 
         private void btnCancelAll_Click(object sender, EventArgs e)
@@ -298,7 +323,18 @@ namespace IB_TradingPlatformExtention1
             };
 
             if (modifierKeys == Keys.Control) client.CancelAllOrders();
-            else client.CancelAllOrdersForContract(currContract);
+            else {
+                var ordersToCancel = client.OpenOrders
+                .Where(order => order.Contract.Symbol == currContract.Symbol &&
+                                order.Contract.SecType == currContract.SecType &&
+                                order.Contract.Exchange == currContract.Exchange)
+                .ToList();
+
+                foreach (var openOrder in ordersToCancel)
+                {
+                    client.CancelOrder(openOrder.Order.OrderId);
+                }
+            }
         }
 
         private void cbTrailStop_CheckedChanged(object sender, EventArgs e)
@@ -314,7 +350,7 @@ namespace IB_TradingPlatformExtention1
             if (cbStopLoss.Checked)
             {
                 this.cbTrailStop.Checked = false;
-                numStopLoss.Value = (decimal.Parse(tbAsk.Text) + decimal.Parse(tbBid.Text)) / 2 ;
+                numStopLoss.Value = (decimal.Parse(tbAsk.Text) + decimal.Parse(tbBid.Text)) / 2;
             }
         }
 
@@ -345,12 +381,11 @@ namespace IB_TradingPlatformExtention1
                 // Define a new order to close the position by taking the opposite action
                 myOrder closeOrder = new myOrder
                 {
-                    Action = side, 
-                    OrderType = chkOutside.Checked? "LMT" : "MKT",
-                    TotalQuantity = Math.Abs(positionToClose.PositionAmount), 
+                    Action = side,
+                    OrderType = chkOutside.Checked ? "LMT" : "MKT",
+                    TotalQuantity = Math.Abs(positionToClose.PositionAmount),
                     LmtPrice = lmtPrice,
-                    OutsideRth = chkOutside.Checked, 
-                    StopType = 0
+                    OutsideRth = chkOutside.Checked,
                 };
 
                 client.PlaceOrder(currContract, closeOrder);
@@ -358,6 +393,80 @@ namespace IB_TradingPlatformExtention1
             else
             {
                 Console.WriteLine("No open position found for the specified contract.");
+            }
+        }
+
+        private void btnStopLossAdj_Click(object sender, EventArgs e)
+        {
+            myContract currContract = new myContract
+            {
+                Symbol = cbSymbol.Text.Trim(),
+                SecType = "STK",
+                Exchange = "SMART",
+                PrimaryExch = "ISLAND",
+                Currency = "USD"
+            };
+
+            var position = client.OpenPositions.FirstOrDefault(p => p.Contract.Symbol == currContract.Symbol
+                                                                    && p.Contract.SecType == currContract.SecType
+                                                                    && p.Contract.Exchange == currContract.Exchange);
+
+            if (position == null || position.PositionAmount == 0) return;
+
+            var stopLossOrder = client.OpenOrders.FirstOrDefault(order =>
+                order.Contract.Symbol == position.Contract.Symbol &&
+                order.Contract.SecType == position.Contract.SecType &&
+                order.Contract.Exchange == position.Contract.Exchange &&
+                (order.Order.OrderType == "STP" ||
+                 order.Order.OrderType == "STP LMT" ||
+                 order.Order.OrderType == "TRAIL" ||
+                 order.Order.OrderType == "TRAIL LIMIT") &&
+                 ((order.Order.Action == "BUY" && position.PositionAmount < 0) ||
+                 (order.Order.Action == "SELL" && position.PositionAmount > 0)));
+
+            int stopType = 0;
+
+            if (this.cbStopLoss.Checked) stopType = 1;
+            if (this.cbTrailStop.Checked) stopType = 2;
+
+            if (stopLossOrder != null)
+            {
+                if (stopType == 0)
+                {
+                    client.CancelOrder(stopLossOrder.Order.OrderId);
+                    return;
+                }
+
+                StopLossOrder _stopLossOrder = new StopLossOrder
+                {
+                    ParentId = stopLossOrder.ParentId,
+                    OrderId = stopLossOrder.Order.OrderId,
+                    Action = stopLossOrder.Order.Action,
+                    TotalQuantity = Math.Abs(position.PositionAmount),
+                    OutsideRth = chkOutside.Checked,
+                    StopType = stopType,
+                    StopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value,
+                    StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
+                };
+
+                client.PlaceStopLossOrder(currContract, _stopLossOrder);
+            }
+            else
+            {
+                if (stopType == 0) return;
+
+                StopLossOrder _stopLossOrder = new StopLossOrder
+                {
+                    OrderId = client.orderId,
+                    Action = position.PositionAmount > 0 ? "SELL" : "BUY",
+                    TotalQuantity = Math.Abs(position.PositionAmount),
+                    OutsideRth = chkOutside.Checked,
+                    StopType = stopType,
+                    StopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value,
+                    StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
+                };
+
+                client.PlaceStopLossOrder(currContract, _stopLossOrder);
             }
         }
     }
@@ -373,10 +482,21 @@ namespace IB_TradingPlatformExtention1
 
     public class myOrder
     {
+        public bool AttachStop { get; set; } = false;
+        public int OrderId { get; set; }
         public string Action { get; set; }
         public string OrderType { get; set; }
         public decimal TotalQuantity { get; set; }
         public double LmtPrice { get; set; }
+        public bool OutsideRth { get; set; }
+    }
+
+    public class StopLossOrder
+    {
+        public int ParentId { get; set; } = 0;
+        public int OrderId { get; set; }
+        public string Action { get; set; }
+        public decimal TotalQuantity { get; set; }
         public bool OutsideRth { get; set; }
         public int StopType { get; set; } // 0 - No stop, 1 - STP, 2 - TRAIL
         public double StopPrice { get; set; }
