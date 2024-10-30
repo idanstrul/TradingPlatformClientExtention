@@ -100,6 +100,29 @@ namespace IB_TradingPlatformExtention1
 
         }
 
+        public Position GetPositionForContract(myContract currContract)
+        {
+            return OpenPositions.FirstOrDefault(p => p.Contract.Symbol == currContract.Symbol
+                                                 && p.Contract.SecType == currContract.SecType
+                                                 //&& p.Contract.Exchange == currContract.Exchange
+                                                 && p.PositionAmount != 0);
+        }
+
+        public OpenOrder GetStopLossOrderForPosition(Position position)
+        {
+            if (position == null) return null;
+            return OpenOrders.FirstOrDefault(order =>
+                order.Contract.Symbol == position.Contract.Symbol &&
+                order.Contract.SecType == position.Contract.SecType &&
+                //order.Contract.Exchange == position.Contract.Exchange &&
+                (order.Order.OrderType == "STP" ||
+                 order.Order.OrderType == "STP LMT" ||
+                 order.Order.OrderType == "TRAIL" ||
+                 order.Order.OrderType == "TRAIL LIMIT") &&
+                 ((order.Order.Action == "BUY" && position.PositionAmount < 0) ||
+                 (order.Order.Action == "SELL" && position.PositionAmount > 0)));
+        }
+
         public void PlaceOrder(myContract c, myOrder o)
         {
             // Create a new contract to specify the security we are searching for
@@ -201,6 +224,20 @@ namespace IB_TradingPlatformExtention1
             wrapper.ClientSocket.reqGlobalCancel(new OrderCancel());
         }
 
+        public void CancelAllOrdersForContract(myContract currContract)
+        {
+            var ordersToCancel = OpenOrders
+                .Where(order => order.Contract.Symbol == currContract.Symbol &&
+                                order.Contract.SecType == currContract.SecType &&
+                                order.Contract.Exchange == currContract.Exchange)
+                .ToList();
+
+            foreach (var openOrder in ordersToCancel)
+            {
+                CancelOrder(openOrder.Order.OrderId);
+            }
+        }
+
         public void OnGetTickPrice(string tickPrice)
         {
             //myform.AddTextBoxItemTickPrice(tickPrice);
@@ -278,7 +315,7 @@ namespace IB_TradingPlatformExtention1
 
         public void UpdateOrder(int orderId, string status, decimal filled, decimal remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, string whyHeld, double mktCapPrice)
         {
-            if (status == "Filled" || status == "Cancelled")
+            if (status == "Filled" || status == "Cancelled" || status == "ApiCancelled" || status == "Inactive")
             {
                 RemoveOrder(orderId);
                 return;
