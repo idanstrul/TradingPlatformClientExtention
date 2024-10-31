@@ -297,18 +297,20 @@ namespace IB_TradingPlatformExtention1
                 bool isIncreasePos = (pos.PositionAmount > 0 && side == "BUY") || (pos.PositionAmount < 0 && side == "SELL");
                 if (currStopLossOrder == null)
                 {
-                    if (isIncreasePos)  
+                    if (isIncreasePos)
                     {
                         // Same as with no pos
                         client.PlaceOrder(contract, order);
                         if (stopType > 0) client.PlaceStopLossOrder(contract, stopLossOrder);
-                    } else
+                    }
+                    else
                     {
                         // Do not place stop loss order
                         order.AttachStop = false;
                         client.PlaceOrder(contract, order);
                     }
-                } else
+                }
+                else
                 {
                     if (isIncreasePos)
                     {
@@ -369,7 +371,7 @@ namespace IB_TradingPlatformExtention1
 
             if (modifierKeys == Keys.Control) client.CancelAllOrders();
             else client.CancelAllOrdersForContract(currContract);
-            
+
         }
 
         private void cbTrailStop_CheckedChanged(object sender, EventArgs e)
@@ -449,50 +451,45 @@ namespace IB_TradingPlatformExtention1
 
             var stopLossOrder = client.GetStopLossOrderForPosition(position);
 
+            bool isOutsideRth = chkOutside.Checked;
             int stopType = 0;
 
             if (this.cbStopLoss.Checked) stopType = 1;
             if (this.cbTrailStop.Checked) stopType = 2;
 
+            StopLossOrder _stopLossOrder = new StopLossOrder
+            {
+                OrderId = client.orderId,
+                Action = position.PositionAmount > 0 ? "SELL" : "BUY",
+                TotalQuantity = Math.Abs(position.PositionAmount),
+                OutsideRth = isOutsideRth,
+                StopType = stopType,
+                StopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value,
+                StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
+            };
+
             if (stopLossOrder != null)
             {
-                if (stopType == 0)
+                _stopLossOrder.ParentId = stopLossOrder.ParentId;
+                string currStopType = stopLossOrder.Order.OrderType;
+
+                if ((currStopType == "STP" && stopType == 1 && !isOutsideRth) ||
+                    (currStopType == "STP LMT" && stopType == 1 && isOutsideRth) ||
+                    (currStopType == "TRAIL" && stopType == 2 && !isOutsideRth) ||
+                    (currStopType == "TRAIL LIMIT" && stopType == 2 && isOutsideRth))
+                {
+                    _stopLossOrder.OrderId = stopLossOrder.Order.OrderId;
+                }
+                else
                 {
                     client.CancelOrder(stopLossOrder.Order.OrderId);
-                    return;
                 }
-
-                StopLossOrder _stopLossOrder = new StopLossOrder
-                {
-                    ParentId = stopLossOrder.ParentId,
-                    OrderId = stopLossOrder.Order.OrderId,
-                    Action = stopLossOrder.Order.Action,
-                    TotalQuantity = Math.Abs(position.PositionAmount),
-                    OutsideRth = chkOutside.Checked,
-                    StopType = stopType,
-                    StopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value,
-                    StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
-                };
-
-                client.PlaceStopLossOrder(currContract, _stopLossOrder);
             }
-            else
-            {
-                if (stopType == 0) return;
 
-                StopLossOrder _stopLossOrder = new StopLossOrder
-                {
-                    OrderId = client.orderId,
-                    Action = position.PositionAmount > 0 ? "SELL" : "BUY",
-                    TotalQuantity = Math.Abs(position.PositionAmount),
-                    OutsideRth = chkOutside.Checked,
-                    StopType = stopType,
-                    StopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value,
-                    StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
-                };
+            if (stopType == 0) return;
 
-                client.PlaceStopLossOrder(currContract, _stopLossOrder);
-            }
+            client.PlaceStopLossOrder(currContract, _stopLossOrder);
+
         }
     }
 

@@ -196,7 +196,7 @@ namespace IB_TradingPlatformExtention1
             if (o.StopType == 2)
             {
                 stopLoss.OrderType = (o.OutsideRth) ? "TRAIL LIMIT" : "TRAIL";
-                stopLoss.TrailStopPrice = 0.00;
+                stopLoss.TrailStopPrice = 100;
                 stopLoss.AuxPrice = (double)o.StopPrice;
                 if (stopLoss.OrderType == "TRAIL LIMIT") stopLoss.LmtPriceOffset = o.StopLimitPriceOffset;
             }
