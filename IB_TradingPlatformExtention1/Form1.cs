@@ -465,6 +465,7 @@ namespace IB_TradingPlatformExtention1
                 OutsideRth = isOutsideRth,
                 StopType = stopType,
                 StopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value,
+                TrailStopPrice = Math.Round((double.Parse(tbAsk.Text) + double.Parse(tbBid.Text)) / 2, 2),
                 StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
             };
 
@@ -523,6 +524,7 @@ namespace IB_TradingPlatformExtention1
         public bool OutsideRth { get; set; }
         public int StopType { get; set; } // 0 - No stop, 1 - STP, 2 - TRAIL
         public double StopPrice { get; set; }
+        public double TrailStopPrice { get; set; } // It's a required field for ib trail orders, I don't know what it is used for
         public double StopLimitPriceOffset { get; set; }
     }
 }
