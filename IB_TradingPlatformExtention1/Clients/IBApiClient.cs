@@ -108,10 +108,10 @@ namespace IB_TradingPlatformExtention1
                                                  && p.PositionAmount != 0);
         }
 
-        public OpenOrder GetStopLossOrderForPosition(Position position)
+        public List<OpenOrder> GetStopLossOrdersForPosition(Position position)
         {
             if (position == null) return null;
-            return OpenOrders.FirstOrDefault(order =>
+            return OpenOrders.Where(order =>
                 order.Contract.Symbol == position.Contract.Symbol &&
                 order.Contract.SecType == position.Contract.SecType &&
                 //order.Contract.Exchange == position.Contract.Exchange &&
@@ -120,7 +120,8 @@ namespace IB_TradingPlatformExtention1
                  order.Order.OrderType == "TRAIL" ||
                  order.Order.OrderType == "TRAIL LIMIT") &&
                  ((order.Order.Action == "BUY" && position.PositionAmount < 0) ||
-                 (order.Order.Action == "SELL" && position.PositionAmount > 0)));
+                 (order.Order.Action == "SELL" && position.PositionAmount > 0)))
+                .ToList();
         }
 
         public void PlaceOrder(myContract c, myOrder o)
