@@ -55,16 +55,9 @@ namespace IB_TradingPlatformExtention1
 
         private void Client_OnConnected()
         {
-            if (cbSymbol.Text.Trim() == "") return;
-            myContract contract = new myContract
-            {
-                Symbol = cbSymbol.Text.Trim(),
-                SecType = "STK",
-                Exchange = "SMART",
-                PrimaryExch = "ISLAND",
-                Currency = "USD"
-            };
-            client.GetData(contract);
+            myContract currContract = GetCurrContract();
+            if (currContract == null) return;
+            client.GetData(currContract);
 
         }
 
@@ -152,16 +145,9 @@ namespace IB_TradingPlatformExtention1
 
         private void cbSymbol_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (cbSymbol.Text.Trim() == "") return;
-            myContract contract = new myContract
-            {
-                Symbol = cbSymbol.Text.Trim(),
-                SecType = "STK",
-                Exchange = "SMART",
-                PrimaryExch = "ISLAND",
-                Currency = "USD"
-            };
-            client.GetData(contract);
+            myContract currContract = GetCurrContract();
+            if (currContract == null) return;
+            client.GetData(currContract);
         }
 
         private void cbSymbol_KeyPress(object sender, KeyPressEventArgs e)
@@ -192,15 +178,9 @@ namespace IB_TradingPlatformExtention1
                 }
                 cbSymbol.SelectAll();
 
-                myContract contract = new myContract
-                {
-                    Symbol = name,
-                    SecType = "STK",
-                    Exchange = "SMART",
-                    PrimaryExch = "ISLAND",
-                    Currency = "USD"
-                };
-                client.GetData(contract);
+                myContract currContract = GetCurrContract();
+                if (currContract == null) return;
+                client.GetData(currContract);
             }
         }
 
@@ -284,14 +264,8 @@ namespace IB_TradingPlatformExtention1
         public void placeOrder(string side, Keys modifierKeys, decimal posSize)
         {
             // Create a new contract to specify the security we are searching for
-            myContract contract = new myContract
-            {
-                Symbol = cbSymbol.Text.Trim(),
-                SecType = "STK",
-                Exchange = cbMarket.Text,
-                PrimaryExch = "ISLAND",
-                Currency = "USD"
-            };
+            myContract currContract = GetCurrContract();
+            if (currContract == null) return;
 
             double lmtPriceOffset = (double)((side == "BUY") ? this.numTradeOffset.Value : -this.numTradeOffset.Value);
             double lmtPrice = ((side == "BUY" && modifierKeys != Keys.Alt) || (side == "SELL" && modifierKeys == Keys.Alt) ?
@@ -303,7 +277,7 @@ namespace IB_TradingPlatformExtention1
             if (this.cbStopLoss.Checked) stopType = 1;
             if (this.cbTrailStop.Checked) stopType = 2;
 
-            Position pos = client.GetPositionForContract(contract);
+            Position pos = client.GetPositionForContract(currContract);
             List<OpenOrder> currStopLossOrders = client.GetStopLossOrdersForPosition(pos);
 
             myOrder order = new myOrder
@@ -322,7 +296,7 @@ namespace IB_TradingPlatformExtention1
             {
                 stopLossOrder = new StopLossOrder
                 {
-                    OcaGroupName = contract.Symbol + "_" + contract.SecType + "_" + client.orderId,
+                    OcaGroupName = currContract.Symbol + "_" + currContract.SecType + "_" + client.orderId,
                     ParentId = client.orderId,
                     OrderId = client.orderId + 1,
                     Action = side == "BUY" ? "SELL" : "BUY",
@@ -347,21 +321,15 @@ namespace IB_TradingPlatformExtention1
                 }
             }
 
-            client.PlaceOrder(contract, order);
-            if (order.AttachStop) client.PlaceStopLossOrder(contract, stopLossOrder);
+            client.PlaceOrder(currContract, order);
+            if (order.AttachStop) client.PlaceStopLossOrder(currContract, stopLossOrder);
 
         }
 
         private void btnCancelLast_Click(object sender, EventArgs e)
         {
-            myContract currContract = new myContract
-            {
-                Symbol = cbSymbol.Text.Trim(),
-                SecType = "STK",
-                Exchange = "SMART",
-                PrimaryExch = "ISLAND",
-                Currency = "USD"
-            };
+            myContract currContract = GetCurrContract();
+            if (currContract == null) return;
 
             OpenOrder prevOrder = client.OpenOrders
            .Where(order => order.Contract.Symbol == currContract.Symbol
@@ -376,14 +344,8 @@ namespace IB_TradingPlatformExtention1
         private void btnCancelAll_Click(object sender, EventArgs e)
         {
             Keys modifierKeys = Form.ModifierKeys;
-            myContract currContract = new myContract
-            {
-                Symbol = cbSymbol.Text.Trim(),
-                SecType = "STK",
-                Exchange = "SMART",
-                PrimaryExch = "ISLAND",
-                Currency = "USD"
-            };
+            myContract currContract = GetCurrContract();
+            if (currContract == null) return;
 
             if (modifierKeys == Keys.Control) client.CancelAllOrders();
             else client.CancelAllOrdersForContract(currContract);
@@ -409,14 +371,8 @@ namespace IB_TradingPlatformExtention1
 
         private void btnClosePos_Click(object sender, EventArgs e)
         {
-            myContract currContract = new myContract
-            {
-                Symbol = cbSymbol.Text.Trim(),
-                SecType = "STK",
-                Exchange = "SMART",
-                PrimaryExch = "ISLAND",
-                Currency = "USD"
-            };
+            myContract currContract = GetCurrContract();
+            if (currContract == null) return;
 
             client.CancelAllOrdersForContract(currContract);
 
@@ -457,14 +413,8 @@ namespace IB_TradingPlatformExtention1
 
         private void AdjustStopLoss()
         {
-            myContract currContract = new myContract
-            {
-                Symbol = cbSymbol.Text.Trim(),
-                SecType = "STK",
-                Exchange = "SMART",
-                PrimaryExch = "ISLAND",
-                Currency = "USD"
-            };
+            myContract currContract = GetCurrContract();
+            if (currContract == null) return;
 
             var position = client.GetPositionForContract(currContract);
 
