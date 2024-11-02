@@ -23,6 +23,7 @@ namespace IB_TradingPlatformExtention1
 
         // Events to notify the form when data changes
         public event Action<string, string> OnTickPriceUpdated;
+        public event Action<string, string> OnPositionChanged;
         public event Action OnConnected;
         public event Action OnDisconnected;
 
@@ -145,6 +146,8 @@ namespace IB_TradingPlatformExtention1
             // Create a new order
             Order order = new Order();
             // gets the next order id from the text box
+            if(!string.IsNullOrEmpty(o.OcaGroupName)) order.OcaGroup = o.OcaGroupName;
+            order.OcaType = 2;
             order.OrderId = o.OrderId;
             // gets the side of the order (BUY, or SELL)
             order.Action = o.Action;
@@ -189,6 +192,8 @@ namespace IB_TradingPlatformExtention1
 
             Order stopLoss = new Order();
             if (o.ParentId > 0) stopLoss.ParentId = o.ParentId;
+            if(!string.IsNullOrEmpty(o.OcaGroupName)) stopLoss.OcaGroup = o.OcaGroupName;
+            stopLoss.OcaType = 2;
             stopLoss.OrderId = o.OrderId;
             stopLoss.Action = o.Action;
             stopLoss.TriggerMethod = 7;
@@ -294,6 +299,8 @@ namespace IB_TradingPlatformExtention1
                     AverageCost = avgCost
                 });
             }
+
+            OnPositionChanged?.Invoke(contract.Symbol, contract.SecType);
         }
 
         public void UpdateOrder(Order order, Contract contract)
