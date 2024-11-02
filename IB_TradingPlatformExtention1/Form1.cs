@@ -470,6 +470,12 @@ namespace IB_TradingPlatformExtention1
             client.PlaceStopLossOrder(currContract, _stopLossOrder);
 
         }
+
+        private void btnOptionsAnalysis_Click(object sender, EventArgs e)
+        {
+            OptionsAnalysisForm OAform = new OptionsAnalysisForm();
+            OAform.Show();
+        }
     }
 
     public class myContract

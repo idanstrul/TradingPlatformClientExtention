@@ -57,6 +57,7 @@
             this.chkOutside = new System.Windows.Forms.CheckBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.btnStopLossAdj = new System.Windows.Forms.Button();
             this.btnClosePos = new System.Windows.Forms.Button();
             this.numTrailStop = new System.Windows.Forms.NumericUpDown();
             this.numStopLoss = new System.Windows.Forms.NumericUpDown();
@@ -73,7 +74,7 @@
             this.btnCancelAll = new System.Windows.Forms.Button();
             this.btnCancelLast = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.btnStopLossAdj = new System.Windows.Forms.Button();
+            this.btnOptionsAnalysis = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -313,6 +314,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.btnOptionsAnalysis);
             this.tabPage1.Controls.Add(this.btnStopLossAdj);
             this.tabPage1.Controls.Add(this.btnClosePos);
             this.tabPage1.Controls.Add(this.numTrailStop);
@@ -355,6 +357,16 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // btnStopLossAdj
+            // 
+            this.btnStopLossAdj.Location = new System.Drawing.Point(388, 234);
+            this.btnStopLossAdj.Name = "btnStopLossAdj";
+            this.btnStopLossAdj.Size = new System.Drawing.Size(75, 23);
+            this.btnStopLossAdj.TabIndex = 51;
+            this.btnStopLossAdj.Text = "Adjust";
+            this.btnStopLossAdj.UseVisualStyleBackColor = true;
+            this.btnStopLossAdj.Click += new System.EventHandler(this.btnStopLossAdj_Click);
             // 
             // btnClosePos
             // 
@@ -559,15 +571,15 @@
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // btnStopLossAdj
+            // btnOptionsAnalysis
             // 
-            this.btnStopLossAdj.Location = new System.Drawing.Point(388, 234);
-            this.btnStopLossAdj.Name = "btnStopLossAdj";
-            this.btnStopLossAdj.Size = new System.Drawing.Size(75, 23);
-            this.btnStopLossAdj.TabIndex = 51;
-            this.btnStopLossAdj.Text = "Adjust";
-            this.btnStopLossAdj.UseVisualStyleBackColor = true;
-            this.btnStopLossAdj.Click += new System.EventHandler(this.btnStopLossAdj_Click);
+            this.btnOptionsAnalysis.Location = new System.Drawing.Point(122, 252);
+            this.btnOptionsAnalysis.Name = "btnOptionsAnalysis";
+            this.btnOptionsAnalysis.Size = new System.Drawing.Size(75, 23);
+            this.btnOptionsAnalysis.TabIndex = 52;
+            this.btnOptionsAnalysis.Text = "Options analysis";
+            this.btnOptionsAnalysis.UseVisualStyleBackColor = true;
+            this.btnOptionsAnalysis.Click += new System.EventHandler(this.btnOptionsAnalysis_Click);
             // 
             // Form1
             // 
@@ -633,6 +645,7 @@
         private System.Windows.Forms.NumericUpDown numStopLoss;
         private System.Windows.Forms.Button btnClosePos;
         private System.Windows.Forms.Button btnStopLossAdj;
+        private System.Windows.Forms.Button btnOptionsAnalysis;
     }
 }
 
