@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace IB_TradingPlatformExtention1
 {
@@ -28,6 +29,58 @@ namespace IB_TradingPlatformExtention1
 
             double currOptPrice = BlackScholes.CalculateOptionPrice(s, k, t, r, v, isCall);
             numCurrOptPrice.Value = (decimal)currOptPrice;
+        }
+
+        private void btnPlotRiskProfile_Click(object sender, EventArgs e)
+        {
+            double s = (double)numSpotPrice.Value;
+            double k = (double)numStrikePrice.Value;
+            double t = (double)numTimeToExpiration.Value;
+            double r = (double)numRiskFreeRate.Value;
+            double v = (double)numVolatility.Value;
+            bool isCall = cbIsCall.Checked;
+
+            double range = (double)numPriceRange.Value;
+            List<double> optPrices = new List<double>();
+
+            // Define the lower and upper bounds for the underlying price
+            double lowerBound = s * (1 - range / 100);
+            double upperBound = s * (1 + range / 100);
+            double step = s * 0.001; // Step of 0.1% of the spot price
+
+            List<double> pricePoints = new List<double>();
+
+            // Iterate over prices in the defined range and calculate the option price
+            for (double underlyingPrice = lowerBound; underlyingPrice <= upperBound; underlyingPrice += step)
+            {
+                double optionPrice = BlackScholes.CalculateOptionPrice(underlyingPrice, k, t, r, v, isCall);
+                optPrices.Add(optionPrice);
+                pricePoints.Add(underlyingPrice);
+            }
+
+            // Clear previous series and data points
+            chartRiskProfile.Series.Clear();
+
+            // Create a new series for the risk profile
+            Series series = new Series("Option Price Profile");
+            series.ChartType = SeriesChartType.Line;
+            series.XValueType = ChartValueType.Double;
+            series.YValueType = ChartValueType.Double;
+
+            // Add data points to the series
+            for (int i = 0; i < pricePoints.Count; i++)
+            {
+                series.Points.AddXY(pricePoints[i], optPrices[i]);
+            }
+
+            // Add the series to the chart
+            chartRiskProfile.Series.Add(series);
+
+            // Configure chart display
+            chartRiskProfile.ChartAreas[0].AxisX.Title = "Underlying Price";
+            chartRiskProfile.ChartAreas[0].AxisY.Title = "Option Price";
+            chartRiskProfile.ChartAreas[0].RecalculateAxesScale();
+
         }
     }
 

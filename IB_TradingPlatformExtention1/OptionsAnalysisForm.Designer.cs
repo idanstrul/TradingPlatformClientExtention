@@ -28,6 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.numSpotPrice = new System.Windows.Forms.NumericUpDown();
             this.numStrikePrice = new System.Windows.Forms.NumericUpDown();
             this.numTimeToExpiration = new System.Windows.Forms.NumericUpDown();
@@ -42,12 +45,18 @@
             this.label7 = new System.Windows.Forms.Label();
             this.btnCalculateOptPrice = new System.Windows.Forms.Button();
             this.cbIsCall = new System.Windows.Forms.CheckBox();
+            this.btnPlotRiskProfile = new System.Windows.Forms.Button();
+            this.numPriceRange = new System.Windows.Forms.NumericUpDown();
+            this.label6 = new System.Windows.Forms.Label();
+            this.chartRiskProfile = new System.Windows.Forms.DataVisualization.Charting.Chart();
             ((System.ComponentModel.ISupportInitialize)(this.numSpotPrice)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numStrikePrice)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTimeToExpiration)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numRiskFreeRate)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numVolatility)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numCurrOptPrice)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPriceRange)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chartRiskProfile)).BeginInit();
             this.SuspendLayout();
             // 
             // numSpotPrice
@@ -192,11 +201,58 @@
             this.cbIsCall.Text = "Is Call";
             this.cbIsCall.UseVisualStyleBackColor = true;
             // 
+            // btnPlotRiskProfile
+            // 
+            this.btnPlotRiskProfile.Location = new System.Drawing.Point(325, 132);
+            this.btnPlotRiskProfile.Name = "btnPlotRiskProfile";
+            this.btnPlotRiskProfile.Size = new System.Drawing.Size(75, 23);
+            this.btnPlotRiskProfile.TabIndex = 0;
+            this.btnPlotRiskProfile.Text = "Plot risk profile";
+            this.btnPlotRiskProfile.UseVisualStyleBackColor = true;
+            this.btnPlotRiskProfile.Click += new System.EventHandler(this.btnPlotRiskProfile_Click);
+            // 
+            // numPriceRange
+            // 
+            this.numPriceRange.DecimalPlaces = 4;
+            this.numPriceRange.Location = new System.Drawing.Point(494, 133);
+            this.numPriceRange.Name = "numPriceRange";
+            this.numPriceRange.Size = new System.Drawing.Size(120, 22);
+            this.numPriceRange.TabIndex = 16;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(440, 135);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(48, 16);
+            this.label6.TabIndex = 17;
+            this.label6.Text = "Range";
+            // 
+            // chartRiskProfile
+            // 
+            chartArea1.Name = "ChartArea1";
+            this.chartRiskProfile.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chartRiskProfile.Legends.Add(legend1);
+            this.chartRiskProfile.Location = new System.Drawing.Point(122, 229);
+            this.chartRiskProfile.Name = "chartRiskProfile";
+            series1.ChartArea = "ChartArea1";
+            series1.Legend = "Legend1";
+            series1.Name = "Series1";
+            this.chartRiskProfile.Series.Add(series1);
+            this.chartRiskProfile.Size = new System.Drawing.Size(541, 268);
+            this.chartRiskProfile.TabIndex = 18;
+            this.chartRiskProfile.Text = "chart1";
+            // 
             // OptionsAnalysisForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(800, 575);
+            this.Controls.Add(this.chartRiskProfile);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.numPriceRange);
+            this.Controls.Add(this.btnPlotRiskProfile);
             this.Controls.Add(this.cbIsCall);
             this.Controls.Add(this.btnCalculateOptPrice);
             this.Controls.Add(this.label7);
@@ -219,6 +275,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.numRiskFreeRate)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numVolatility)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numCurrOptPrice)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPriceRange)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chartRiskProfile)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -240,5 +298,9 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Button btnCalculateOptPrice;
         private System.Windows.Forms.CheckBox cbIsCall;
+        private System.Windows.Forms.Button btnPlotRiskProfile;
+        private System.Windows.Forms.NumericUpDown numPriceRange;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chartRiskProfile;
     }
 }
