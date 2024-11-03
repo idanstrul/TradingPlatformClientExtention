@@ -18,70 +18,117 @@ namespace IB_TradingPlatformExtention1
             InitializeComponent();
         }
 
-        private void btnCalculateOptPrice_Click(object sender, EventArgs e)
-        {
-            double s = (double)numSpotPrice.Value;
-            double k = (double)numStrikePrice.Value;
-            double t = (double)numTimeToExpiration.Value;
-            double r = (double)numRiskFreeRate.Value;
-            double v = (double)numVolatility.Value;
-            bool isCall = cbIsCall.Checked;
-
-            double currOptPrice = BlackScholes.CalculateOptionPrice(s, k, t, r, v, isCall);
-            numCurrOptPrice.Value = (decimal)currOptPrice;
-        }
-
         private void btnPlotRiskProfile_Click(object sender, EventArgs e)
         {
             double s = (double)numSpotPrice.Value;
-            double k = (double)numStrikePrice.Value;
-            double t = (double)numTimeToExpiration.Value;
             double r = (double)numRiskFreeRate.Value;
-            double v = (double)numVolatility.Value;
-            bool isCall = cbIsCall.Checked;
-
             double range = (double)numPriceRange.Value;
-            List<double> optPrices = new List<double>();
-
-            // Define the lower and upper bounds for the underlying price
-            double lowerBound = s * (1 - range / 100);
-            double upperBound = s * (1 + range / 100);
-            double step = s * 0.001; // Step of 0.1% of the spot price
-
+            DateTime currTime = dtpCurrTimePicker.Value;
+            List<double> pnlBeforeExp = new List<double>();
+            List<double> pnlAtExp = new List<double>();
             List<double> pricePoints = new List<double>();
 
-            // Iterate over prices in the defined range and calculate the option price
+            double lowerBound = s * (1 - range / 100);
+            double upperBound = s * (1 + range / 100);
+            double step = s * 0.001;
+
+            // Calculate initial cost for the strategy
+            double initialCost = 0;
+
+            foreach (DataGridViewRow row in dgOptTradeLegs.Rows)
+            {
+                if (row.IsNewRow) continue;
+
+                // Parse each option leg
+                if (!DateTime.TryParse(row.Cells[0].Value?.ToString(), out DateTime expiration))
+                    throw new ArgumentException("Invalid expiration date.");
+                if (!double.TryParse(row.Cells[1].Value?.ToString(), out double strike))
+                    throw new ArgumentException("Invalid strike price.");
+                if (!double.TryParse(row.Cells[2].Value?.ToString(), out double volatility))
+                    throw new ArgumentException("Invalid volatility.");
+
+                bool isCall = (bool)(row.Cells[3].Value ?? false);
+                bool isBuy = (bool)(row.Cells[4].Value ?? false);
+
+                double minutesToExpiration = BlackScholes.CalculateTimeToExpirationInMinutes(expiration, currTime);
+                double timeToExp = minutesToExpiration / 525600.0;
+
+                // Calculate option price for the current leg
+                double legPrice = BlackScholes.CalculateOptionPrice(s, strike, timeToExp, r, volatility, isCall) * 100;
+                initialCost += isBuy ? legPrice : -legPrice;
+            }
+
+            // Calculate PnL for each price point
             for (double underlyingPrice = lowerBound; underlyingPrice <= upperBound; underlyingPrice += step)
             {
-                double optionPrice = BlackScholes.CalculateOptionPrice(underlyingPrice, k, t, r, v, isCall);
-                optPrices.Add(optionPrice);
+                double totalPnlBeforeExp = 0;
+                double totalPnlAtExp = 0;
+
+                foreach (DataGridViewRow row in dgOptTradeLegs.Rows)
+                {
+                    if (row.IsNewRow) continue;
+
+                    // Parse each option leg
+                    if (!DateTime.TryParse(row.Cells[0].Value?.ToString(), out DateTime expiration))
+                        throw new ArgumentException("Invalid expiration date.");
+                    if (!double.TryParse(row.Cells[1].Value?.ToString(), out double strike))
+                        throw new ArgumentException("Invalid strike price.");
+                    if (!double.TryParse(row.Cells[2].Value?.ToString(), out double volatility))
+                        throw new ArgumentException("Invalid volatility.");
+
+                    bool isCall = (bool)(row.Cells[3].Value ?? false);
+                    bool isBuy = (bool)(row.Cells[4].Value ?? false);
+
+                    double minutesToExpiration = BlackScholes.CalculateTimeToExpirationInMinutes(expiration, currTime);
+                    double timeToExp = minutesToExpiration / 525600.0;
+
+                    // Calculate the PnL for each leg
+                    double legPriceAtExp = BlackScholes.CalculateIntrinsicValue(underlyingPrice, strike, isCall) * 100;
+                    double legPriceBeforeExp = BlackScholes.CalculateOptionPrice(underlyingPrice, strike, timeToExp, r, volatility, isCall) * 100;
+
+                    // Adjust total PnL based on whether it's a long or short position
+                    totalPnlAtExp += isBuy ? legPriceAtExp : -legPriceAtExp;
+                    totalPnlBeforeExp += isBuy ? legPriceBeforeExp : -legPriceBeforeExp;
+                }
+
+                pnlAtExp.Add(totalPnlAtExp - initialCost);
+                pnlBeforeExp.Add(totalPnlBeforeExp - initialCost);
                 pricePoints.Add(underlyingPrice);
             }
 
-            // Clear previous series and data points
+            // Plot results on chart
             chartRiskProfile.Series.Clear();
 
-            // Create a new series for the risk profile
-            Series series = new Series("Option Price Profile");
-            series.ChartType = SeriesChartType.Line;
-            series.XValueType = ChartValueType.Double;
-            series.YValueType = ChartValueType.Double;
+            // PnL Before Expiration Series
+            Series seriesPnlBeforeExp = new Series("PnL (Before Expiration)");
+            seriesPnlBeforeExp.ChartType = SeriesChartType.Line;
+            seriesPnlBeforeExp.XValueType = ChartValueType.Double;
+            seriesPnlBeforeExp.YValueType = ChartValueType.Double;
 
-            // Add data points to the series
             for (int i = 0; i < pricePoints.Count; i++)
             {
-                series.Points.AddXY(pricePoints[i], optPrices[i]);
+                seriesPnlBeforeExp.Points.AddXY(pricePoints[i], pnlBeforeExp[i]);
             }
+            chartRiskProfile.Series.Add(seriesPnlBeforeExp);
 
-            // Add the series to the chart
-            chartRiskProfile.Series.Add(series);
+            // PnL at Expiration Series
+            Series seriesPnlAtExp = new Series("PnL (At Expiration)");
+            seriesPnlAtExp.ChartType = SeriesChartType.Line;
+            seriesPnlAtExp.XValueType = ChartValueType.Double;
+            seriesPnlAtExp.YValueType = ChartValueType.Double;
+
+            for (int i = 0; i < pricePoints.Count; i++)
+            {
+                seriesPnlAtExp.Points.AddXY(pricePoints[i], pnlAtExp[i]);
+            }
+            chartRiskProfile.Series.Add(seriesPnlAtExp);
 
             // Configure chart display
             chartRiskProfile.ChartAreas[0].AxisX.Title = "Underlying Price";
-            chartRiskProfile.ChartAreas[0].AxisY.Title = "Option Price";
+            chartRiskProfile.ChartAreas[0].AxisY.Title = "Profit / Loss";
             chartRiskProfile.ChartAreas[0].RecalculateAxesScale();
-
         }
+
     }
 
     public class BlackScholes
@@ -128,5 +175,41 @@ namespace IB_TradingPlatformExtention1
                 return K * Math.Exp(-r * T) * Cdf(-d2) - S * Cdf(-d1);
             }
         }
+
+        public static double CalculateIntrinsicValue(double s, double k, bool isCall)
+        {
+            if (isCall)
+            {
+                return Math.Max(s - k, 0); // Call option intrinsic value
+            }
+            else
+            {
+                return Math.Max(k - s, 0); // Put option intrinsic value
+            }
+        }
+
+        public static double CalculateTimeToExpirationInMinutes(DateTime expirationDate, DateTime currentTime)
+        {
+            // Define the Eastern Time zone
+            TimeZoneInfo easternZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+
+            // Set the expiration time to 4:00 PM Eastern Time
+            DateTime expirationEndOfDayET = new DateTime(
+                expirationDate.Year, expirationDate.Month, expirationDate.Day, 16, 0, 0, DateTimeKind.Unspecified);
+
+            // Convert expiration to ET time zone first, then to UTC
+            DateTime expirationEndOfDayEastern = TimeZoneInfo.ConvertTimeToUtc(
+                TimeZoneInfo.ConvertTimeToUtc(expirationEndOfDayET, easternZone));
+
+            // Convert the provided current time to UTC if it’s not already
+            DateTime currentTimeUtc = currentTime.Kind == DateTimeKind.Utc ? currentTime : currentTime.ToUniversalTime();
+
+            // Calculate the difference in minutes
+            double timeToExpMinutes = (expirationEndOfDayEastern - currentTimeUtc).TotalMinutes;
+
+            // Ensure time is positive; if negative, the expiration has passed
+            return timeToExpMinutes > 0 ? timeToExpMinutes : 0;
+        }
+
     }
 }
