@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea6 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend6 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series6 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.numSpotPrice = new System.Windows.Forms.NumericUpDown();
             this.numRiskFreeRate = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
@@ -136,19 +136,28 @@
             // 
             // chartRiskProfile
             // 
-            chartArea6.Name = "ChartArea1";
-            this.chartRiskProfile.ChartAreas.Add(chartArea6);
-            legend6.Name = "Legend1";
-            this.chartRiskProfile.Legends.Add(legend6);
+            chartArea1.AxisX.IntervalOffset = 1D;
+            chartArea1.AxisX.IntervalOffsetType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number;
+            chartArea1.AxisX.IntervalType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number;
+            chartArea1.AxisX.MajorGrid.LineColor = System.Drawing.Color.Gainsboro;
+            chartArea1.AxisX.MajorTickMark.LineColor = System.Drawing.Color.Gainsboro;
+            chartArea1.AxisY.MajorGrid.LineColor = System.Drawing.Color.Gainsboro;
+            chartArea1.AxisY.MajorTickMark.LineColor = System.Drawing.Color.Gainsboro;
+            chartArea1.BackHatchStyle = System.Windows.Forms.DataVisualization.Charting.ChartHatchStyle.Cross;
+            chartArea1.Name = "ChartArea1";
+            this.chartRiskProfile.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chartRiskProfile.Legends.Add(legend1);
             this.chartRiskProfile.Location = new System.Drawing.Point(15, 175);
             this.chartRiskProfile.Name = "chartRiskProfile";
-            series6.ChartArea = "ChartArea1";
-            series6.Legend = "Legend1";
-            series6.Name = "Series1";
-            this.chartRiskProfile.Series.Add(series6);
+            series1.ChartArea = "ChartArea1";
+            series1.Legend = "Legend1";
+            series1.Name = "Series1";
+            this.chartRiskProfile.Series.Add(series1);
             this.chartRiskProfile.Size = new System.Drawing.Size(1079, 388);
             this.chartRiskProfile.TabIndex = 18;
             this.chartRiskProfile.Text = "Risk profile";
+            this.chartRiskProfile.MouseMove += new System.Windows.Forms.MouseEventHandler(this.chartRiskProfile_MouseMove);
             // 
             // dgOptTradeLegs
             // 

@@ -13,13 +13,57 @@ namespace IB_TradingPlatformExtention1
 {
     public partial class OptionsAnalysisForm : Form
     {
+        private VerticalLineAnnotation verticalLine;
+        private TextAnnotation priceAnnotation;
+        private TextAnnotation pnlAnnotation;
+
+        public List<OptionLeg> optionLegs = new List<OptionLeg>();
+        public double strategyInitialCost = 0;
+
+
         public OptionsAnalysisForm()
         {
             InitializeComponent();
+
+            verticalLine = new VerticalLineAnnotation
+            {
+                AxisX = chartRiskProfile.ChartAreas[0].AxisX,
+                AllowMoving = false,
+                ClipToChartArea = chartRiskProfile.ChartAreas[0].Name,
+                LineColor = Color.Red,
+                LineWidth = 1,
+                Visible = false // Start hidden until hover
+            };
+            chartRiskProfile.Annotations.Add(verticalLine);
+
+            // Initialize and add the underlying price text annotation
+            priceAnnotation = new TextAnnotation
+            {
+                AxisX = chartRiskProfile.ChartAreas[0].AxisX,
+                AxisY = chartRiskProfile.ChartAreas[0].AxisY,
+                Alignment = ContentAlignment.TopCenter,
+                ForeColor = Color.Blue,
+                Visible = false // Start hidden until hover
+            };
+            chartRiskProfile.Annotations.Add(priceAnnotation);
+
+            // Initialize and add the P&L text annotation
+            pnlAnnotation = new TextAnnotation
+            {
+                AxisX = chartRiskProfile.ChartAreas[0].AxisX,
+                AxisY = chartRiskProfile.ChartAreas[0].AxisY,
+                Alignment = ContentAlignment.MiddleRight,
+                ForeColor = Color.Green,
+                Visible = false // Start hidden until hover
+            };
+            chartRiskProfile.Annotations.Add(pnlAnnotation);
         }
 
         private void btnPlotRiskProfile_Click(object sender, EventArgs e)
         {
+            optionLegs.Clear();
+            strategyInitialCost = 0;
+
             double s = (double)numSpotPrice.Value;
             double r = (double)numRiskFreeRate.Value;
             double range = (double)numPriceRange.Value;
@@ -32,14 +76,10 @@ namespace IB_TradingPlatformExtention1
             double upperBound = s * (1 + range / 100);
             double step = s * 0.001;
 
-            // Calculate initial cost for the strategy
-            double initialCost = 0;
-
             foreach (DataGridViewRow row in dgOptTradeLegs.Rows)
             {
                 if (row.IsNewRow) continue;
 
-                // Parse each option leg
                 if (!DateTime.TryParse(row.Cells[0].Value?.ToString(), out DateTime expiration))
                     throw new ArgumentException("Invalid expiration date.");
                 if (!double.TryParse(row.Cells[1].Value?.ToString(), out double strike))
@@ -50,49 +90,28 @@ namespace IB_TradingPlatformExtention1
                 bool isCall = (bool)(row.Cells[3].Value ?? false);
                 bool isBuy = (bool)(row.Cells[4].Value ?? false);
 
-                double minutesToExpiration = BlackScholes.CalculateTimeToExpirationInMinutes(expiration, currTime);
-                double timeToExp = minutesToExpiration / 525600.0;
-
-                // Calculate option price for the current leg
-                double legPrice = BlackScholes.CalculateOptionPrice(s, strike, timeToExp, r, volatility, isCall) * 100;
-                initialCost += isBuy ? legPrice : -legPrice;
+                // Add this option leg to the list
+                optionLegs.Add(new OptionLeg
+                {
+                    Expiration = expiration,
+                    Strike = strike,
+                    Volatility = volatility,
+                    IsCall = isCall,
+                    IsBuy = isBuy
+                });
             }
+
+            // Calculate the initial cost of the strategy (premium)
+            strategyInitialCost = BlackScholes.CalculateStrategyPremium(optionLegs, s, currTime, r);
 
             // Calculate PnL for each price point
             for (double underlyingPrice = lowerBound; underlyingPrice <= upperBound; underlyingPrice += step)
             {
-                double totalPnlBeforeExp = 0;
-                double totalPnlAtExp = 0;
+                double totalPnlBeforeExp = BlackScholes.CalculateStrategyPremium(optionLegs, underlyingPrice, currTime, r); ;
+                double totalPnlAtExp = BlackScholes.CalculateStrategyPremium(optionLegs, underlyingPrice, DateTime.MaxValue, r);
 
-                foreach (DataGridViewRow row in dgOptTradeLegs.Rows)
-                {
-                    if (row.IsNewRow) continue;
-
-                    // Parse each option leg
-                    if (!DateTime.TryParse(row.Cells[0].Value?.ToString(), out DateTime expiration))
-                        throw new ArgumentException("Invalid expiration date.");
-                    if (!double.TryParse(row.Cells[1].Value?.ToString(), out double strike))
-                        throw new ArgumentException("Invalid strike price.");
-                    if (!double.TryParse(row.Cells[2].Value?.ToString(), out double volatility))
-                        throw new ArgumentException("Invalid volatility.");
-
-                    bool isCall = (bool)(row.Cells[3].Value ?? false);
-                    bool isBuy = (bool)(row.Cells[4].Value ?? false);
-
-                    double minutesToExpiration = BlackScholes.CalculateTimeToExpirationInMinutes(expiration, currTime);
-                    double timeToExp = minutesToExpiration / 525600.0;
-
-                    // Calculate the PnL for each leg
-                    double legPriceAtExp = BlackScholes.CalculateIntrinsicValue(underlyingPrice, strike, isCall) * 100;
-                    double legPriceBeforeExp = BlackScholes.CalculateOptionPrice(underlyingPrice, strike, timeToExp, r, volatility, isCall) * 100;
-
-                    // Adjust total PnL based on whether it's a long or short position
-                    totalPnlAtExp += isBuy ? legPriceAtExp : -legPriceAtExp;
-                    totalPnlBeforeExp += isBuy ? legPriceBeforeExp : -legPriceBeforeExp;
-                }
-
-                pnlAtExp.Add(totalPnlAtExp - initialCost);
-                pnlBeforeExp.Add(totalPnlBeforeExp - initialCost);
+                pnlAtExp.Add(totalPnlAtExp - strategyInitialCost);
+                pnlBeforeExp.Add(totalPnlBeforeExp - strategyInitialCost);
                 pricePoints.Add(underlyingPrice);
             }
 
@@ -129,6 +148,44 @@ namespace IB_TradingPlatformExtention1
             chartRiskProfile.ChartAreas[0].RecalculateAxesScale();
         }
 
+        private void chartRiskProfile_MouseMove(object sender, MouseEventArgs e)
+        {
+            double r = (double)numRiskFreeRate.Value;
+            DateTime currTime = dtpCurrTimePicker.Value;
+
+            // Convert mouse X position to chart coordinate (Underlying price)
+            double mouseXValue = chartRiskProfile.ChartAreas[0].AxisX.PixelPositionToValue(e.X);
+
+            //// Find the nearest price point in the data
+            //double step = (double)numSpotPrice.Value * 0.001; // Assuming 0.1% steps of the spot price
+            //double mouseXValue = Math.Round(mouseXValue / step) * step;
+
+            // Set the position of the vertical line
+            verticalLine.X = mouseXValue;
+            verticalLine.Visible = true;
+
+            // Display underlying price text at the top of the line
+            priceAnnotation.Text = $"Price: {mouseXValue:F2}";
+            priceAnnotation.AnchorX = mouseXValue;
+            priceAnnotation.AnchorY = chartRiskProfile.ChartAreas[0].AxisY.Maximum; // At the top of the chart
+            priceAnnotation.Visible = true;
+
+            // Calculate the P&L at this underlying price for the strategy
+            double pnlBeforeExp = BlackScholes.CalculateStrategyPremium(optionLegs, mouseXValue, currTime, r);
+            pnlAnnotation.Text = $"PnL: {pnlBeforeExp:F2}";
+            pnlAnnotation.AnchorX = mouseXValue;
+            pnlAnnotation.AnchorY = pnlBeforeExp;
+            pnlAnnotation.Visible = true;
+        }
+    }
+
+    public class OptionLeg
+    {
+        public DateTime Expiration { get; set; }
+        public double Strike { get; set; }
+        public double Volatility { get; set; } // as a decimal (e.g., 0.20 for 20%)
+        public bool IsCall { get; set; }
+        public bool IsBuy { get; set; }
     }
 
     public class BlackScholes
@@ -209,6 +266,28 @@ namespace IB_TradingPlatformExtention1
 
             // Ensure time is positive; if negative, the expiration has passed
             return timeToExpMinutes > 0 ? timeToExpMinutes : 0;
+        }
+
+        // Modify the CalculateStrategyPremium function
+        public static double CalculateStrategyPremium(List<OptionLeg> optionLegs, double underlyingPrice, DateTime currTime, double riskFreeRate)
+        {
+            double premium = 0.0;
+
+            foreach (var leg in optionLegs)
+            {
+                // Calculate time to expiration in years
+                double timeToExp = CalculateTimeToExpirationInMinutes(leg.Expiration, currTime) / 525600.0;
+
+                // Determine the price of the option based on whether it's before expiration or at expiration
+                double optionPrice = timeToExp > 0
+                    ? CalculateOptionPrice(underlyingPrice, leg.Strike, timeToExp, riskFreeRate, leg.Volatility, leg.IsCall) * 100
+                    : CalculateIntrinsicValue(underlyingPrice, leg.Strike, leg.IsCall) * 100;
+
+                // Adjust premium based on whether the leg is a buy or sell
+                premium += leg.IsBuy ? optionPrice : -optionPrice;
+            }
+
+            return premium;
         }
 
     }
