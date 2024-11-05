@@ -157,6 +157,7 @@
             this.chartRiskProfile.Size = new System.Drawing.Size(1079, 388);
             this.chartRiskProfile.TabIndex = 18;
             this.chartRiskProfile.Text = "Risk profile";
+            this.chartRiskProfile.MouseLeave += new System.EventHandler(this.chartRiskProfile_MouseLeave);
             this.chartRiskProfile.MouseMove += new System.Windows.Forms.MouseEventHandler(this.chartRiskProfile_MouseMove);
             // 
             // dgOptTradeLegs

@@ -14,6 +14,7 @@ namespace IB_TradingPlatformExtention1
     public partial class OptionsAnalysisForm : Form
     {
         private VerticalLineAnnotation verticalLine;
+        private EllipseAnnotation intersectionDot;
         private TextAnnotation priceAnnotation;
         private TextAnnotation pnlAnnotation;
 
@@ -28,13 +29,26 @@ namespace IB_TradingPlatformExtention1
             verticalLine = new VerticalLineAnnotation
             {
                 AxisX = chartRiskProfile.ChartAreas[0].AxisX,
-                AllowMoving = false,
+                AxisY = chartRiskProfile.ChartAreas[0].AxisY,
                 ClipToChartArea = chartRiskProfile.ChartAreas[0].Name,
-                LineColor = Color.Red,
+                LineColor = Color.Black,
                 LineWidth = 1,
-                Visible = false // Start hidden until hover
+                Visible = false, // Start hidden until hover
+                IsInfinitive = true,
             };
             chartRiskProfile.Annotations.Add(verticalLine);
+
+            intersectionDot = new EllipseAnnotation
+            {
+                AxisX = chartRiskProfile.ChartAreas[0].AxisX,
+                AxisY = chartRiskProfile.ChartAreas[0].AxisY,
+                Width = 0.5, // Adjust size as needed
+                Height = 1,
+                BackColor = Color.Black, // Color for the dot
+                Visible = false // Start hidden until hover
+            };
+            chartRiskProfile.Annotations.Add(intersectionDot);
+
 
             // Initialize and add the underlying price text annotation
             priceAnnotation = new TextAnnotation
@@ -156,6 +170,9 @@ namespace IB_TradingPlatformExtention1
             // Convert mouse X position to chart coordinate (Underlying price)
             double mouseXValue = chartRiskProfile.ChartAreas[0].AxisX.PixelPositionToValue(e.X);
 
+            // Calculate the P&L at this underlying price for the strategy
+            double pnlBeforeExp = BlackScholes.CalculateStrategyPremium(optionLegs, mouseXValue, currTime, r) - strategyInitialCost;
+
             //// Find the nearest price point in the data
             //double step = (double)numSpotPrice.Value * 0.001; // Assuming 0.1% steps of the spot price
             //double mouseXValue = Math.Round(mouseXValue / step) * step;
@@ -164,18 +181,29 @@ namespace IB_TradingPlatformExtention1
             verticalLine.X = mouseXValue;
             verticalLine.Visible = true;
 
+            intersectionDot.AnchorX = mouseXValue;
+            intersectionDot.AnchorY = pnlBeforeExp - 4;
+            intersectionDot.Visible = true;
+
             // Display underlying price text at the top of the line
             priceAnnotation.Text = $"Price: {mouseXValue:F2}";
             priceAnnotation.AnchorX = mouseXValue;
             priceAnnotation.AnchorY = chartRiskProfile.ChartAreas[0].AxisY.Maximum; // At the top of the chart
             priceAnnotation.Visible = true;
 
-            // Calculate the P&L at this underlying price for the strategy
-            double pnlBeforeExp = BlackScholes.CalculateStrategyPremium(optionLegs, mouseXValue, currTime, r);
+            
             pnlAnnotation.Text = $"PnL: {pnlBeforeExp:F2}";
             pnlAnnotation.AnchorX = mouseXValue;
             pnlAnnotation.AnchorY = pnlBeforeExp;
             pnlAnnotation.Visible = true;
+        }
+
+        private void chartRiskProfile_MouseLeave(object sender, EventArgs e)
+        {
+            verticalLine.Visible = false;
+            intersectionDot.Visible = false;
+            priceAnnotation.Visible = false;
+            pnlAnnotation.Visible = false;
         }
     }
 
