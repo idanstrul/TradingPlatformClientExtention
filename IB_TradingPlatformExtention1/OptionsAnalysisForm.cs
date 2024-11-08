@@ -14,6 +14,7 @@ namespace IB_TradingPlatformExtention1
     public partial class OptionsAnalysisForm : Form
     {
         private VerticalLineAnnotation verticalLine;
+        private HorizontalLineAnnotation zeroLine;
         private EllipseAnnotation intersectionDot;
         private TextAnnotation priceAnnotation;
         private TextAnnotation pnlAnnotation;
@@ -38,6 +39,20 @@ namespace IB_TradingPlatformExtention1
             };
             chartRiskProfile.Annotations.Add(verticalLine);
 
+            HorizontalLineAnnotation zeroLine = new HorizontalLineAnnotation
+            {
+                AxisX = chartRiskProfile.ChartAreas[0].AxisX,
+                AxisY = chartRiskProfile.ChartAreas[0].AxisY,
+                IsInfinitive = true,
+                Y = 0, 
+                LineColor = Color.Black, 
+                LineWidth = 1,
+                LineDashStyle = ChartDashStyle.Solid,
+                ClipToChartArea = chartRiskProfile.ChartAreas[0].Name,
+
+            };
+            chartRiskProfile.Annotations.Add(zeroLine);
+
             intersectionDot = new EllipseAnnotation
             {
                 AxisX = chartRiskProfile.ChartAreas[0].AxisX,
@@ -56,7 +71,7 @@ namespace IB_TradingPlatformExtention1
                 AxisX = chartRiskProfile.ChartAreas[0].AxisX,
                 AxisY = chartRiskProfile.ChartAreas[0].AxisY,
                 Alignment = ContentAlignment.TopCenter,
-                ForeColor = Color.Blue,
+                ForeColor = Color.Black,
                 Visible = false // Start hidden until hover
             };
             chartRiskProfile.Annotations.Add(priceAnnotation);
@@ -67,7 +82,7 @@ namespace IB_TradingPlatformExtention1
                 AxisX = chartRiskProfile.ChartAreas[0].AxisX,
                 AxisY = chartRiskProfile.ChartAreas[0].AxisY,
                 Alignment = ContentAlignment.MiddleRight,
-                ForeColor = Color.Green,
+                ForeColor = Color.Black,
                 Visible = false // Start hidden until hover
             };
             chartRiskProfile.Annotations.Add(pnlAnnotation);
@@ -140,10 +155,13 @@ namespace IB_TradingPlatformExtention1
 
             for (int i = 0; i < pricePoints.Count; i++)
             {
-                seriesPnlBeforeExp.Points.AddXY(pricePoints[i], pnlBeforeExp[i]);
+                DataPoint point = new DataPoint(pricePoints[i], pnlBeforeExp[i]);
+                point.Color = ColorPnlPoint(pnlBeforeExp[i]);
+                seriesPnlBeforeExp.Points.Add(point);
             }
             chartRiskProfile.Series.Add(seriesPnlBeforeExp);
 
+            int dashSpacing = 2;
             // PnL at Expiration Series
             Series seriesPnlAtExp = new Series("PnL (At Expiration)");
             seriesPnlAtExp.ChartType = SeriesChartType.Line;
@@ -152,7 +170,17 @@ namespace IB_TradingPlatformExtention1
 
             for (int i = 0; i < pricePoints.Count; i++)
             {
-                seriesPnlAtExp.Points.AddXY(pricePoints[i], pnlAtExp[i]);
+                if (i % dashSpacing == 0)
+                {
+                    DataPoint point = new DataPoint(pricePoints[i], pnlAtExp[i]);
+                    point.Color = ColorPnlPoint(pnlAtExp[i]);
+                    seriesPnlAtExp.Points.Add(point);
+                } else
+                {
+                    DataPoint point = new DataPoint(pricePoints[i], pnlAtExp[i]);
+                    point.Color = Color.Transparent;
+                    seriesPnlAtExp.Points.Add(point);
+                }
             }
             chartRiskProfile.Series.Add(seriesPnlAtExp);
 
@@ -160,6 +188,15 @@ namespace IB_TradingPlatformExtention1
             chartRiskProfile.ChartAreas[0].AxisX.Title = "Underlying Price";
             chartRiskProfile.ChartAreas[0].AxisY.Title = "Profit / Loss";
             chartRiskProfile.ChartAreas[0].RecalculateAxesScale();
+        }
+
+        private Color ColorPnlPoint(double yValue)
+        {
+            int intensity = (int)Math.Min(255, Math.Abs(yValue) * 2); // Scale to keep within 0-255 range
+                                                                  // Assign color based on positive or negative yValue
+            return yValue > 0
+                ? Color.FromArgb(255, 0, intensity / 2, 0) // Green gradient above 0
+                : Color.FromArgb(255, intensity, 0, 0);     // Red gradient below 0
         }
 
         private void chartRiskProfile_MouseMove(object sender, MouseEventArgs e)
@@ -186,13 +223,13 @@ namespace IB_TradingPlatformExtention1
             intersectionDot.Visible = true;
 
             // Display underlying price text at the top of the line
-            priceAnnotation.Text = $"Price: {mouseXValue:F2}";
+            priceAnnotation.Text = $"Price:       {mouseXValue:F2}";
             priceAnnotation.AnchorX = mouseXValue;
             priceAnnotation.AnchorY = chartRiskProfile.ChartAreas[0].AxisY.Maximum; // At the top of the chart
             priceAnnotation.Visible = true;
 
             
-            pnlAnnotation.Text = $"PnL: {pnlBeforeExp:F2}";
+            pnlAnnotation.Text = $"PnL:         {pnlBeforeExp:F2}";
             pnlAnnotation.AnchorX = mouseXValue;
             pnlAnnotation.AnchorY = pnlBeforeExp;
             pnlAnnotation.Visible = true;
