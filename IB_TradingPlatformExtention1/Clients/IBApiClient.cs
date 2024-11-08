@@ -169,6 +169,8 @@ namespace IB_TradingPlatformExtention1
             // Place the order
             wrapper.ClientSocket.placeOrder(order.OrderId, contract, order);
 
+            UpdateOrder(order, contract);
+
             // increase the order id value
             orderId++;
         }
@@ -216,6 +218,8 @@ namespace IB_TradingPlatformExtention1
             //to activate all its predecessors
             stopLoss.Transmit = true;
             wrapper.ClientSocket.placeOrder(stopLoss.OrderId, contract, stopLoss);
+
+            UpdateOrder(stopLoss, contract);
 
             orderId++;
         }

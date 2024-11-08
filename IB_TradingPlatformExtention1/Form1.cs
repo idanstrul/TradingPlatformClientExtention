@@ -24,6 +24,7 @@ namespace IB_TradingPlatformExtention1
         // the text property on a ListBox control.
         delegate void SetTextCallbackTickPrice(string field, string price);
         delegate myContract SetCallbackCurrContract();
+        private double? TrailStopPrice = null;
 
         // Create the ibClient object to represent the connection
         public Form1()
@@ -294,6 +295,10 @@ namespace IB_TradingPlatformExtention1
 
             if (stopType > 0)
             {
+                double trailStopPrice = side == "BUY" ?
+                double.Parse(tbBid.Text) - (double)numTrailStop.Value :
+                double.Parse(tbAsk.Text) + (double)numTrailStop.Value;
+
                 stopLossOrder = new StopLossOrder
                 {
                     OcaGroupName = currContract.Symbol + "_" + currContract.SecType + "_" + client.orderId,
@@ -304,7 +309,7 @@ namespace IB_TradingPlatformExtention1
                     OutsideRth = isOutsideRth,
                     StopType = stopType,
                     StopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value,
-                    TrailStopPrice = Math.Round((double.Parse(tbAsk.Text) + double.Parse(tbBid.Text)) / 2, 2),
+                    TrailStopPrice = trailStopPrice,
                     StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
                 };
             }
@@ -317,6 +322,11 @@ namespace IB_TradingPlatformExtention1
 
                 if (!isIncreasePos && currStopLossOrders.Count > 0)
                 {
+                    Order currStopLossOrder = currStopLossOrders.First().Order;
+                    if (currStopLossOrder.OrderType == "TRAIL" || currStopLossOrder.OrderType == "TRAIL LIMIT")
+                    {
+                        TrailStopPrice = currStopLossOrder.TrailStopPrice;
+                    }
                     order.OcaGroupName = currStopLossOrders.First().Order.OcaGroup;
                 }
             }
@@ -428,6 +438,10 @@ namespace IB_TradingPlatformExtention1
             if (this.cbStopLoss.Checked) stopType = 1;
             if (this.cbTrailStop.Checked) stopType = 2;
 
+            double trailStopPrice = TrailStopPrice != null? (double)TrailStopPrice : position.PositionAmount > 0 ? 
+                double.Parse(tbBid.Text) - (double)numTrailStop.Value : 
+                double.Parse(tbAsk.Text) + (double)numTrailStop.Value;
+
             StopLossOrder _stopLossOrder = new StopLossOrder
             {
                 OcaGroupName = currContract.Symbol + "_" + currContract.SecType + "_" + client.orderId,
@@ -437,7 +451,7 @@ namespace IB_TradingPlatformExtention1
                 OutsideRth = isOutsideRth,
                 StopType = stopType,
                 StopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value,
-                TrailStopPrice = Math.Round((double.Parse(tbAsk.Text) + double.Parse(tbBid.Text)) / 2, 2),
+                TrailStopPrice = trailStopPrice,
                 StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
             };
 
@@ -468,6 +482,7 @@ namespace IB_TradingPlatformExtention1
             if (stopType == 0) return;
 
             client.PlaceStopLossOrder(currContract, _stopLossOrder);
+            TrailStopPrice = null;
 
         }
 
