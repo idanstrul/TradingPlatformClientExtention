@@ -57,6 +57,7 @@
             this.chkOutside = new System.Windows.Forms.CheckBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.btnOptionsAnalysis = new System.Windows.Forms.Button();
             this.btnStopLossAdj = new System.Windows.Forms.Button();
             this.btnClosePos = new System.Windows.Forms.Button();
             this.numTrailStop = new System.Windows.Forms.NumericUpDown();
@@ -74,7 +75,6 @@
             this.btnCancelAll = new System.Windows.Forms.Button();
             this.btnCancelLast = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.btnOptionsAnalysis = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -95,11 +95,14 @@
             // 
             // cbSymbol
             // 
+            this.cbSymbol.DisplayMember = "Description";
+            this.cbSymbol.DropDownWidth = 300;
             this.cbSymbol.FormattingEnabled = true;
             this.cbSymbol.Location = new System.Drawing.Point(9, 31);
             this.cbSymbol.Name = "cbSymbol";
             this.cbSymbol.Size = new System.Drawing.Size(92, 24);
             this.cbSymbol.TabIndex = 1;
+            this.cbSymbol.ValueMember = "ConId";
             this.cbSymbol.SelectedIndexChanged += new System.EventHandler(this.cbSymbol_SelectedIndexChanged);
             this.cbSymbol.KeyDown += new System.Windows.Forms.KeyEventHandler(this.cbSymbol_KeyDown);
             this.cbSymbol.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cbSymbol_KeyPress);
@@ -358,6 +361,16 @@
             this.tabPage1.Text = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // btnOptionsAnalysis
+            // 
+            this.btnOptionsAnalysis.Location = new System.Drawing.Point(122, 252);
+            this.btnOptionsAnalysis.Name = "btnOptionsAnalysis";
+            this.btnOptionsAnalysis.Size = new System.Drawing.Size(75, 23);
+            this.btnOptionsAnalysis.TabIndex = 52;
+            this.btnOptionsAnalysis.Text = "Options analysis";
+            this.btnOptionsAnalysis.UseVisualStyleBackColor = true;
+            this.btnOptionsAnalysis.Click += new System.EventHandler(this.btnOptionsAnalysis_Click);
+            // 
             // btnStopLossAdj
             // 
             this.btnStopLossAdj.Location = new System.Drawing.Point(388, 234);
@@ -570,16 +583,6 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // btnOptionsAnalysis
-            // 
-            this.btnOptionsAnalysis.Location = new System.Drawing.Point(122, 252);
-            this.btnOptionsAnalysis.Name = "btnOptionsAnalysis";
-            this.btnOptionsAnalysis.Size = new System.Drawing.Size(75, 23);
-            this.btnOptionsAnalysis.TabIndex = 52;
-            this.btnOptionsAnalysis.Text = "Options analysis";
-            this.btnOptionsAnalysis.UseVisualStyleBackColor = true;
-            this.btnOptionsAnalysis.Click += new System.EventHandler(this.btnOptionsAnalysis_Click);
             // 
             // Form1
             // 

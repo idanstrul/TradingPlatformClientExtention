@@ -22,11 +22,10 @@ namespace IB_TradingPlatformExtention1.Interfaces
         void Disconnect();
 
         // Market data retrieval
-        void GetData(myContract _contract);
+        void GetDataForCurrContract();
 
         // Order management
-        void PlaceOrder(myContract c, myOrder o);
-        void CancelAllOrders();
+        //void PlaceOrder(myContract c, myOrder o);
 
         // Order and position updates
         void UpdatePosition(string account, Contract contract, decimal position, double avgCost);

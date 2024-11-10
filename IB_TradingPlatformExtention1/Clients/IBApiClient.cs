@@ -13,8 +13,12 @@ namespace IB_TradingPlatformExtention1
 {
     public class IBApiClient : IBrokerApiClient
     {
+        public LastTickDetails LastTickDetails { get; set; } = new LastTickDetails();
         public List<Position> OpenPositions { get; private set; } = new List<Position>();
         public List<OpenOrder> OpenOrders { get; private set; } = new List<OpenOrder>();
+        public List<Contract> USContracts { get; private set; } = new List<Contract>();
+        private Contract CurrContract;
+        private double? TrailStopPrice = null;
         private EWrapperImpl wrapper;
         private EReader reader;
         private Thread apiThread;
@@ -23,9 +27,11 @@ namespace IB_TradingPlatformExtention1
 
         // Events to notify the form when data changes
         public event Action<string, string> OnTickPriceUpdated;
-        public event Action<string, string> OnPositionChanged;
+        public event Action OnPositionChanged;
+        public event Action<object[]> OnContractSamplesReceived;
         public event Action OnConnected;
         public event Action OnDisconnected;
+        public event Action OnContractSelected;
 
         public IBApiClient()
         {
@@ -69,26 +75,25 @@ namespace IB_TradingPlatformExtention1
             OnDisconnected?.Invoke();
         }
 
-        public void GetData(myContract _contract)
+        public void SearchContracts(string symbol)
         {
+            wrapper.ClientSocket.reqMatchingSymbols(1, symbol);
+        }
+
+        public void SetCurrContract(int conId)
+        {
+            CurrContract = USContracts.Where(x => x.ConId == conId).FirstOrDefault();
+            OnContractSelected?.Invoke();
+        }
+
+        public void GetDataForCurrContract()
+        {
+            if (CurrContract == null) return;
             wrapper.ClientSocket.cancelMktData(1); // cancel market data
 
-            // Create a new contract to specify the security we are searching for
-            Contract contract = new Contract();
+            CurrContract.Exchange = CurrContract.Exchange ?? "SMART";
             // Create a new TagValueList object (for API version 9.71 and later) 
             List<TagValue> mktDataOptions = new List<TagValue>();
-
-            // Set the underlying stock symbol fromthe cbSymbol combobox            
-            contract.Symbol = _contract.Symbol;
-            // Set the Security type to STK for a Stock
-            contract.SecType = _contract.SecType;
-            // Use "SMART" as the general exchange
-            contract.Exchange = _contract.Exchange;
-            // Set the primary exchange (sometimes called Listing exchange)
-            // Use either NYSE or ISLAND
-            contract.PrimaryExch = _contract.PrimaryExch;
-            // Set the currency to USD
-            contract.Currency = _contract.Currency;
 
             // If using delayed market data subscription un-comment 
             // the line below to request delayed data
@@ -97,12 +102,13 @@ namespace IB_TradingPlatformExtention1
             // Kick off the subscription for real-time data (add the mktDataOptions list for API v9.71)
 
             // For API v9.72 and higher, add one more parameter for regulatory snapshot
-            wrapper.ClientSocket.reqMktData(1, contract, "", false, false, mktDataOptions);
+            wrapper.ClientSocket.reqMktData(1, CurrContract, "", false, false, mktDataOptions);
 
         }
 
-        public Position GetPositionForContract(myContract currContract)
+        public Position GetPositionForCurrContract(Contract currContract)
         {
+            if (currContract == null) return null;
             return OpenPositions.FirstOrDefault(p => p.Contract.Symbol == currContract.Symbol
                                                  && p.Contract.SecType == currContract.SecType
                                                  //&& p.Contract.Exchange == currContract.Exchange
@@ -125,162 +131,303 @@ namespace IB_TradingPlatformExtention1
                 .ToList();
         }
 
-        public void PlaceOrder(myContract c, myOrder o)
+        public void PlaceOrder(string side, Keys modifierKeys, decimal totalQuantity, double lmtPriceOffset, int stopType, bool isOutsideRth, double stopPrice)
         {
-            // Create a new contract to specify the security we are searching for
-            Contract contract = new Contract();
+            if (CurrContract == null) return;
 
-            // Set the underlying stock symbol from the cbSymbol combobox
-            contract.Symbol = c.Symbol;
-            // Set the Security type to STK for a Stock
-            contract.SecType = c.SecType;
-            // Use "SMART" as the general exchange
-            contract.Exchange = c.Exchange;
-            // Set the primary exchange (sometimes called Listing exchange)
-            // Use either NYSE or ISLAND
-            contract.PrimaryExch = c.PrimaryExch;
-            // Set the currency to USD
-            contract.Currency = c.Currency;
+            double lmtPrice = ((side == "BUY" && modifierKeys != Keys.Alt) || (side == "SELL" && modifierKeys == Keys.Alt) ?
+                LastTickDetails.Ask : LastTickDetails.Bid) + lmtPriceOffset;
 
+            Position pos = GetPositionForCurrContract(CurrContract);
+            List<OpenOrder> currStopLossOrders = GetStopLossOrdersForPosition(pos);
 
-            // Create a new order
-            Order order = new Order();
-            // gets the next order id from the text box
-            if(!string.IsNullOrEmpty(o.OcaGroupName)) order.OcaGroup = o.OcaGroupName;
-            order.OcaType = 2;
-            order.OrderId = o.OrderId;
-            // gets the side of the order (BUY, or SELL)
-            order.Action = o.Action;
-            // gets order type from combobox market or limit order(MKT, or LMT)
-            order.OrderType = o.OrderType;
-            // number of shares from Quantity
-            order.TotalQuantity = o.TotalQuantity;
-            // Value from limit price
-            order.LmtPrice = o.LmtPrice;
-            //order.OutsideRth = cbOutsideRTH.Checked;
-            order.OutsideRth = o.OutsideRth;
+            Order order = new Order
+            {
+                OcaType = 2,
+                OrderId = orderId,
+                Action = side,
+                OrderType = (modifierKeys == Keys.Control) ? "MKT" : "LMT",
+                TotalQuantity = totalQuantity,
+                LmtPrice = lmtPrice,
+                OutsideRth = isOutsideRth,
+            };
 
+            Order stopLossOrder = null;
 
-            if (o.AttachStop)
+            if (stopType > 0)
             {
                 order.Transmit = false;
+
+                double trailStopPrice = side == "BUY" ?
+                LastTickDetails.Bid - stopPrice : LastTickDetails.Ask + stopPrice;
+
+                stopLossOrder = new Order
+                {
+                    OcaGroup = CurrContract.Symbol + "_" + CurrContract.SecType + "_" + orderId,
+                    OcaType = 2,
+                    TriggerMethod = 7,
+                    ParentId = orderId,
+                    OrderId = orderId + 1,
+                    Action = side == "BUY" ? "SELL" : "BUY",
+                    TotalQuantity = totalQuantity,
+                    OutsideRth = isOutsideRth,
+                    AuxPrice = stopPrice,
+                };
+
+                if (stopType == 2)
+                {
+                    stopLossOrder.OrderType = (isOutsideRth) ? "TRAIL LIMIT" : "TRAIL";
+                    stopLossOrder.TrailStopPrice = trailStopPrice;
+                    if (stopLossOrder.OrderType == "TRAIL LIMIT") stopLossOrder.LmtPriceOffset = -4 * lmtPriceOffset;
+                }
+                else if (stopType == 1)
+                {
+                    stopLossOrder.OrderType = (isOutsideRth) ? "STP LMT" : "STP";
+                    if (stopLossOrder.OrderType == "STP LMT") stopLossOrder.LmtPrice = stopPrice - 4 * lmtPriceOffset;
+                }
+            }
+
+            if (pos != null)
+            {
+                // Is this order is for increasing or decreasing position size
+                bool isIncreasePos = (pos.PositionAmount > 0 && side == "BUY") || (pos.PositionAmount < 0 && side == "SELL");
+                order.Transmit = true;
+
+                if (!isIncreasePos && currStopLossOrders.Count > 0)
+                {
+                    Order currStopLossOrder = currStopLossOrders.First().Order;
+                    if (currStopLossOrder.OrderType == "TRAIL" || currStopLossOrder.OrderType == "TRAIL LIMIT")
+                    {
+                        TrailStopPrice = currStopLossOrder.TrailStopPrice;
+                    }
+                    order.OcaGroup = currStopLossOrders.First().Order.OcaGroup;
+                }
             }
 
             // Place the order
-            wrapper.ClientSocket.placeOrder(order.OrderId, contract, order);
+            wrapper.ClientSocket.placeOrder(order.OrderId, CurrContract, order);
 
-            UpdateOrder(order, contract);
+            UpdateOrder(order, CurrContract);
 
             // increase the order id value
             orderId++;
+
+            if (!order.Transmit)
+            {
+                //In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true
+                //to activate all its predecessors
+                stopLossOrder.Transmit = true;
+                wrapper.ClientSocket.placeOrder(stopLossOrder.OrderId, CurrContract, stopLossOrder);
+
+                UpdateOrder(stopLossOrder, CurrContract);
+
+                orderId++;
+            }
         }
 
-        public void PlaceStopLossOrder(myContract c, StopLossOrder o)
+        public void AdjustStopLoss(bool isOutsideRth, int stopType, double stopPrice, double limitPriceOffset)
         {
-            // Create a new contract to specify the security we are searching for
-            Contract contract = new Contract();
+            if (CurrContract == null) return;
 
-            // Set the underlying stock symbol from the cbSymbol combobox
-            contract.Symbol = c.Symbol;
-            // Set the Security type to STK for a Stock
-            contract.SecType = c.SecType;
-            // Use "SMART" as the general exchange
-            contract.Exchange = c.Exchange;
-            // Set the primary exchange (sometimes called Listing exchange)
-            // Use either NYSE or ISLAND
-            contract.PrimaryExch = c.PrimaryExch;
-            // Set the currency to USD
-            contract.Currency = c.Currency;
+            var position = GetPositionForCurrContract(CurrContract);
 
-            Order stopLoss = new Order();
-            if (o.ParentId > 0) stopLoss.ParentId = o.ParentId;
-            if(!string.IsNullOrEmpty(o.OcaGroupName)) stopLoss.OcaGroup = o.OcaGroupName;
-            stopLoss.OcaType = 2;
-            stopLoss.OrderId = o.OrderId;
-            stopLoss.Action = o.Action;
-            stopLoss.TriggerMethod = 7;
-            stopLoss.OutsideRth = o.OutsideRth;
-            stopLoss.TotalQuantity = o.TotalQuantity;
-            if (o.StopType == 2)
+            if (position == null || position.PositionAmount == 0) return;
+
+            var stopLossOrders = GetStopLossOrdersForPosition(position);
+
+            double trailStopPrice = TrailStopPrice != null ? (double)TrailStopPrice : position.PositionAmount > 0 ?
+                LastTickDetails.Bid - stopPrice : LastTickDetails.Ask + stopPrice;
+
+            Order stopLoss = new Order
             {
-                stopLoss.OrderType = (o.OutsideRth) ? "TRAIL LIMIT" : "TRAIL";
-                stopLoss.TrailStopPrice = o.TrailStopPrice;
-                stopLoss.AuxPrice = (double)o.StopPrice;
-                if (stopLoss.OrderType == "TRAIL LIMIT") stopLoss.LmtPriceOffset = o.StopLimitPriceOffset;
-            }
-            else if (o.StopType == 1)
+                OcaGroup = CurrContract.Symbol + "_" + CurrContract.SecType + "_" + orderId,
+                OcaType = 2,
+                OrderId = orderId,
+                Action = position.PositionAmount > 0 ? "SELL" : "BUY",
+                TriggerMethod = 7,
+                TotalQuantity = Math.Abs(position.PositionAmount),
+                OutsideRth = isOutsideRth,
+                AuxPrice = stopPrice
+
+            };
+
+            if (stopType == 2)
             {
-                stopLoss.OrderType = (o.OutsideRth) ? "STP LMT" : "STP"; //or "STP LMT"
-                stopLoss.AuxPrice = o.StopPrice;
-                if (stopLoss.OrderType == "STP LMT") stopLoss.LmtPrice = o.StopPrice + o.StopLimitPriceOffset;
+                stopLoss.OrderType = (isOutsideRth) ? "TRAIL LIMIT" : "TRAIL";
+                stopLoss.TrailStopPrice = trailStopPrice;
+                if (stopLoss.OrderType == "TRAIL LIMIT") stopLoss.LmtPriceOffset = -4 * limitPriceOffset;
             }
+            else if (stopType == 1)
+            {
+                stopLoss.OrderType = (isOutsideRth) ? "STP LMT" : "STP"; //or "STP LMT"
+                if (stopLoss.OrderType == "STP LMT") stopLoss.LmtPrice = stopPrice - 4 * limitPriceOffset;
+            }
+
             //In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true
             //to activate all its predecessors
             stopLoss.Transmit = true;
-            wrapper.ClientSocket.placeOrder(stopLoss.OrderId, contract, stopLoss);
 
-            UpdateOrder(stopLoss, contract);
+
+            if (stopLossOrders.Count == 1)
+            {
+                //_stopLossOrder.ParentId = stopLossOrders.First().ParentId;
+                stopLoss.OcaGroup = stopLossOrders.First().Order.OcaGroup;
+                string currStopType = stopLossOrders.First().Order.OrderType;
+
+                if ((currStopType == "STP" && stopType == 1 && !isOutsideRth) ||
+                    (currStopType == "STP LMT" && stopType == 1 && isOutsideRth) ||
+                    (currStopType == "TRAIL" && stopType == 2 && !isOutsideRth) ||
+                    (currStopType == "TRAIL LIMIT" && stopType == 2 && isOutsideRth))
+                {
+                    stopLoss.TrailStopPrice = stopLossOrders.First().Order.TrailStopPrice;
+                    stopLoss.OrderId = stopLossOrders.First().Order.OrderId;
+                }
+                else
+                {
+                    wrapper.ClientSocket.cancelOrder(stopLossOrders.First().Order.OrderId, new OrderCancel());
+                }
+            }
+            else if (stopLossOrders.Count > 1)
+            {
+                stopLossOrders.ForEach(order => wrapper.ClientSocket.cancelOrder(order.Order.OrderId, new OrderCancel()));
+            }
+
+            if (stopType == 0) return;
+
+            wrapper.ClientSocket.placeOrder(stopLoss.OrderId, CurrContract, stopLoss);
+
+            TrailStopPrice = null;
+            UpdateOrder(stopLoss, CurrContract);
 
             orderId++;
+
         }
 
-        public void CancelOrder(int orderId)
+        public void ClosePositionForCurrContract(double tradePriceOffset, bool isOutsideRth)
         {
-            wrapper.ClientSocket.cancelOrder(orderId, new OrderCancel());
+            if (CurrContract == null) return;
+
+            CancelAllOrdersForCurrContract(false);
+
+            // Find the position for the given contract
+            var positionToClose = GetPositionForCurrContract(CurrContract);
+
+            // If a position exists, proceed to close it
+            if (positionToClose != null && positionToClose.PositionAmount != 0)
+            {
+                string side = positionToClose.PositionAmount > 0 ? "SELL" : "BUY";
+
+                double lmtPriceOffset = (double)((side == "BUY") ? 4 * tradePriceOffset : -4 * tradePriceOffset);
+                double lmtPrice = (side == "BUY" ? LastTickDetails.Ask : LastTickDetails.Bid) + lmtPriceOffset;
+
+                // Define a new order to close the position by taking the opposite action
+                Order closeOrder = new Order
+                {
+                    OrderId = orderId,
+                    Action = side,
+                    OrderType = isOutsideRth ? "LMT" : "MKT",
+                    TotalQuantity = Math.Abs(positionToClose.PositionAmount),
+                    LmtPrice = lmtPrice,
+                    OutsideRth = isOutsideRth,
+                };
+                // Place the order
+                wrapper.ClientSocket.placeOrder(closeOrder.OrderId, CurrContract, closeOrder);
+
+                UpdateOrder(closeOrder, CurrContract);
+
+                // increase the order id value
+                orderId++;
+            }
+            else
+            {
+                Console.WriteLine("No open position found for the specified contract.");
+            }
         }
 
-        public void CancelAllOrders()
+        public void CancelLastOrderForCurrContract()
         {
-            wrapper.ClientSocket.reqGlobalCancel(new OrderCancel());
+            if (CurrContract == null) return;
+
+            OpenOrder prevOrder = OpenOrders
+           .Where(order => order.Contract.Symbol == CurrContract.Symbol
+                           && order.Contract.SecType == CurrContract.SecType
+                           && order.Contract.Exchange == CurrContract.Exchange)
+           .OrderByDescending(order => order.Order.OrderId)
+           .FirstOrDefault();
+
+            if (prevOrder != null)
+                wrapper.ClientSocket.cancelOrder(prevOrder.Order.OrderId, new OrderCancel());
         }
 
-        public void CancelAllOrdersForContract(myContract currContract)
+        public void CancelAllOrdersForCurrContract(bool isGlobalCancel)
         {
-            var ordersToCancel = OpenOrders
-                .Where(order => order.Contract.Symbol == currContract.Symbol &&
-                                order.Contract.SecType == currContract.SecType &&
-                                order.Contract.Exchange == currContract.Exchange)
+            if (CurrContract == null) return;
+            if (isGlobalCancel)
+            {
+                wrapper.ClientSocket.reqGlobalCancel(new OrderCancel());
+
+            }
+            else
+            {
+                var ordersToCancel = OpenOrders
+                .Where(order => order.Contract.Symbol == CurrContract.Symbol &&
+                                order.Contract.SecType == CurrContract.SecType &&
+                                order.Contract.Exchange == CurrContract.Exchange)
                 .ToList();
 
-            foreach (var openOrder in ordersToCancel)
-            {
-                CancelOrder(openOrder.Order.OrderId);
+                foreach (var openOrder in ordersToCancel)
+                {
+                    wrapper.ClientSocket.cancelOrder(openOrder.Order.OrderId, new OrderCancel());
+                }
             }
+
         }
 
         public void OnGetTickPrice(string tickPrice)
         {
-            //myform.AddTextBoxItemTickPrice(tickPrice);
-            string[] tickerPrice = new string[] { tickPrice };
-            tickerPrice = tickPrice.Split(',');
+            string[] tickerPrice = tickPrice.Split(',');
 
             if (Convert.ToInt32(tickerPrice[0]) == 1)
             {
                 if (Convert.ToInt32(tickerPrice[1]) == 4)// Delayed Last quote 68, if you want realtime use tickerPrice == 4
                 {
+                    LastTickDetails.Last = Convert.ToDouble(tickerPrice[2]);
                     // Add the text string to the list box
-
                     OnTickPriceUpdated?.Invoke("Last", tickerPrice[2]);
-                    //this.tbLast.Text = tickerPrice[2];
 
                 }
                 else if (Convert.ToInt32(tickerPrice[1]) == 2)  // Delayed Ask quote 67, if you want realtime use tickerPrice == 2
                 {
+                    LastTickDetails.Ask = Convert.ToDouble(tickerPrice[2]);
                     // Add the text string to the list box
-
                     OnTickPriceUpdated?.Invoke("Ask", tickerPrice[2]);
-                    //this.tbAsk.Text = tickerPrice[2];
 
                 }
                 else if (Convert.ToInt32(tickerPrice[1]) == 1)  // Delayed Bid quote 66, if you want realtime use tickerPrice == 1
                 {
-                    // Add the text string to the list box
 
+                    LastTickDetails.Bid = Convert.ToDouble(tickerPrice[2]);
+                    // Add the text string to the list box
                     OnTickPriceUpdated?.Invoke("Bid", tickerPrice[2]);
-                    //this.tbBid.Text = tickerPrice[2];
 
                 }
             }
+        }
+
+        public void OnGetContractSamples(ContractDescription[] contractDescriptions)
+        {
+            USContracts = contractDescriptions
+                .Select(x => x.Contract)
+                .Where(x => x.Currency == "USD").ToList();
+
+            var ContractIdentifiers = USContracts.Select(x =>
+            {
+                string description = x.Symbol + " (" + x.Description + ", " + (x.Exchange ?? "SMART") + " / " + x.PrimaryExch + ")";
+
+                return new { ConId = x.ConId, Description = description };
+            }).ToArray();
+
+            OnContractSamplesReceived.Invoke(ContractIdentifiers);
         }
 
         public void UpdatePosition(string account, Contract contract, decimal position, double avgCost)
@@ -304,7 +451,11 @@ namespace IB_TradingPlatformExtention1
                 });
             }
 
-            OnPositionChanged?.Invoke(contract.Symbol, contract.SecType);
+            if (CurrContract == null) return;
+            if (contract.Symbol == CurrContract.Symbol && contract.SecType == CurrContract.SecType)
+            {
+                OnPositionChanged?.Invoke();
+            }
         }
 
         public void UpdateOrder(Order order, Contract contract)
@@ -353,6 +504,13 @@ namespace IB_TradingPlatformExtention1
         {
             OpenOrders.RemoveAll(o => o.Order.OrderId == orderId);
         }
+    }
+
+    public class LastTickDetails
+    {
+        public double Bid { get; set; }
+        public double Ask { get; set; }
+        public double Last { get; set; }
     }
 
     public class Position

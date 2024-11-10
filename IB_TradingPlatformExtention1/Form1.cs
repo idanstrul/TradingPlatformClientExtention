@@ -23,8 +23,7 @@ namespace IB_TradingPlatformExtention1
         // This delegate enables asynchronous calls for setting
         // the text property on a ListBox control.
         delegate void SetTextCallbackTickPrice(string field, string price);
-        delegate myContract SetCallbackCurrContract();
-        private double? TrailStopPrice = null;
+        delegate void SetCallbackContractSamplesRecived(object[] contractIdentifiers);
 
         // Create the ibClient object to represent the connection
         public Form1()
@@ -37,16 +36,34 @@ namespace IB_TradingPlatformExtention1
             client.OnConnected += Client_OnConnected;
             client.OnDisconnected += Client_OnDisconnected;
             client.OnPositionChanged += Client_OnPositionChanged;
+            client.OnContractSamplesReceived += Client_OnContractSamplesReceived;
         }
 
-        private void Client_OnPositionChanged(string symbol, string secType)
+        private void Client_OnContractSamplesReceived(object[] contractIdentifiers)
         {
-            myContract currContract = GetCurrContract();
-            if (currContract == null) return;
-            if (symbol == currContract.Symbol && secType == "STK")
+            if (this.cbSymbol.InvokeRequired)
             {
-                AdjustStopLoss();
+                SetCallbackContractSamplesRecived d = new SetCallbackContractSamplesRecived(Client_OnContractSamplesReceived);
+                try
+                {
+                    this.Invoke(d, new object[] { contractIdentifiers });
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("This is from Client_OnContractSamplesRecived", e);
+                }
             }
+            else
+            {
+                cbSymbol.Items.Clear();
+                cbSymbol.Items.AddRange(contractIdentifiers);
+                cbSymbol.DroppedDown = true;
+            }
+        }
+
+        private void Client_OnPositionChanged()
+        {
+            AdjustStopLoss();
         }
 
         private void Client_OnDisconnected()
@@ -56,9 +73,7 @@ namespace IB_TradingPlatformExtention1
 
         private void Client_OnConnected()
         {
-            myContract currContract = GetCurrContract();
-            if (currContract == null) return;
-            client.GetData(currContract);
+            //throw new NotImplementedException();
 
         }
 
@@ -78,7 +93,6 @@ namespace IB_TradingPlatformExtention1
             }
             else
             {
-
                 switch (field)
                 {
                     case "Last":
@@ -93,42 +107,8 @@ namespace IB_TradingPlatformExtention1
                     default:
                         break;
                 }
-
             }
         }
-
-        private myContract GetCurrContract()
-        {
-
-            if (this.cbSymbol.InvokeRequired)
-            {
-                SetCallbackCurrContract d = new SetCallbackCurrContract(GetCurrContract);
-                try
-                {
-                    return (myContract)this.Invoke(d, new object[] {});
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("This is from Client_OnTickPriceUpdated", e);
-                    return null;
-                }
-            }
-            else
-            {
-                if (cbSymbol.Text.Trim() == "") return null;
-                myContract contract = new myContract
-                {
-                    Symbol = cbSymbol.Text.Trim(),
-                    SecType = "STK",
-                    Exchange = "SMART",
-                    PrimaryExch = "ISLAND",
-                    Currency = "USD"
-                };
-                return contract;
-            }
-            
-        }
-
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -146,9 +126,9 @@ namespace IB_TradingPlatformExtention1
 
         private void cbSymbol_SelectedIndexChanged(object sender, EventArgs e)
         {
-            myContract currContract = GetCurrContract();
-            if (currContract == null) return;
-            client.GetData(currContract);
+            var selectedItem = cbSymbol.SelectedItem as dynamic;
+            client.SetCurrContract(selectedItem.ConId);
+            client.GetDataForCurrContract();
         }
 
         private void cbSymbol_KeyPress(object sender, KeyPressEventArgs e)
@@ -163,25 +143,7 @@ namespace IB_TradingPlatformExtention1
         {
             if (e.KeyCode == Keys.Enter)
             {
-                cbSymbol.SelectionStart = 0;
-                cbSymbol.SelectionLength = cbSymbol.Text.Trim().Length;
-
-                e.SuppressKeyPress = true;
-
-                string name = cbSymbol.Text.Trim();
-
-                if (name == "") return;
-
-                // adds the security symbol to the dropdown list in the symbol combobox
-                if (!cbSymbol.Items.Contains(name))
-                {
-                    cbSymbol.Items.Add(name);
-                }
-                cbSymbol.SelectAll();
-
-                myContract currContract = GetCurrContract();
-                if (currContract == null) return;
-                client.GetData(currContract);
+                client.SearchContracts(cbSymbol.Text.Trim());
             }
         }
 
@@ -264,13 +226,7 @@ namespace IB_TradingPlatformExtention1
 
         public void placeOrder(string side, Keys modifierKeys, decimal posSize)
         {
-            // Create a new contract to specify the security we are searching for
-            myContract currContract = GetCurrContract();
-            if (currContract == null) return;
-
             double lmtPriceOffset = (double)((side == "BUY") ? this.numTradeOffset.Value : -this.numTradeOffset.Value);
-            double lmtPrice = ((side == "BUY" && modifierKeys != Keys.Alt) || (side == "SELL" && modifierKeys == Keys.Alt) ?
-                Convert.ToDouble(tbAsk.Text) : Convert.ToDouble(tbBid.Text)) + lmtPriceOffset;
 
             int stopType = 0;
             bool isOutsideRth = chkOutside.Checked;
@@ -278,88 +234,47 @@ namespace IB_TradingPlatformExtention1
             if (this.cbStopLoss.Checked) stopType = 1;
             if (this.cbTrailStop.Checked) stopType = 2;
 
-            Position pos = client.GetPositionForContract(currContract);
-            List<OpenOrder> currStopLossOrders = client.GetStopLossOrdersForPosition(pos);
+            decimal totalQuantity = Math.Floor(posSize * Convert.ToDecimal(numQuantity.Value));
 
-            myOrder order = new myOrder
-            {
-                AttachStop = stopType > 0,
-                OrderId = client.orderId,
-                Action = side,
-                OrderType = (modifierKeys == Keys.Control) ? "MKT" : "LMT",
-                TotalQuantity = Math.Floor(posSize * Convert.ToDecimal(numQuantity.Value)),
-                LmtPrice = lmtPrice,
-                OutsideRth = isOutsideRth,
-            };
-            StopLossOrder stopLossOrder = null;
+            double stopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value;
 
-            if (stopType > 0)
-            {
-                double trailStopPrice = side == "BUY" ?
-                double.Parse(tbBid.Text) - (double)numTrailStop.Value :
-                double.Parse(tbAsk.Text) + (double)numTrailStop.Value;
 
-                stopLossOrder = new StopLossOrder
-                {
-                    OcaGroupName = currContract.Symbol + "_" + currContract.SecType + "_" + client.orderId,
-                    ParentId = client.orderId,
-                    OrderId = client.orderId + 1,
-                    Action = side == "BUY" ? "SELL" : "BUY",
-                    TotalQuantity = Math.Floor(posSize * Convert.ToDecimal(numQuantity.Value)),
-                    OutsideRth = isOutsideRth,
-                    StopType = stopType,
-                    StopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value,
-                    TrailStopPrice = trailStopPrice,
-                    StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
-                };
-            }
+            client.PlaceOrder(side, modifierKeys, totalQuantity, lmtPriceOffset, stopType, isOutsideRth, stopPrice);
+        }
 
-            if (pos != null)
-            {
-                // Is this order is for increasing or decreasing position size
-                bool isIncreasePos = (pos.PositionAmount > 0 && side == "BUY") || (pos.PositionAmount < 0 && side == "SELL");
-                order.AttachStop = false;
+        private void btnStopLossAdj_Click(object sender, EventArgs e)
+        {
+            AdjustStopLoss();
+        }
 
-                if (!isIncreasePos && currStopLossOrders.Count > 0)
-                {
-                    Order currStopLossOrder = currStopLossOrders.First().Order;
-                    if (currStopLossOrder.OrderType == "TRAIL" || currStopLossOrder.OrderType == "TRAIL LIMIT")
-                    {
-                        TrailStopPrice = currStopLossOrder.TrailStopPrice;
-                    }
-                    order.OcaGroupName = currStopLossOrders.First().Order.OcaGroup;
-                }
-            }
+        private void AdjustStopLoss()
+        {
+            bool isOutsideRth = chkOutside.Checked;
+            int stopType = 0;
 
-            client.PlaceOrder(currContract, order);
-            if (order.AttachStop) client.PlaceStopLossOrder(currContract, stopLossOrder);
+            if (this.cbStopLoss.Checked) stopType = 1;
+            if (this.cbTrailStop.Checked) stopType = 2;
 
+            double stopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value;
+
+            client.AdjustStopLoss(isOutsideRth, stopType, stopPrice, (double)numTradeOffset.Value);
+
+        }
+
+        private void btnClosePos_Click(object sender, EventArgs e)
+        {
+            client.ClosePositionForCurrContract((double)this.numTradeOffset.Value, chkOutside.Checked);
         }
 
         private void btnCancelLast_Click(object sender, EventArgs e)
         {
-            myContract currContract = GetCurrContract();
-            if (currContract == null) return;
-
-            OpenOrder prevOrder = client.OpenOrders
-           .Where(order => order.Contract.Symbol == currContract.Symbol
-                           && order.Contract.SecType == currContract.SecType
-                           && order.Contract.Exchange == currContract.Exchange)
-           .OrderByDescending(order => order.Order.OrderId)
-           .FirstOrDefault();
-
-            if (prevOrder != null) client.CancelOrder(prevOrder.Order.OrderId);
+            client.CancelLastOrderForCurrContract();
         }
 
         private void btnCancelAll_Click(object sender, EventArgs e)
         {
             Keys modifierKeys = Form.ModifierKeys;
-            myContract currContract = GetCurrContract();
-            if (currContract == null) return;
-
-            if (modifierKeys == Keys.Control) client.CancelAllOrders();
-            else client.CancelAllOrdersForContract(currContract);
-
+            client.CancelAllOrdersForCurrContract(modifierKeys == Keys.Control);
         }
 
         private void cbTrailStop_CheckedChanged(object sender, EventArgs e)
@@ -379,153 +294,10 @@ namespace IB_TradingPlatformExtention1
             }
         }
 
-        private void btnClosePos_Click(object sender, EventArgs e)
-        {
-            myContract currContract = GetCurrContract();
-            if (currContract == null) return;
-
-            client.CancelAllOrdersForContract(currContract);
-
-            // Find the position for the given contract
-            var positionToClose = client.GetPositionForContract(currContract);
-
-            // If a position exists, proceed to close it
-            if (positionToClose != null && positionToClose.PositionAmount != 0)
-            {
-                string side = positionToClose.PositionAmount > 0 ? "SELL" : "BUY";
-
-                double lmtPriceOffset = (double)((side == "BUY") ? 4 * this.numTradeOffset.Value : -4 * this.numTradeOffset.Value);
-                double lmtPrice = (side == "BUY" ? Convert.ToDouble(tbAsk.Text) : Convert.ToDouble(tbBid.Text)) + lmtPriceOffset;
-
-                // Define a new order to close the position by taking the opposite action
-                myOrder closeOrder = new myOrder
-                {
-                    OrderId = client.orderId,
-                    Action = side,
-                    OrderType = chkOutside.Checked ? "LMT" : "MKT",
-                    TotalQuantity = Math.Abs(positionToClose.PositionAmount),
-                    LmtPrice = lmtPrice,
-                    OutsideRth = chkOutside.Checked,
-                };
-
-                client.PlaceOrder(currContract, closeOrder);
-            }
-            else
-            {
-                Console.WriteLine("No open position found for the specified contract.");
-            }
-        }
-
-        private void btnStopLossAdj_Click(object sender, EventArgs e)
-        {
-            AdjustStopLoss();
-        }
-
-        private void AdjustStopLoss()
-        {
-            myContract currContract = GetCurrContract();
-            if (currContract == null) return;
-
-            var position = client.GetPositionForContract(currContract);
-
-            if (position == null || position.PositionAmount == 0) return;
-
-            var stopLossOrders = client.GetStopLossOrdersForPosition(position);
-
-            bool isOutsideRth = chkOutside.Checked;
-            int stopType = 0;
-
-            if (this.cbStopLoss.Checked) stopType = 1;
-            if (this.cbTrailStop.Checked) stopType = 2;
-
-            double trailStopPrice = TrailStopPrice != null? (double)TrailStopPrice : position.PositionAmount > 0 ? 
-                double.Parse(tbBid.Text) - (double)numTrailStop.Value : 
-                double.Parse(tbAsk.Text) + (double)numTrailStop.Value;
-
-            StopLossOrder _stopLossOrder = new StopLossOrder
-            {
-                OcaGroupName = currContract.Symbol + "_" + currContract.SecType + "_" + client.orderId,
-                OrderId = client.orderId,
-                Action = position.PositionAmount > 0 ? "SELL" : "BUY",
-                TotalQuantity = Math.Abs(position.PositionAmount),
-                OutsideRth = isOutsideRth,
-                StopType = stopType,
-                StopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value,
-                TrailStopPrice = trailStopPrice,
-                StopLimitPriceOffset = -4 * (double)numTradeOffset.Value
-            };
-
-            if (stopLossOrders.Count == 1)
-            {
-                //_stopLossOrder.ParentId = stopLossOrders.First().ParentId;
-                _stopLossOrder.OcaGroupName = stopLossOrders.First().Order.OcaGroup;
-                string currStopType = stopLossOrders.First().Order.OrderType;
-
-                if ((currStopType == "STP" && stopType == 1 && !isOutsideRth) ||
-                    (currStopType == "STP LMT" && stopType == 1 && isOutsideRth) ||
-                    (currStopType == "TRAIL" && stopType == 2 && !isOutsideRth) ||
-                    (currStopType == "TRAIL LIMIT" && stopType == 2 && isOutsideRth))
-                {
-                    _stopLossOrder.TrailStopPrice = stopLossOrders.First().Order.TrailStopPrice;
-                    _stopLossOrder.OrderId = stopLossOrders.First().Order.OrderId;
-                }
-                else
-                {
-                    client.CancelOrder(stopLossOrders.First().Order.OrderId);
-                }
-            }
-            else if (stopLossOrders.Count > 1)
-            {
-                stopLossOrders.ForEach(order => client.CancelOrder(order.Order.OrderId));
-            }
-
-            if (stopType == 0) return;
-
-            client.PlaceStopLossOrder(currContract, _stopLossOrder);
-            TrailStopPrice = null;
-
-        }
-
         private void btnOptionsAnalysis_Click(object sender, EventArgs e)
         {
             OptionsAnalysisForm OAform = new OptionsAnalysisForm();
             OAform.Show();
         }
-    }
-
-    public class myContract
-    {
-        public string Symbol { get; set; }
-        public string SecType { get; set; }
-        public string Exchange { get; set; }
-        public string PrimaryExch { get; set; }
-        public string Currency { get; set; }
-    }
-
-    public class myOrder
-    {
-        //public bool isTakeProfit { get; set; } = false;
-        public string OcaGroupName { get; set; }
-        public bool AttachStop { get; set; } = false;
-        public int OrderId { get; set; }
-        public string Action { get; set; }
-        public string OrderType { get; set; }
-        public decimal TotalQuantity { get; set; }
-        public double LmtPrice { get; set; }
-        public bool OutsideRth { get; set; }
-    }
-
-    public class StopLossOrder
-    {
-        public string OcaGroupName { get; set; }
-        public int ParentId { get; set; } = 0;
-        public int OrderId { get; set; }
-        public string Action { get; set; }
-        public decimal TotalQuantity { get; set; }
-        public bool OutsideRth { get; set; }
-        public int StopType { get; set; } // 0 - No stop, 1 - STP, 2 - TRAIL
-        public double StopPrice { get; set; }
-        public double TrailStopPrice { get; set; } // It's a required field for ib trail orders, I don't know what it is used for
-        public double StopLimitPriceOffset { get; set; }
     }
 }
