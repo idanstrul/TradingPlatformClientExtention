@@ -37,17 +37,13 @@
             this.btnConnect = new System.Windows.Forms.Button();
             this.cbSymbol = new System.Windows.Forms.ComboBox();
             this.numQuantity = new System.Windows.Forms.NumericUpDown();
-            this.cbMarket = new System.Windows.Forms.ComboBox();
             this.cbTif = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
-            this.tbPrimaryEx = new System.Windows.Forms.TextBox();
             this.tbBid = new System.Windows.Forms.TextBox();
             this.tbAsk = new System.Windows.Forms.TextBox();
             this.tbLast = new System.Windows.Forms.TextBox();
@@ -96,11 +92,11 @@
             // cbSymbol
             // 
             this.cbSymbol.DisplayMember = "Description";
-            this.cbSymbol.DropDownWidth = 300;
+            this.cbSymbol.DropDownWidth = 400;
             this.cbSymbol.FormattingEnabled = true;
-            this.cbSymbol.Location = new System.Drawing.Point(9, 31);
+            this.cbSymbol.Location = new System.Drawing.Point(65, 9);
             this.cbSymbol.Name = "cbSymbol";
-            this.cbSymbol.Size = new System.Drawing.Size(92, 24);
+            this.cbSymbol.Size = new System.Drawing.Size(409, 24);
             this.cbSymbol.TabIndex = 1;
             this.cbSymbol.ValueMember = "ConId";
             this.cbSymbol.SelectedIndexChanged += new System.EventHandler(this.cbSymbol_SelectedIndexChanged);
@@ -114,14 +110,14 @@
             0,
             0,
             0});
-            this.numQuantity.Location = new System.Drawing.Point(107, 33);
+            this.numQuantity.Location = new System.Drawing.Point(67, 69);
             this.numQuantity.Maximum = new decimal(new int[] {
             1000000,
             0,
             0,
             0});
             this.numQuantity.Name = "numQuantity";
-            this.numQuantity.Size = new System.Drawing.Size(120, 22);
+            this.numQuantity.Size = new System.Drawing.Size(74, 22);
             this.numQuantity.TabIndex = 3;
             this.numQuantity.Value = new decimal(new int[] {
             30,
@@ -129,29 +125,15 @@
             0,
             0});
             // 
-            // cbMarket
-            // 
-            this.cbMarket.FormattingEnabled = true;
-            this.cbMarket.Items.AddRange(new object[] {
-            "SMART",
-            "ARCA",
-            "BATS",
-            "ISLAND"});
-            this.cbMarket.Location = new System.Drawing.Point(233, 31);
-            this.cbMarket.Name = "cbMarket";
-            this.cbMarket.Size = new System.Drawing.Size(121, 24);
-            this.cbMarket.TabIndex = 5;
-            this.cbMarket.Text = "SMART";
-            // 
             // cbTif
             // 
             this.cbTif.FormattingEnabled = true;
             this.cbTif.Items.AddRange(new object[] {
             "DAY",
             "GTC"});
-            this.cbTif.Location = new System.Drawing.Point(38, 61);
+            this.cbTif.Location = new System.Drawing.Point(182, 69);
             this.cbTif.Name = "cbTif";
-            this.cbTif.Size = new System.Drawing.Size(121, 24);
+            this.cbTif.Size = new System.Drawing.Size(76, 24);
             this.cbTif.TabIndex = 7;
             this.cbTif.Text = "DAY";
             // 
@@ -167,34 +149,16 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(104, 12);
+            this.label2.Location = new System.Drawing.Point(6, 72);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(55, 16);
             this.label2.TabIndex = 9;
             this.label2.Text = "Quantity";
             // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(230, 12);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(48, 16);
-            this.label4.TabIndex = 11;
-            this.label4.Text = "Market";
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(356, 12);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(71, 16);
-            this.label7.TabIndex = 14;
-            this.label7.Text = "Primary Ex";
-            // 
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(6, 64);
+            this.label8.Location = new System.Drawing.Point(150, 72);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(27, 16);
             this.label8.TabIndex = 15;
@@ -203,7 +167,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(6, 92);
+            this.label9.Location = new System.Drawing.Point(6, 43);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(27, 16);
             this.label9.TabIndex = 16;
@@ -212,7 +176,7 @@
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(152, 92);
+            this.label10.Location = new System.Drawing.Point(129, 43);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(30, 16);
             this.label10.TabIndex = 17;
@@ -221,41 +185,33 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(307, 92);
+            this.label11.Location = new System.Drawing.Point(258, 43);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(32, 16);
             this.label11.TabIndex = 18;
             this.label11.Text = "Last";
             // 
-            // tbPrimaryEx
-            // 
-            this.tbPrimaryEx.Location = new System.Drawing.Point(359, 31);
-            this.tbPrimaryEx.Name = "tbPrimaryEx";
-            this.tbPrimaryEx.Size = new System.Drawing.Size(100, 22);
-            this.tbPrimaryEx.TabIndex = 20;
-            this.tbPrimaryEx.Text = "NASDAQ";
-            // 
             // tbBid
             // 
-            this.tbBid.Location = new System.Drawing.Point(39, 89);
+            this.tbBid.Location = new System.Drawing.Point(38, 40);
             this.tbBid.Name = "tbBid";
-            this.tbBid.Size = new System.Drawing.Size(100, 22);
+            this.tbBid.Size = new System.Drawing.Size(78, 22);
             this.tbBid.TabIndex = 21;
             this.tbBid.Text = "0.00";
             // 
             // tbAsk
             // 
-            this.tbAsk.Location = new System.Drawing.Point(188, 89);
+            this.tbAsk.Location = new System.Drawing.Point(165, 39);
             this.tbAsk.Name = "tbAsk";
-            this.tbAsk.Size = new System.Drawing.Size(100, 22);
+            this.tbAsk.Size = new System.Drawing.Size(76, 22);
             this.tbAsk.TabIndex = 22;
             this.tbAsk.Text = "0.00";
             // 
             // tbLast
             // 
-            this.tbLast.Location = new System.Drawing.Point(345, 89);
+            this.tbLast.Location = new System.Drawing.Point(296, 40);
             this.tbLast.Name = "tbLast";
-            this.tbLast.Size = new System.Drawing.Size(100, 22);
+            this.tbLast.Size = new System.Drawing.Size(76, 22);
             this.tbLast.TabIndex = 23;
             this.tbLast.Text = "0.00";
             // 
@@ -274,7 +230,7 @@
             this.btnSell1.BackColor = System.Drawing.Color.Red;
             this.btnSell1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnSell1.ForeColor = System.Drawing.Color.White;
-            this.btnSell1.Location = new System.Drawing.Point(9, 170);
+            this.btnSell1.Location = new System.Drawing.Point(9, 155);
             this.btnSell1.Name = "btnSell1";
             this.btnSell1.Size = new System.Drawing.Size(79, 37);
             this.btnSell1.TabIndex = 27;
@@ -287,7 +243,7 @@
             this.btnBuy1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
             this.btnBuy1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnBuy1.ForeColor = System.Drawing.Color.White;
-            this.btnBuy1.Location = new System.Drawing.Point(9, 127);
+            this.btnBuy1.Location = new System.Drawing.Point(9, 112);
             this.btnBuy1.Name = "btnBuy1";
             this.btnBuy1.Size = new System.Drawing.Size(79, 37);
             this.btnBuy1.TabIndex = 28;
@@ -298,7 +254,7 @@
             // chkOutside
             // 
             this.chkOutside.AutoSize = true;
-            this.chkOutside.Location = new System.Drawing.Point(165, 63);
+            this.chkOutside.Location = new System.Drawing.Point(264, 71);
             this.chkOutside.Name = "chkOutside";
             this.chkOutside.Size = new System.Drawing.Size(104, 20);
             this.chkOutside.TabIndex = 29;
@@ -337,18 +293,14 @@
             this.tabPage1.Controls.Add(this.label1);
             this.tabPage1.Controls.Add(this.cbSymbol);
             this.tabPage1.Controls.Add(this.numQuantity);
-            this.tabPage1.Controls.Add(this.cbMarket);
             this.tabPage1.Controls.Add(this.chkOutside);
             this.tabPage1.Controls.Add(this.cbTif);
             this.tabPage1.Controls.Add(this.btnBuy1);
             this.tabPage1.Controls.Add(this.label2);
             this.tabPage1.Controls.Add(this.btnSell1);
-            this.tabPage1.Controls.Add(this.label4);
             this.tabPage1.Controls.Add(this.tbLast);
             this.tabPage1.Controls.Add(this.tbAsk);
             this.tabPage1.Controls.Add(this.tbBid);
-            this.tabPage1.Controls.Add(this.label7);
-            this.tabPage1.Controls.Add(this.tbPrimaryEx);
             this.tabPage1.Controls.Add(this.label8);
             this.tabPage1.Controls.Add(this.label9);
             this.tabPage1.Controls.Add(this.label11);
@@ -452,7 +404,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(370, 148);
+            this.label3.Location = new System.Drawing.Point(370, 133);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(112, 16);
             this.label3.TabIndex = 44;
@@ -466,7 +418,7 @@
             0,
             0,
             131072});
-            this.numTradeOffset.Location = new System.Drawing.Point(373, 170);
+            this.numTradeOffset.Location = new System.Drawing.Point(373, 155);
             this.numTradeOffset.Name = "numTradeOffset";
             this.numTradeOffset.Size = new System.Drawing.Size(86, 22);
             this.numTradeOffset.TabIndex = 43;
@@ -481,7 +433,7 @@
             this.btnBuy1_8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
             this.btnBuy1_8.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnBuy1_8.ForeColor = System.Drawing.Color.White;
-            this.btnBuy1_8.Location = new System.Drawing.Point(264, 127);
+            this.btnBuy1_8.Location = new System.Drawing.Point(264, 112);
             this.btnBuy1_8.Name = "btnBuy1_8";
             this.btnBuy1_8.Size = new System.Drawing.Size(79, 37);
             this.btnBuy1_8.TabIndex = 42;
@@ -494,7 +446,7 @@
             this.btnBuy1_4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
             this.btnBuy1_4.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnBuy1_4.ForeColor = System.Drawing.Color.White;
-            this.btnBuy1_4.Location = new System.Drawing.Point(179, 127);
+            this.btnBuy1_4.Location = new System.Drawing.Point(179, 112);
             this.btnBuy1_4.Name = "btnBuy1_4";
             this.btnBuy1_4.Size = new System.Drawing.Size(79, 37);
             this.btnBuy1_4.TabIndex = 41;
@@ -507,7 +459,7 @@
             this.btnBuy1_2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
             this.btnBuy1_2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnBuy1_2.ForeColor = System.Drawing.Color.White;
-            this.btnBuy1_2.Location = new System.Drawing.Point(94, 127);
+            this.btnBuy1_2.Location = new System.Drawing.Point(94, 112);
             this.btnBuy1_2.Name = "btnBuy1_2";
             this.btnBuy1_2.Size = new System.Drawing.Size(79, 37);
             this.btnBuy1_2.TabIndex = 40;
@@ -520,7 +472,7 @@
             this.btnSell1_8.BackColor = System.Drawing.Color.Red;
             this.btnSell1_8.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnSell1_8.ForeColor = System.Drawing.Color.White;
-            this.btnSell1_8.Location = new System.Drawing.Point(264, 170);
+            this.btnSell1_8.Location = new System.Drawing.Point(264, 155);
             this.btnSell1_8.Name = "btnSell1_8";
             this.btnSell1_8.Size = new System.Drawing.Size(79, 37);
             this.btnSell1_8.TabIndex = 39;
@@ -533,7 +485,7 @@
             this.btnSell1_2.BackColor = System.Drawing.Color.Red;
             this.btnSell1_2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnSell1_2.ForeColor = System.Drawing.Color.White;
-            this.btnSell1_2.Location = new System.Drawing.Point(94, 170);
+            this.btnSell1_2.Location = new System.Drawing.Point(94, 155);
             this.btnSell1_2.Name = "btnSell1_2";
             this.btnSell1_2.Size = new System.Drawing.Size(79, 37);
             this.btnSell1_2.TabIndex = 38;
@@ -546,7 +498,7 @@
             this.btnSell1_4.BackColor = System.Drawing.Color.Red;
             this.btnSell1_4.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnSell1_4.ForeColor = System.Drawing.Color.White;
-            this.btnSell1_4.Location = new System.Drawing.Point(179, 170);
+            this.btnSell1_4.Location = new System.Drawing.Point(179, 155);
             this.btnSell1_4.Name = "btnSell1_4";
             this.btnSell1_4.Size = new System.Drawing.Size(79, 37);
             this.btnSell1_4.TabIndex = 37;
@@ -611,17 +563,13 @@
         private System.Windows.Forms.Button btnConnect;
         private System.Windows.Forms.ComboBox cbSymbol;
         private System.Windows.Forms.NumericUpDown numQuantity;
-        private System.Windows.Forms.ComboBox cbMarket;
         private System.Windows.Forms.ComboBox cbTif;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.TextBox tbPrimaryEx;
         private System.Windows.Forms.TextBox tbBid;
         private System.Windows.Forms.TextBox tbAsk;
         private System.Windows.Forms.TextBox tbLast;
