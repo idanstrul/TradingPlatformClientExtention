@@ -18,6 +18,8 @@ namespace IB_TradingPlatformExtention1
         private EllipseAnnotation intersectionDot;
         private TextAnnotation priceAnnotation;
         private TextAnnotation pnlAnnotation;
+        private TextAnnotation probabilityAnnotation;
+
 
         public List<OptionLeg> optionLegs = new List<OptionLeg>();
         public double strategyInitialCost = 0;
@@ -86,6 +88,16 @@ namespace IB_TradingPlatformExtention1
                 Visible = false // Start hidden until hover
             };
             chartRiskProfile.Annotations.Add(pnlAnnotation);
+
+            probabilityAnnotation = new TextAnnotation
+            {
+                AxisX = chartRiskProfile.ChartAreas[0].AxisX,
+                AxisY = chartRiskProfile.ChartAreas[0].AxisY,
+                Alignment = ContentAlignment.BottomCenter,
+                ForeColor = Color.Black,
+                Visible = false // Start hidden until hover
+            };
+            chartRiskProfile.Annotations.Add(probabilityAnnotation);
         }
 
         private void btnPlotRiskProfile_Click(object sender, EventArgs e)
@@ -203,6 +215,7 @@ namespace IB_TradingPlatformExtention1
         {
             double r = (double)numRiskFreeRate.Value;
             DateTime currTime = dtpCurrTimePicker.Value;
+            double atmIv = (double) numAtmIv.Value;
 
             // Convert mouse X position to chart coordinate (Underlying price)
             double mouseXValue = chartRiskProfile.ChartAreas[0].AxisX.PixelPositionToValue(e.X);
@@ -233,6 +246,18 @@ namespace IB_TradingPlatformExtention1
             pnlAnnotation.AnchorX = mouseXValue;
             pnlAnnotation.AnchorY = pnlBeforeExp;
             pnlAnnotation.Visible = true;
+
+
+            // Calculate the probability of being above/below the current price at expiration
+            double timeToExp = optionLegs.Count > 0 ? optionLegs.Min(leg => BlackScholes.CalculateTimeToExpirationInMinutes(leg.Expiration, currTime)) / 525600.0 : 0;
+            double probAbove = BlackScholes.CalculateProbabilityAboveSpot((double)numSpotPrice.Value, mouseXValue, timeToExp, r, atmIv);
+            double probBelow = 1 - probAbove;
+
+            // Update and position the probability annotation
+            probabilityAnnotation.Text = $"<--{probBelow * 100:F2}%     {probAbove * 100:F2}%-->";
+            probabilityAnnotation.AnchorX = mouseXValue;
+            probabilityAnnotation.AnchorY = chartRiskProfile.ChartAreas[0].AxisY.Minimum; // At the bottom of the chart
+            probabilityAnnotation.Visible = true;
         }
 
         private void chartRiskProfile_MouseLeave(object sender, EventArgs e)
@@ -241,6 +266,7 @@ namespace IB_TradingPlatformExtention1
             intersectionDot.Visible = false;
             priceAnnotation.Visible = false;
             pnlAnnotation.Visible = false;
+            probabilityAnnotation.Visible = false;
         }
     }
 
@@ -353,6 +379,16 @@ namespace IB_TradingPlatformExtention1
             }
 
             return premium;
+        }
+
+        public static double CalculateProbabilityAboveSpot(double currentSpotPrice, double targetSpotPrice, double timeToExpirationInYears, double riskFreeRate, double atTheMonyImpliedVolatility)
+        {
+            // Calculate d2, which is the standard normal variable for the target spot price at expiration
+            double d2 = (Math.Log(targetSpotPrice / currentSpotPrice) + (riskFreeRate - 0.5 * atTheMonyImpliedVolatility * atTheMonyImpliedVolatility) * timeToExpirationInYears) /
+                        (atTheMonyImpliedVolatility * Math.Sqrt(timeToExpirationInYears));
+
+            // Use the CDF to get the probability that the underlying price will be above the target spot price
+            return 1 - Cdf(d2); // Probability of being above S1 is 1 - CDF(d2)
         }
 
     }

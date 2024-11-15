@@ -46,11 +46,14 @@
             this.colIsCall = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.colDirIsBuy = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.dtpCurrTimePicker = new System.Windows.Forms.DateTimePicker();
+            this.label2 = new System.Windows.Forms.Label();
+            this.numAtmIv = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.numSpotPrice)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numRiskFreeRate)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPriceRange)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chartRiskProfile)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgOptTradeLegs)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numAtmIv)).BeginInit();
             this.SuspendLayout();
             // 
             // numSpotPrice
@@ -104,7 +107,7 @@
             // 
             // btnPlotRiskProfile
             // 
-            this.btnPlotRiskProfile.Location = new System.Drawing.Point(15, 146);
+            this.btnPlotRiskProfile.Location = new System.Drawing.Point(15, 159);
             this.btnPlotRiskProfile.Name = "btnPlotRiskProfile";
             this.btnPlotRiskProfile.Size = new System.Drawing.Size(149, 23);
             this.btnPlotRiskProfile.TabIndex = 0;
@@ -115,7 +118,7 @@
             // numPriceRange
             // 
             this.numPriceRange.DecimalPlaces = 4;
-            this.numPriceRange.Location = new System.Drawing.Point(103, 75);
+            this.numPriceRange.Location = new System.Drawing.Point(103, 103);
             this.numPriceRange.Name = "numPriceRange";
             this.numPriceRange.Size = new System.Drawing.Size(120, 22);
             this.numPriceRange.TabIndex = 16;
@@ -128,7 +131,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(12, 77);
+            this.label6.Location = new System.Drawing.Point(12, 105);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(48, 16);
             this.label6.TabIndex = 17;
@@ -148,7 +151,7 @@
             this.chartRiskProfile.ChartAreas.Add(chartArea1);
             legend1.Name = "Legend1";
             this.chartRiskProfile.Legends.Add(legend1);
-            this.chartRiskProfile.Location = new System.Drawing.Point(15, 175);
+            this.chartRiskProfile.Location = new System.Drawing.Point(12, 222);
             this.chartRiskProfile.Name = "chartRiskProfile";
             series1.ChartArea = "ChartArea1";
             series1.Legend = "Legend1";
@@ -215,17 +218,46 @@
             // 
             this.dtpCurrTimePicker.CustomFormat = "dd-MM-yyyy HH:mm";
             this.dtpCurrTimePicker.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpCurrTimePicker.Location = new System.Drawing.Point(23, 103);
+            this.dtpCurrTimePicker.Location = new System.Drawing.Point(23, 131);
             this.dtpCurrTimePicker.Name = "dtpCurrTimePicker";
             this.dtpCurrTimePicker.Size = new System.Drawing.Size(200, 22);
             this.dtpCurrTimePicker.TabIndex = 20;
             this.dtpCurrTimePicker.Value = new System.DateTime(2024, 11, 3, 2, 4, 33, 0);
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 77);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(51, 16);
+            this.label2.TabIndex = 22;
+            this.label2.Text = "ATM IV";
+            // 
+            // numAtmIv
+            // 
+            this.numAtmIv.DecimalPlaces = 6;
+            this.numAtmIv.Location = new System.Drawing.Point(103, 75);
+            this.numAtmIv.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
+            this.numAtmIv.Name = "numAtmIv";
+            this.numAtmIv.Size = new System.Drawing.Size(120, 22);
+            this.numAtmIv.TabIndex = 21;
+            this.numAtmIv.Value = new decimal(new int[] {
+            437,
+            0,
+            0,
+            262144});
+            // 
             // OptionsAnalysisForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1106, 575);
+            this.ClientSize = new System.Drawing.Size(1106, 622);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.numAtmIv);
             this.Controls.Add(this.dtpCurrTimePicker);
             this.Controls.Add(this.dgOptTradeLegs);
             this.Controls.Add(this.chartRiskProfile);
@@ -243,6 +275,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numPriceRange)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chartRiskProfile)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgOptTradeLegs)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numAtmIv)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -265,5 +298,7 @@
         private System.Windows.Forms.DataGridViewCheckBoxColumn colIsCall;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colDirIsBuy;
         private System.Windows.Forms.DateTimePicker dtpCurrTimePicker;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.NumericUpDown numAtmIv;
     }
 }
