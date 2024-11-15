@@ -28,9 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.numSpotPrice = new System.Windows.Forms.NumericUpDown();
             this.numRiskFreeRate = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
@@ -40,14 +39,15 @@
             this.label6 = new System.Windows.Forms.Label();
             this.chartRiskProfile = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.dgOptTradeLegs = new System.Windows.Forms.DataGridView();
-            this.coExpiration = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colStrike = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colVolatility = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colIsCall = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.colDirIsBuy = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.dtpCurrTimePicker = new System.Windows.Forms.DateTimePicker();
             this.label2 = new System.Windows.Forms.Label();
             this.numAtmIv = new System.Windows.Forms.NumericUpDown();
+            this.colSelected = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.colRight = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.coExpiration = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colStrike = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colVolatility = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colQuantity = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.numSpotPrice)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numRiskFreeRate)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPriceRange)).BeginInit();
@@ -139,24 +139,21 @@
             // 
             // chartRiskProfile
             // 
-            chartArea1.AxisX.IntervalOffset = 1D;
-            chartArea1.AxisX.IntervalOffsetType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number;
-            chartArea1.AxisX.IntervalType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number;
-            chartArea1.AxisX.MajorGrid.LineColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisX.MajorTickMark.LineColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisY.MajorGrid.LineColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisY.MajorTickMark.LineColor = System.Drawing.Color.Gainsboro;
-            chartArea1.BackHatchStyle = System.Windows.Forms.DataVisualization.Charting.ChartHatchStyle.Cross;
-            chartArea1.Name = "ChartArea1";
-            this.chartRiskProfile.ChartAreas.Add(chartArea1);
-            legend1.Name = "Legend1";
-            this.chartRiskProfile.Legends.Add(legend1);
+            chartArea2.AxisX.IntervalOffset = 1D;
+            chartArea2.AxisX.IntervalOffsetType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number;
+            chartArea2.AxisX.IntervalType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number;
+            chartArea2.AxisX.MajorGrid.LineColor = System.Drawing.Color.Gainsboro;
+            chartArea2.AxisX.MajorTickMark.LineColor = System.Drawing.Color.Gainsboro;
+            chartArea2.AxisY.MajorGrid.LineColor = System.Drawing.Color.Gainsboro;
+            chartArea2.AxisY.MajorTickMark.LineColor = System.Drawing.Color.Gainsboro;
+            chartArea2.BackHatchStyle = System.Windows.Forms.DataVisualization.Charting.ChartHatchStyle.Cross;
+            chartArea2.Name = "ChartArea1";
+            this.chartRiskProfile.ChartAreas.Add(chartArea2);
             this.chartRiskProfile.Location = new System.Drawing.Point(12, 222);
             this.chartRiskProfile.Name = "chartRiskProfile";
-            series1.ChartArea = "ChartArea1";
-            series1.Legend = "Legend1";
-            series1.Name = "Series1";
-            this.chartRiskProfile.Series.Add(series1);
+            series2.ChartArea = "ChartArea1";
+            series2.Name = "Series1";
+            this.chartRiskProfile.Series.Add(series2);
             this.chartRiskProfile.Size = new System.Drawing.Size(1079, 388);
             this.chartRiskProfile.TabIndex = 18;
             this.chartRiskProfile.Text = "Risk profile";
@@ -167,52 +164,18 @@
             // 
             this.dgOptTradeLegs.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgOptTradeLegs.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colSelected,
+            this.colRight,
             this.coExpiration,
             this.colStrike,
             this.colVolatility,
-            this.colIsCall,
-            this.colDirIsBuy});
+            this.colQuantity});
             this.dgOptTradeLegs.Location = new System.Drawing.Point(251, 19);
             this.dgOptTradeLegs.Name = "dgOptTradeLegs";
             this.dgOptTradeLegs.RowHeadersWidth = 51;
             this.dgOptTradeLegs.RowTemplate.Height = 24;
             this.dgOptTradeLegs.Size = new System.Drawing.Size(776, 150);
             this.dgOptTradeLegs.TabIndex = 19;
-            // 
-            // coExpiration
-            // 
-            this.coExpiration.HeaderText = "Expiration";
-            this.coExpiration.MinimumWidth = 6;
-            this.coExpiration.Name = "coExpiration";
-            this.coExpiration.Width = 125;
-            // 
-            // colStrike
-            // 
-            this.colStrike.HeaderText = "Strike";
-            this.colStrike.MinimumWidth = 6;
-            this.colStrike.Name = "colStrike";
-            this.colStrike.Width = 125;
-            // 
-            // colVolatility
-            // 
-            this.colVolatility.HeaderText = "Volatility";
-            this.colVolatility.MinimumWidth = 6;
-            this.colVolatility.Name = "colVolatility";
-            this.colVolatility.Width = 125;
-            // 
-            // colIsCall
-            // 
-            this.colIsCall.HeaderText = "Is call";
-            this.colIsCall.MinimumWidth = 6;
-            this.colIsCall.Name = "colIsCall";
-            this.colIsCall.Width = 125;
-            // 
-            // colDirIsBuy
-            // 
-            this.colDirIsBuy.HeaderText = "Direction is buy";
-            this.colDirIsBuy.MinimumWidth = 6;
-            this.colDirIsBuy.Name = "colDirIsBuy";
-            this.colDirIsBuy.Width = 125;
             // 
             // dtpCurrTimePicker
             // 
@@ -250,6 +213,58 @@
             0,
             0,
             262144});
+            // 
+            // colSelected
+            // 
+            this.colSelected.HeaderText = "Selected";
+            this.colSelected.MinimumWidth = 6;
+            this.colSelected.Name = "colSelected";
+            this.colSelected.Width = 125;
+            // 
+            // colRight
+            // 
+            this.colRight.HeaderText = "Right";
+            this.colRight.Items.AddRange(new object[] {
+            "CALL",
+            "PUT"});
+            this.colRight.MinimumWidth = 6;
+            this.colRight.Name = "colRight";
+            this.colRight.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colRight.Width = 125;
+            // 
+            // coExpiration
+            // 
+            this.coExpiration.HeaderText = "Expiration";
+            this.coExpiration.MinimumWidth = 6;
+            this.coExpiration.Name = "coExpiration";
+            this.coExpiration.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.coExpiration.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.coExpiration.Width = 125;
+            // 
+            // colStrike
+            // 
+            this.colStrike.HeaderText = "Strike";
+            this.colStrike.MinimumWidth = 6;
+            this.colStrike.Name = "colStrike";
+            this.colStrike.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colStrike.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.colStrike.Width = 125;
+            // 
+            // colVolatility
+            // 
+            this.colVolatility.HeaderText = "Volatility";
+            this.colVolatility.MinimumWidth = 6;
+            this.colVolatility.Name = "colVolatility";
+            this.colVolatility.Width = 125;
+            // 
+            // colQuantity
+            // 
+            this.colQuantity.HeaderText = "Quantity";
+            this.colQuantity.MinimumWidth = 6;
+            this.colQuantity.Name = "colQuantity";
+            this.colQuantity.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colQuantity.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colQuantity.Width = 125;
             // 
             // OptionsAnalysisForm
             // 
@@ -292,13 +307,14 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartRiskProfile;
         private System.Windows.Forms.DataGridView dgOptTradeLegs;
-        private System.Windows.Forms.DataGridViewTextBoxColumn coExpiration;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colStrike;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colVolatility;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn colIsCall;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn colDirIsBuy;
         private System.Windows.Forms.DateTimePicker dtpCurrTimePicker;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.NumericUpDown numAtmIv;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn colSelected;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colRight;
+        private System.Windows.Forms.DataGridViewComboBoxColumn coExpiration;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colStrike;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colVolatility;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colQuantity;
     }
 }

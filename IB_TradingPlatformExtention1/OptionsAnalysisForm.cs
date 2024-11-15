@@ -46,8 +46,8 @@ namespace IB_TradingPlatformExtention1
                 AxisX = chartRiskProfile.ChartAreas[0].AxisX,
                 AxisY = chartRiskProfile.ChartAreas[0].AxisY,
                 IsInfinitive = true,
-                Y = 0, 
-                LineColor = Color.Black, 
+                Y = 0,
+                LineColor = Color.Black,
                 LineWidth = 1,
                 LineDashStyle = ChartDashStyle.Solid,
                 ClipToChartArea = chartRiskProfile.ChartAreas[0].Name,
@@ -129,15 +129,16 @@ namespace IB_TradingPlatformExtention1
             {
                 if (row.IsNewRow) continue;
 
-                if (!DateTime.TryParse(row.Cells[0].Value?.ToString(), out DateTime expiration))
+                if (!DateTime.TryParse(row.Cells[2].Value?.ToString(), out DateTime expiration))
                     throw new ArgumentException("Invalid expiration date.");
-                if (!double.TryParse(row.Cells[1].Value?.ToString(), out double strike))
+                if (!double.TryParse(row.Cells[3].Value?.ToString(), out double strike))
                     throw new ArgumentException("Invalid strike price.");
-                if (!double.TryParse(row.Cells[2].Value?.ToString(), out double volatility))
+                if (!double.TryParse(row.Cells[4].Value?.ToString(), out double volatility))
+                    throw new ArgumentException("Invalid volatility.");
+                if (!int.TryParse(row.Cells[5].Value?.ToString(), out int quantity))
                     throw new ArgumentException("Invalid volatility.");
 
-                bool isCall = (bool)(row.Cells[3].Value ?? false);
-                bool isBuy = (bool)(row.Cells[4].Value ?? false);
+                bool isCall = row.Cells[1].Value?.ToString() == "CALL";
 
                 // Add this option leg to the list
                 optionLegs.Add(new OptionLeg
@@ -146,7 +147,7 @@ namespace IB_TradingPlatformExtention1
                     Strike = strike,
                     Volatility = volatility,
                     IsCall = isCall,
-                    IsBuy = isBuy
+                    Quantity = quantity
                 });
             }
 
@@ -195,7 +196,8 @@ namespace IB_TradingPlatformExtention1
                     DataPoint point = new DataPoint(pricePoints[i], pnlAtExp[i]);
                     point.Color = ColorPnlPoint(pnlAtExp[i]);
                     seriesPnlAtExp.Points.Add(point);
-                } else
+                }
+                else
                 {
                     DataPoint point = new DataPoint(pricePoints[i], pnlAtExp[i]);
                     point.Color = Color.Transparent;
@@ -213,7 +215,7 @@ namespace IB_TradingPlatformExtention1
         private Color ColorPnlPoint(double yValue)
         {
             int intensity = (int)Math.Min(255, Math.Abs(yValue) * 2); // Scale to keep within 0-255 range
-                                                                  // Assign color based on positive or negative yValue
+                                                                      // Assign color based on positive or negative yValue
             return yValue > 0
                 ? Color.FromArgb(255, 0, intensity / 2, 0) // Green gradient above 0
                 : Color.FromArgb(255, intensity, 0, 0);     // Red gradient below 0
@@ -223,7 +225,7 @@ namespace IB_TradingPlatformExtention1
         {
             double r = (double)numRiskFreeRate.Value;
             DateTime currTime = dtpCurrTimePicker.Value;
-            double atmIv = (double) numAtmIv.Value;
+            double atmIv = (double)numAtmIv.Value;
 
             // Convert mouse X position to chart coordinate (Underlying price)
             double mouseXValue = chartRiskProfile.ChartAreas[0].AxisX.PixelPositionToValue(e.X);
@@ -249,7 +251,7 @@ namespace IB_TradingPlatformExtention1
             priceAnnotation.AnchorY = chartRiskProfile.ChartAreas[0].AxisY.Maximum; // At the top of the chart
             priceAnnotation.Visible = true;
 
-            
+
             pnlAnnotation.Text = $"PnL:         {pnlBeforeExp:F2}";
             pnlAnnotation.AnchorX = mouseXValue;
             pnlAnnotation.AnchorY = pnlBeforeExp;
@@ -280,11 +282,11 @@ namespace IB_TradingPlatformExtention1
 
     public class OptionLeg
     {
+        public bool IsCall { get; set; }
         public DateTime Expiration { get; set; }
         public double Strike { get; set; }
         public double Volatility { get; set; } // as a decimal (e.g., 0.20 for 20%)
-        public bool IsCall { get; set; }
-        public bool IsBuy { get; set; }
+        public int Quantity { get; set; }
     }
 
     public class BlackScholes
@@ -383,7 +385,7 @@ namespace IB_TradingPlatformExtention1
                     : CalculateIntrinsicValue(underlyingPrice, leg.Strike, leg.IsCall) * 100;
 
                 // Adjust premium based on whether the leg is a buy or sell
-                premium += leg.IsBuy ? optionPrice : -optionPrice;
+                premium += leg.Quantity * optionPrice;
             }
 
             return premium;
