@@ -100,6 +100,14 @@ namespace IB_TradingPlatformExtention1
             chartRiskProfile.Annotations.Add(probabilityAnnotation);
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            // Set the current time to dtpCurrTimePicker when the form loads
+            dtpCurrTimePicker.Value = DateTime.Now;
+        }
+
         private void btnPlotRiskProfile_Click(object sender, EventArgs e)
         {
             optionLegs.Clear();
