@@ -29,6 +29,8 @@ namespace IB_TradingPlatformExtention1
         public event Action<string, string> OnTickPriceUpdated;
         public event Action OnPositionChanged;
         public event Action<object[]> OnContractSamplesReceived;
+        public event Action<int, HashSet<string>, HashSet<double>> OnOptionChainDetailsReceived;
+        public event Action OnOptionChainDetailsReceivedEnd;
         public event Action OnConnected;
         public event Action OnDisconnected;
         public event Action OnContractSelected;
@@ -503,6 +505,41 @@ namespace IB_TradingPlatformExtention1
         public void RemoveOrder(int orderId)
         {
             OpenOrders.RemoveAll(o => o.Order.OrderId == orderId);
+        }
+
+        // Options: 
+
+        public void GetOptionChainForCurrContract()
+        {
+            if (CurrContract == null) return;
+            wrapper.ClientSocket.reqSecDefOptParams(0, CurrContract.Symbol, "", CurrContract.SecType, CurrContract.ConId);
+        }
+
+        public void OnGetOptionChainDetails(int reqId, string exchange, int underlyingConId, string tradingClass, string multiplier, HashSet<string> expirations, HashSet<double> strikes)
+        {
+            int.TryParse(multiplier, out var multiplierVal);
+            OnOptionChainDetailsReceived?.Invoke(multiplierVal, expirations, strikes);
+        }
+
+        public void OnGetOptionChainDetailsEnd()
+        {
+            OnOptionChainDetailsReceivedEnd?.Invoke();
+        }
+
+        public void GetOptionContractData(string right, DateTime expiration, double strike)
+        {
+            Contract optionContract = new Contract
+            {
+                Symbol = CurrContract.Symbol,
+                SecType = "OPT",
+                Exchange = "SMART",
+                Currency = CurrContract.Currency,
+                Right = right,
+                LastTradeDate = "expiration",
+                Strike = strike,
+            };
+
+            wrapper.ClientSocket.reqContractDetails(0, optionContract);
         }
     }
 

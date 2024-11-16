@@ -296,7 +296,7 @@ namespace IB_TradingPlatformExtention1
 
         private void btnOptionsAnalysis_Click(object sender, EventArgs e)
         {
-            OptionsAnalysisForm OAform = new OptionsAnalysisForm();
+            OptionsAnalysisForm OAform = new OptionsAnalysisForm(client);
             OAform.Show();
         }
     }

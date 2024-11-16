@@ -601,6 +601,8 @@ namespace IB_TradingPlatformExtention1
         {
             Console.WriteLine("Security Definition Option Parameter. Request: {0}, Exchange: {1}, Undrelying contract id: {2}, Trading class: {3}, Multiplier: {4}, Expirations: {5}, Strikes: {6}",
                               reqId, exchange, Util.IntMaxString(underlyingConId), tradingClass, multiplier, string.Join(", ", expirations), string.Join(", ", strikes));
+
+            client.OnGetOptionChainDetails(reqId, exchange, underlyingConId, tradingClass, multiplier, expirations, strikes);
         }
         //! [securityDefinitionOptionParameter]
 
@@ -608,6 +610,8 @@ namespace IB_TradingPlatformExtention1
         public void securityDefinitionOptionParameterEnd(int reqId)
         {
             Console.WriteLine("Security Definition Option Parameter End. Request: " + reqId + "\n");
+            client.OnGetOptionChainDetailsEnd();
+
         }
         //! [securityDefinitionOptionParameterEnd]
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,9 @@ namespace IB_TradingPlatformExtention1
 {
     public partial class OptionsAnalysisForm : Form
     {
+        delegate void InitOptionLegCallback(int rowIdx);
+        delegate void OnOptionChainDetailsReceivedEndCallback();
+
         private VerticalLineAnnotation verticalLine;
         private HorizontalLineAnnotation zeroLine;
         private EllipseAnnotation intersectionDot;
@@ -22,12 +26,19 @@ namespace IB_TradingPlatformExtention1
 
 
         public List<OptionLeg> optionLegs = new List<OptionLeg>();
+        public OptionChainDetails optionChainDetails = new OptionChainDetails();
         public double strategyInitialCost = 0;
 
+        private IBApiClient client;
 
-        public OptionsAnalysisForm()
+        public OptionsAnalysisForm(IBApiClient _client)
         {
             InitializeComponent();
+
+            client = _client;
+
+            client.OnOptionChainDetailsReceived += Client_OnOptionChainDetailsReceived;
+            client.OnOptionChainDetailsReceivedEnd += Client_OnOptionChainDetailsReceivedEnd;
 
             verticalLine = new VerticalLineAnnotation
             {
@@ -100,13 +111,157 @@ namespace IB_TradingPlatformExtention1
             chartRiskProfile.Annotations.Add(probabilityAnnotation);
         }
 
-        protected override void OnLoad(EventArgs e)
+        private void OptionsAnalysisForm_Load(object sender, EventArgs e)
         {
-            base.OnLoad(e);
-
-            // Set the current time to dtpCurrTimePicker when the form loads
             dtpCurrTimePicker.Value = DateTime.Now;
+
+            dgOptTradeLegs.Columns["colVolatility"].ValueType = typeof(double);
+            dgOptTradeLegs.Columns["colVolatility"].DefaultCellStyle.Format = "N2";
+
+            dgOptTradeLegs.Columns["colQuantity"].ValueType = typeof(int);
+            dgOptTradeLegs.Columns["colQuantity"].DefaultCellStyle.Format = "N0";
+
+            dgOptTradeLegs.Columns["colStrike"].ValueType = typeof(double);
+            dgOptTradeLegs.Columns["colStrike"].DefaultCellStyle.Format = "N2";
+
+            dgOptTradeLegs.Columns["colExpiration"].ValueType = typeof(DateTime);
+            dgOptTradeLegs.Columns["colExpiration"].DefaultCellStyle.Format = "dd-MM-yyyy";
+
+            dgOptTradeLegs.Rows.Add();
+
+            client.GetOptionChainForCurrContract();
+
         }
+
+        private void dgOptTradeLegs_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        {
+            // Loop only through the newly added rows
+            for (int i = e.RowIndex; i < e.RowIndex + e.RowCount; i++)
+            {
+                InitOptionLeg(i);
+            }
+
+        }
+
+        public void InitOptionLeg(int rowIdx)
+        {
+
+            if (this.dgOptTradeLegs.InvokeRequired)
+            {
+                InitOptionLegCallback d = new InitOptionLegCallback(InitOptionLeg);
+                try
+                {
+                    this.Invoke(d, new object[] { rowIdx });
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("This is from InitOptionLeg", e);
+                }
+            }
+            else
+            {
+                if (optionChainDetails.Expirations == null || optionChainDetails.Strikes == null) return;
+
+                // Parse and sort expiration dates
+                DateTime now = DateTime.Now;
+                List<DateTime> sortedExpirations = optionChainDetails.Expirations
+                    .Select(exp => DateTime.ParseExact(exp, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture))
+                    .OrderBy(exp => exp)
+                    .ToList();
+
+                // Parse and sort strikes
+                List<double> sortedStrikes = optionChainDetails.Strikes.OrderBy(strike => strike).ToList();
+
+                // Determine the closest expiration and strike
+                DateTime closestExpiration = sortedExpirations
+                    .OrderBy(exp => Math.Abs((exp - now).Ticks))
+                    .FirstOrDefault();
+
+                double currentSpotPrice = (double)numSpotPrice.Value;
+                double closestStrike = sortedStrikes
+                    .OrderBy(strike => Math.Abs(strike - currentSpotPrice))
+                    .FirstOrDefault();
+
+                DataGridViewRow row = dgOptTradeLegs.Rows[rowIdx];
+
+                // Ensure the expiration and strike ComboBox items are available for the new rows
+                DataGridViewCheckBoxCell selectedCell = row.Cells[0] as DataGridViewCheckBoxCell;
+                DataGridViewComboBoxCell rightCell = row.Cells[1] as DataGridViewComboBoxCell;
+                DataGridViewComboBoxCell expirationCell = row.Cells[2] as DataGridViewComboBoxCell;
+                DataGridViewComboBoxCell strikeCell = row.Cells[3] as DataGridViewComboBoxCell;
+                DataGridViewTextBoxCell volatilityCell = row.Cells[4] as DataGridViewTextBoxCell;
+                DataGridViewTextBoxCell quantityCell = row.Cells[5] as DataGridViewTextBoxCell;
+
+                if (selectedCell != null || rightCell != null || expirationCell != null && strikeCell != null || volatilityCell != null || quantityCell != null)
+                {
+                    selectedCell.Selected = true;
+                    rightCell.Value = "CALL";
+                    quantityCell.Value = 1;
+
+                    expirationCell.Items.Clear();
+                    strikeCell.Items.Clear();
+
+                    foreach (DateTime expiration in sortedExpirations)
+                    {
+                        expirationCell.Items.Add(expiration);
+                    }
+
+                    foreach (double strike in sortedStrikes)
+                    {
+                        strikeCell.Items.Add(strike);
+                    }
+
+                    // Set the default values for the new row
+                    expirationCell.Value = closestExpiration;
+                    strikeCell.Value = closestStrike;
+
+                    client.GetOptionContractData(rightCell.Value as string, closestExpiration, closestStrike);
+                }
+
+                // Refresh the DataGridView to apply changes
+                dgOptTradeLegs.Refresh();
+            }
+        }
+
+
+        private void Client_OnOptionChainDetailsReceived(int multiplier, HashSet<string> expirations, HashSet<double> strikes)
+        {
+            optionChainDetails = new OptionChainDetails
+            {
+                Multiplier = multiplier,
+                Expirations = expirations,
+                Strikes = strikes
+            };
+        }
+
+        private void Client_OnOptionChainDetailsReceivedEnd()
+        {
+            if (this.dgOptTradeLegs.InvokeRequired)
+            {
+                OnOptionChainDetailsReceivedEndCallback d = new OnOptionChainDetailsReceivedEndCallback(Client_OnOptionChainDetailsReceivedEnd);
+                try
+                {
+                    this.Invoke(d, new object[] {  });
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("This is from Client_OnOptionChainDetailsReceived", e);
+                }
+            }
+            else
+            {
+                for (int i = dgOptTradeLegs.Rows.Count - 1; i >= 0; i--)
+                {
+                    if (!dgOptTradeLegs.Rows[i].IsNewRow)
+                    {
+                        dgOptTradeLegs.Rows.RemoveAt(i);
+                    }
+                }
+
+                dgOptTradeLegs.Rows.Add();
+            }
+        }
+
 
         private void btnPlotRiskProfile_Click(object sender, EventArgs e)
         {
@@ -136,7 +291,7 @@ namespace IB_TradingPlatformExtention1
                 if (!double.TryParse(row.Cells[4].Value?.ToString(), out double volatility))
                     throw new ArgumentException("Invalid volatility.");
                 if (!int.TryParse(row.Cells[5].Value?.ToString(), out int quantity))
-                    throw new ArgumentException("Invalid volatility.");
+                    throw new ArgumentException("Invalid quantity.");
 
                 bool isCall = row.Cells[1].Value?.ToString() == "CALL";
 
@@ -287,6 +442,13 @@ namespace IB_TradingPlatformExtention1
         public double Strike { get; set; }
         public double Volatility { get; set; } // as a decimal (e.g., 0.20 for 20%)
         public int Quantity { get; set; }
+    }
+
+    public class OptionChainDetails
+    {
+        public int Multiplier { get; set; }
+        public HashSet<string> Expirations { get; set; }
+        public HashSet<double> Strikes { get; set; }
     }
 
     public class BlackScholes
