@@ -16,6 +16,7 @@ namespace IB_TradingPlatformExtention1
     {
         delegate void InitOptionLegCallback(int rowIdx);
         delegate void OnOptionChainDetailsReceivedEndCallback();
+        delegate void SetOptionLegTickPriceCallback(int rowIdx, string fieldName, string Value);
 
         private VerticalLineAnnotation verticalLine;
         private HorizontalLineAnnotation zeroLine;
@@ -39,6 +40,7 @@ namespace IB_TradingPlatformExtention1
 
             client.OnOptionChainDetailsReceived += Client_OnOptionChainDetailsReceived;
             client.OnOptionChainDetailsReceivedEnd += Client_OnOptionChainDetailsReceivedEnd;
+            client.OnOptionTickPriceUpdated += Client_OnOptionTickPriceUpdated;
 
             verticalLine = new VerticalLineAnnotation
             {
@@ -127,10 +129,43 @@ namespace IB_TradingPlatformExtention1
             dgOptTradeLegs.Columns["colExpiration"].ValueType = typeof(DateTime);
             dgOptTradeLegs.Columns["colExpiration"].DefaultCellStyle.Format = "dd-MM-yyyy";
 
-            dgOptTradeLegs.Rows.Add();
-
             client.GetOptionChainForCurrContract();
 
+        }
+
+        private void Client_OnOptionChainDetailsReceived(int multiplier, HashSet<string> expirations, HashSet<double> strikes)
+        {
+            optionChainDetails = new OptionChainDetails
+            {
+                Multiplier = multiplier,
+                Expirations = expirations,
+                Strikes = strikes
+            };
+        }
+
+        private void Client_OnOptionChainDetailsReceivedEnd()
+        {
+            if (this.dgOptTradeLegs.InvokeRequired)
+            {
+                OnOptionChainDetailsReceivedEndCallback d = new OnOptionChainDetailsReceivedEndCallback(Client_OnOptionChainDetailsReceivedEnd);
+                try
+                {
+                    this.Invoke(d, new object[] { });
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("This is from Client_OnOptionChainDetailsReceived", e);
+                }
+            }
+            else
+            {
+                for (int i = dgOptTradeLegs.Rows.Count - 1; i >= 0; i--)
+                {
+                    dgOptTradeLegs.Rows.RemoveAt(i);
+                }
+
+                dgOptTradeLegs.Rows.Add();
+            }
         }
 
         private void dgOptTradeLegs_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
@@ -214,8 +249,6 @@ namespace IB_TradingPlatformExtention1
                     // Set the default values for the new row
                     expirationCell.Value = closestExpiration;
                     strikeCell.Value = closestStrike;
-
-                    client.GetOptionContractData(rightCell.Value as string, closestExpiration, closestStrike);
                 }
 
                 // Refresh the DataGridView to apply changes
@@ -224,44 +257,84 @@ namespace IB_TradingPlatformExtention1
         }
 
 
-        private void Client_OnOptionChainDetailsReceived(int multiplier, HashSet<string> expirations, HashSet<double> strikes)
+        private void dgOptTradeLegs_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            optionChainDetails = new OptionChainDetails
+            // Ensure the event is triggered for valid rows and columns
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+                return;
+
+            // Get the affected row
+            DataGridViewRow row = dgOptTradeLegs.Rows[e.RowIndex];
+
+            // Retrieve the cells for Right, Expiration, and Strike
+            DataGridViewCell rightCell = row.Cells[1]; // Assuming "Right" is column index 1
+            DataGridViewCell expirationCell = row.Cells[2]; // Assuming "Expiration" is column index 2
+            DataGridViewCell strikeCell = row.Cells[3]; // Assuming "Strike" is column index 3
+
+            // Check if the changed column is one of interest
+            if (e.ColumnIndex == 1 || e.ColumnIndex == 2 || e.ColumnIndex == 3)
             {
-                Multiplier = multiplier,
-                Expirations = expirations,
-                Strikes = strikes
-            };
+                // Ensure that the required cell values are not null
+                string right = rightCell.Value as string;
+                DateTime? expiration = expirationCell.Value as DateTime?;
+                double? strike = strikeCell.Value as double?;
+
+                if (string.IsNullOrWhiteSpace(right) || expiration == null || strike == null)
+                {
+                    // Handle invalid data gracefully (e.g., log or show a warning)
+                    return;
+                }
+
+                // Call the client.GetOptionContractDetails method
+                client.GetOptionContractDetails(
+                    e.RowIndex + 10, // Row index offset by 10 as per the requirement
+                    right,
+                    expiration.Value.ToString("yyyyMMdd"), // Convert expiration to string in the desired format
+                    strike.Value // Strike is already a double
+                );
+            }
         }
 
-        private void Client_OnOptionChainDetailsReceivedEnd()
+        private void btnAddLeg_Click(object sender, EventArgs e)
+        {
+            dgOptTradeLegs.Rows.Add();
+        }
+
+        private void Client_OnOptionTickPriceUpdated(int rowIdx, string fieldName, string Value)
         {
             if (this.dgOptTradeLegs.InvokeRequired)
             {
-                OnOptionChainDetailsReceivedEndCallback d = new OnOptionChainDetailsReceivedEndCallback(Client_OnOptionChainDetailsReceivedEnd);
+                SetOptionLegTickPriceCallback d = new SetOptionLegTickPriceCallback(Client_OnOptionTickPriceUpdated);
                 try
                 {
-                    this.Invoke(d, new object[] {  });
+                    this.Invoke(d, new object[] { rowIdx, fieldName, Value });
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("This is from Client_OnOptionChainDetailsReceived", e);
+                    Console.WriteLine("This is from Client_OnTickPriceUpdated", e);
                 }
             }
             else
             {
-                for (int i = dgOptTradeLegs.Rows.Count - 1; i >= 0; i--)
+                DataGridViewRow row = dgOptTradeLegs.Rows[rowIdx];
+                DataGridViewCell cell = row.Cells[0];
+                switch (fieldName)
                 {
-                    if (!dgOptTradeLegs.Rows[i].IsNewRow)
-                    {
-                        dgOptTradeLegs.Rows.RemoveAt(i);
-                    }
+                    case "Last":
+                        cell = row.Cells[8];
+                        break;
+                    case "Ask":
+                        cell = row.Cells[7];
+                        break;
+                    case "Bid":
+                        cell = row.Cells[6];
+                        break;
+                    default:
+                        break;
                 }
-
-                dgOptTradeLegs.Rows.Add();
+                cell.Value = Value;
             }
         }
-
 
         private void btnPlotRiskProfile_Click(object sender, EventArgs e)
         {

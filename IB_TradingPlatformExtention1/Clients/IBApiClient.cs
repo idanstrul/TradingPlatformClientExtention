@@ -18,6 +18,7 @@ namespace IB_TradingPlatformExtention1
         public List<OpenOrder> OpenOrders { get; private set; } = new List<OpenOrder>();
         public List<Contract> USContracts { get; private set; } = new List<Contract>();
         private Contract CurrContract;
+        private List<OptionLegDetails> CurrOptionStrategy = new List<OptionLegDetails>();
         private double? TrailStopPrice = null;
         private EWrapperImpl wrapper;
         private EReader reader;
@@ -27,6 +28,7 @@ namespace IB_TradingPlatformExtention1
 
         // Events to notify the form when data changes
         public event Action<string, string> OnTickPriceUpdated;
+        public event Action<int, string, string> OnOptionTickPriceUpdated;
         public event Action OnPositionChanged;
         public event Action<object[]> OnContractSamplesReceived;
         public event Action<int, HashSet<string>, HashSet<double>> OnOptionChainDetailsReceived;
@@ -389,30 +391,60 @@ namespace IB_TradingPlatformExtention1
         {
             string[] tickerPrice = tickPrice.Split(',');
 
-            if (Convert.ToInt32(tickerPrice[0]) == 1)
+            int reqId = Convert.ToInt32(tickerPrice[0]);
+            int fieldId = Convert.ToInt32(tickerPrice[1]);
+            string fieldName = "";
+
+            if (reqId == 1)
             {
-                if (Convert.ToInt32(tickerPrice[1]) == 4)// Delayed Last quote 68, if you want realtime use tickerPrice == 4
+                switch (fieldId)
                 {
-                    LastTickDetails.Last = Convert.ToDouble(tickerPrice[2]);
-                    // Add the text string to the list box
-                    OnTickPriceUpdated?.Invoke("Last", tickerPrice[2]);
+                    case 1: // Delayed Bid quote 66, if you want realtime use tickerPrice == 1
+                        fieldName = "Bid";
+                        LastTickDetails.Bid = Convert.ToDouble(tickerPrice[2]);
+                        break;
+                    case 2: // Delayed Ask quote 67, if you want realtime use tickerPrice == 2
+                        fieldName = "Ask";
+                        LastTickDetails.Ask = Convert.ToDouble(tickerPrice[2]);
+                        break;
+                    case 3:
+                        break;
+                    case 4: // Delayed Last quote 68, if you want realtime use tickerPrice == 4
+                        fieldName = "Last";
+                        LastTickDetails.Last = Convert.ToDouble(tickerPrice[2]);
+                        break;
+                    default:
+                        break;
 
                 }
-                else if (Convert.ToInt32(tickerPrice[1]) == 2)  // Delayed Ask quote 67, if you want realtime use tickerPrice == 2
+                // Add the text string to the list box
+                OnTickPriceUpdated?.Invoke(fieldName, tickerPrice[2]);
+            }
+            else
+            {
+                switch (fieldId)
                 {
-                    LastTickDetails.Ask = Convert.ToDouble(tickerPrice[2]);
-                    // Add the text string to the list box
-                    OnTickPriceUpdated?.Invoke("Ask", tickerPrice[2]);
+                    case 1: // Delayed Bid quote 66, if you want realtime use tickerPrice == 1
+                        fieldName = "Bid";
+                        LastTickDetails.Bid = Convert.ToDouble(tickerPrice[2]);
+                        break;
+                    case 2: // Delayed Ask quote 67, if you want realtime use tickerPrice == 2
+                        fieldName = "Ask";
+                        LastTickDetails.Ask = Convert.ToDouble(tickerPrice[2]);
+                        break;
+                    case 3:
+                        break;
+                    case 4: // Delayed Last quote 68, if you want realtime use tickerPrice == 4
+                        fieldName = "Last";
+                        LastTickDetails.Last = Convert.ToDouble(tickerPrice[2]);
+                        break;
+                    default:
+                        break;
 
                 }
-                else if (Convert.ToInt32(tickerPrice[1]) == 1)  // Delayed Bid quote 66, if you want realtime use tickerPrice == 1
-                {
+                // Add the text string to the list box
+                OnOptionTickPriceUpdated?.Invoke(reqId - 10, fieldName, tickerPrice[2]);
 
-                    LastTickDetails.Bid = Convert.ToDouble(tickerPrice[2]);
-                    // Add the text string to the list box
-                    OnTickPriceUpdated?.Invoke("Bid", tickerPrice[2]);
-
-                }
             }
         }
 
@@ -526,7 +558,7 @@ namespace IB_TradingPlatformExtention1
             OnOptionChainDetailsReceivedEnd?.Invoke();
         }
 
-        public void GetOptionContractData(string right, DateTime expiration, double strike)
+        public void GetOptionContractDetails(int reqId, string right, string expiration, double strike)
         {
             Contract optionContract = new Contract
             {
@@ -535,12 +567,68 @@ namespace IB_TradingPlatformExtention1
                 Exchange = "SMART",
                 Currency = CurrContract.Currency,
                 Right = right,
-                LastTradeDate = "expiration",
+                LastTradeDateOrContractMonth = expiration,
                 Strike = strike,
             };
 
-            wrapper.ClientSocket.reqContractDetails(0, optionContract);
+            if (reqId - 10 < CurrOptionStrategy.Count)
+            {
+                // Replace the existing item at the index
+                CurrOptionStrategy[reqId - 10] = new OptionLegDetails
+                {
+                    OptionContract = optionContract
+                };
+            }
+            else
+            {
+                // Add the new item at the desired index
+                CurrOptionStrategy.Add(new OptionLegDetails
+                {
+                    OptionContract = optionContract
+                });
+            }
+
+            wrapper.ClientSocket.reqContractDetails(reqId, optionContract);
         }
+
+        public void OnGetOptionContractDetails(int reqId, ContractDetails contractDetails)
+        {
+            if (reqId - 10 < CurrOptionStrategy.Count)
+            {
+                Contract c1 = CurrOptionStrategy[reqId - 10].OptionContract;
+                Contract c2 = contractDetails.Contract;
+                if (c1.Symbol != c2.Symbol || c1.LastTradeDateOrContractMonth != c2.LastTradeDateOrContractMonth || c1.Strike != c2.Strike) return;
+                // Replace the existing item at the index
+                CurrOptionStrategy[reqId - 10].OptionContract = contractDetails.Contract;
+            }
+            else
+            {
+                // Add the new item at the desired index
+                CurrOptionStrategy.Add(new OptionLegDetails
+                {
+                    OptionContract = contractDetails.Contract
+                });
+            }
+            wrapper.ClientSocket.cancelMktData(reqId); // cancel market data
+
+            List<TagValue> mktDataOptions = new List<TagValue>();
+
+            // If using delayed market data subscription un-comment 
+            // the line below to request delayed data
+            wrapper.ClientSocket.reqMarketDataType(3);  // delayed data = 3 live = 1
+
+            // Kick off the subscription for real-time data (add the mktDataOptions list for API v9.71)
+
+            // For API v9.72 and higher, add one more parameter for regulatory snapshot
+            wrapper.ClientSocket.reqMktData(reqId, contractDetails.Contract, "", false, false, mktDataOptions);
+        }
+
+        public void RemoveOptionLeg(int legIdx)
+        {
+            wrapper.ClientSocket.cancelMktData(legIdx + 10); // cancel market data
+            CurrOptionStrategy.RemoveAt(legIdx);
+        }
+
     }
 
     public class LastTickDetails
@@ -548,6 +636,21 @@ namespace IB_TradingPlatformExtention1
         public double Bid { get; set; }
         public double Ask { get; set; }
         public double Last { get; set; }
+    }
+
+    public class OptionLastTickDetails
+    {
+        public double Bid { get; set; }
+        public double Ask { get; set; }
+        public double Last { get; set; }
+    }
+
+    public class OptionLegDetails
+    {
+        public Contract OptionContract { get; set; }
+        public OptionLastTickDetails LastTickDetails { get; set; }
+        public Position Position { get; set; }
+        public List<OpenOrder> openOrders { get; set; }
     }
 
     public class Position

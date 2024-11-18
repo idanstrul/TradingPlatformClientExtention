@@ -253,6 +253,8 @@ namespace IB_TradingPlatformExtention1
             printContractMsg(contractDetails.Contract);
             printContractDetailsMsg(contractDetails);
             Console.WriteLine("ContractDetails end. ReqId: " + reqId);
+
+            client.OnGetOptionContractDetails(reqId, contractDetails);
         }
         //! [contractdetails]
 
