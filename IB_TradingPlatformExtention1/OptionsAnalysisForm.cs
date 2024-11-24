@@ -9,13 +9,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace IB_TradingPlatformExtention1
 {
     public partial class OptionsAnalysisForm : Form
     {
         delegate void InitOptionLegCallback(int rowIdx);
-        delegate void OnOptionChainDetailsReceivedEndCallback();
+        delegate void OnOptionChainDetailsReceivedEndCallback(int multiplier, HashSet<string> expirations, HashSet<double> strikes);
         delegate void SetOptionLegTickPriceCallback(int rowIdx, string fieldName, string Value);
 
         private VerticalLineAnnotation verticalLine;
@@ -39,8 +40,7 @@ namespace IB_TradingPlatformExtention1
             client = _client;
 
             client.OnOptionChainDetailsReceived += Client_OnOptionChainDetailsReceived;
-            client.OnOptionChainDetailsReceivedEnd += Client_OnOptionChainDetailsReceivedEnd;
-            client.OnOptionTickPriceUpdated += Client_OnOptionTickPriceUpdated;
+            client.OnTickPriceUpdated += Client_OnTickPriceUpdated;
 
             verticalLine = new VerticalLineAnnotation
             {
@@ -129,25 +129,15 @@ namespace IB_TradingPlatformExtention1
             dgOptTradeLegs.Columns["colExpiration"].ValueType = typeof(DateTime);
             dgOptTradeLegs.Columns["colExpiration"].DefaultCellStyle.Format = "dd-MM-yyyy";
 
-            client.GetOptionChainForCurrContract();
+            client.GetOptionChain();
 
         }
 
         private void Client_OnOptionChainDetailsReceived(int multiplier, HashSet<string> expirations, HashSet<double> strikes)
         {
-            optionChainDetails = new OptionChainDetails
-            {
-                Multiplier = multiplier,
-                Expirations = expirations,
-                Strikes = strikes
-            };
-        }
-
-        private void Client_OnOptionChainDetailsReceivedEnd()
-        {
             if (this.dgOptTradeLegs.InvokeRequired)
             {
-                OnOptionChainDetailsReceivedEndCallback d = new OnOptionChainDetailsReceivedEndCallback(Client_OnOptionChainDetailsReceivedEnd);
+                OnOptionChainDetailsReceivedEndCallback d = new OnOptionChainDetailsReceivedEndCallback(Client_OnOptionChainDetailsReceived);
                 try
                 {
                     this.Invoke(d, new object[] { });
@@ -159,6 +149,13 @@ namespace IB_TradingPlatformExtention1
             }
             else
             {
+                optionChainDetails = new OptionChainDetails
+                {
+                    Multiplier = multiplier,
+                    Expirations = expirations,
+                    Strikes = strikes
+                };
+
                 for (int i = dgOptTradeLegs.Rows.Count - 1; i >= 0; i--)
                 {
                     dgOptTradeLegs.Rows.RemoveAt(i);
@@ -176,6 +173,14 @@ namespace IB_TradingPlatformExtention1
                 InitOptionLeg(i);
             }
 
+        }
+
+        private void dgOptTradeLegs_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
+        {
+            for (int i = e.RowIndex; i < e.RowIndex + e.RowCount; i++)
+            {
+                client.RemoveOptionLeg(i);
+            }
         }
 
         public void InitOptionLeg(int rowIdx)
@@ -287,7 +292,7 @@ namespace IB_TradingPlatformExtention1
 
                 // Call the client.GetOptionContractDetails method
                 client.GetOptionContractDetails(
-                    e.RowIndex + 10, // Row index offset by 10 as per the requirement
+                    e.RowIndex, // Row index offset by 10 as per the requirement
                     right,
                     expiration.Value.ToString("yyyyMMdd"), // Convert expiration to string in the desired format
                     strike.Value // Strike is already a double
@@ -300,11 +305,22 @@ namespace IB_TradingPlatformExtention1
             dgOptTradeLegs.Rows.Add();
         }
 
-        private void Client_OnOptionTickPriceUpdated(int rowIdx, string fieldName, string Value)
+        private void dgOptTradeLegs_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            // Ensure the click is valid and on the button column
+            if (e.RowIndex >= 0 && e.ColumnIndex == dgOptTradeLegs.Columns["colRemoveLeg"].Index)
+            {
+                dgOptTradeLegs.Rows.RemoveAt(e.RowIndex);
+            }
+        }
+
+        private void Client_OnTickPriceUpdated(int rowIdx, string fieldName, string Value)
+        {
+            if (rowIdx == -1) return;
+
             if (this.dgOptTradeLegs.InvokeRequired)
             {
-                SetOptionLegTickPriceCallback d = new SetOptionLegTickPriceCallback(Client_OnOptionTickPriceUpdated);
+                SetOptionLegTickPriceCallback d = new SetOptionLegTickPriceCallback(Client_OnTickPriceUpdated);
                 try
                 {
                     this.Invoke(d, new object[] { rowIdx, fieldName, Value });
@@ -316,6 +332,10 @@ namespace IB_TradingPlatformExtention1
             }
             else
             {
+                if (rowIdx == -2)
+                {
+                    throw new NotImplementedException();
+                }
                 DataGridViewRow row = dgOptTradeLegs.Rows[rowIdx];
                 DataGridViewCell cell = row.Cells[0];
                 switch (fieldName)
@@ -505,6 +525,55 @@ namespace IB_TradingPlatformExtention1
             priceAnnotation.Visible = false;
             pnlAnnotation.Visible = false;
             probabilityAnnotation.Visible = false;
+        }
+
+        public void placeOrder(string action, Keys modifierKeys)
+        {
+            
+        }
+
+        private void btnClosePos_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void btnCancelLast_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnCancelAll_Click(object sender, EventArgs e)
+        {
+           
+        }
+
+        private void cbTrailStop_CheckedChanged(object sender, EventArgs e)
+        {
+           
+        }
+
+        private void cbStopLoss_CheckedChanged(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void btnStopLossAdj_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void AdjustStopLoss()
+        {
+
+        }
+
+        private void btnSell_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnBuy_Click(object sender, EventArgs e)
+        {
+
         }
     }
 

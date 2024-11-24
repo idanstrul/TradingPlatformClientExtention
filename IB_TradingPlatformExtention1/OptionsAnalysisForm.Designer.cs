@@ -39,9 +39,6 @@
             this.label6 = new System.Windows.Forms.Label();
             this.chartRiskProfile = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.dgOptTradeLegs = new System.Windows.Forms.DataGridView();
-            this.dtpCurrTimePicker = new System.Windows.Forms.DateTimePicker();
-            this.label2 = new System.Windows.Forms.Label();
-            this.numAtmIv = new System.Windows.Forms.NumericUpDown();
             this.colSelected = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.colRight = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.colExpiration = new System.Windows.Forms.DataGridViewComboBoxColumn();
@@ -54,6 +51,9 @@
             this.colOpenedInterest = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colDelta = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colRemoveLeg = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.dtpCurrTimePicker = new System.Windows.Forms.DateTimePicker();
+            this.label2 = new System.Windows.Forms.Label();
+            this.numAtmIv = new System.Windows.Forms.NumericUpDown();
             this.numQuantity = new System.Windows.Forms.NumericUpDown();
             this.cbTif = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
@@ -67,8 +67,17 @@
             this.btnCancelAll = new System.Windows.Forms.Button();
             this.btnCancelLast = new System.Windows.Forms.Button();
             this.btnAddLeg = new System.Windows.Forms.Button();
-            this.btnIncreasePos = new System.Windows.Forms.Button();
-            this.btnSell1 = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.numTradeOffset = new System.Windows.Forms.NumericUpDown();
+            this.cbIsLimitStop = new System.Windows.Forms.CheckBox();
+            this.btnBuy = new System.Windows.Forms.Button();
+            this.btnSell = new System.Windows.Forms.Button();
+            this.tbLast = new System.Windows.Forms.TextBox();
+            this.tbAsk = new System.Windows.Forms.TextBox();
+            this.tbBid = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numSpotPrice)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numRiskFreeRate)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPriceRange)).BeginInit();
@@ -78,6 +87,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTrailStop)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numStopLoss)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).BeginInit();
             this.SuspendLayout();
             // 
             // numSpotPrice
@@ -214,43 +224,7 @@
             this.dgOptTradeLegs.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgOptTradeLegs_CellClick);
             this.dgOptTradeLegs.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgOptTradeLegs_CellValueChanged);
             this.dgOptTradeLegs.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.dgOptTradeLegs_RowsAdded);
-            // 
-            // dtpCurrTimePicker
-            // 
-            this.dtpCurrTimePicker.CustomFormat = "dd-MM-yyyy HH:mm";
-            this.dtpCurrTimePicker.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpCurrTimePicker.Location = new System.Drawing.Point(23, 131);
-            this.dtpCurrTimePicker.Name = "dtpCurrTimePicker";
-            this.dtpCurrTimePicker.Size = new System.Drawing.Size(200, 22);
-            this.dtpCurrTimePicker.TabIndex = 20;
-            this.dtpCurrTimePicker.Value = new System.DateTime(2024, 11, 3, 2, 4, 33, 0);
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 77);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(51, 16);
-            this.label2.TabIndex = 22;
-            this.label2.Text = "ATM IV";
-            // 
-            // numAtmIv
-            // 
-            this.numAtmIv.DecimalPlaces = 6;
-            this.numAtmIv.Location = new System.Drawing.Point(103, 75);
-            this.numAtmIv.Minimum = new decimal(new int[] {
-            100,
-            0,
-            0,
-            -2147483648});
-            this.numAtmIv.Name = "numAtmIv";
-            this.numAtmIv.Size = new System.Drawing.Size(120, 22);
-            this.numAtmIv.TabIndex = 21;
-            this.numAtmIv.Value = new decimal(new int[] {
-            437,
-            0,
-            0,
-            262144});
+            this.dgOptTradeLegs.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.dgOptTradeLegs_RowsRemoved);
             // 
             // colSelected
             // 
@@ -335,6 +309,43 @@
             this.colRemoveLeg.Name = "colRemoveLeg";
             this.colRemoveLeg.Text = "X";
             // 
+            // dtpCurrTimePicker
+            // 
+            this.dtpCurrTimePicker.CustomFormat = "dd-MM-yyyy HH:mm";
+            this.dtpCurrTimePicker.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+            this.dtpCurrTimePicker.Location = new System.Drawing.Point(23, 131);
+            this.dtpCurrTimePicker.Name = "dtpCurrTimePicker";
+            this.dtpCurrTimePicker.Size = new System.Drawing.Size(200, 22);
+            this.dtpCurrTimePicker.TabIndex = 20;
+            this.dtpCurrTimePicker.Value = new System.DateTime(2024, 11, 3, 2, 4, 33, 0);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 77);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(51, 16);
+            this.label2.TabIndex = 22;
+            this.label2.Text = "ATM IV";
+            // 
+            // numAtmIv
+            // 
+            this.numAtmIv.DecimalPlaces = 6;
+            this.numAtmIv.Location = new System.Drawing.Point(103, 75);
+            this.numAtmIv.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
+            this.numAtmIv.Name = "numAtmIv";
+            this.numAtmIv.Size = new System.Drawing.Size(120, 22);
+            this.numAtmIv.TabIndex = 21;
+            this.numAtmIv.Value = new decimal(new int[] {
+            437,
+            0,
+            0,
+            262144});
+            // 
             // numQuantity
             // 
             this.numQuantity.Location = new System.Drawing.Point(899, 250);
@@ -390,6 +401,7 @@
             this.btnStopLossAdj.TabIndex = 60;
             this.btnStopLossAdj.Text = "Adjust";
             this.btnStopLossAdj.UseVisualStyleBackColor = true;
+            this.btnStopLossAdj.Click += new System.EventHandler(this.btnStopLossAdj_Click);
             // 
             // btnClosePos
             // 
@@ -399,6 +411,7 @@
             this.btnClosePos.TabIndex = 59;
             this.btnClosePos.Text = "Close position";
             this.btnClosePos.UseVisualStyleBackColor = true;
+            this.btnClosePos.Click += new System.EventHandler(this.btnClosePos_Click);
             // 
             // numTrailStop
             // 
@@ -445,6 +458,7 @@
             this.cbTrailStop.TabIndex = 56;
             this.cbTrailStop.Text = "Trail stop";
             this.cbTrailStop.UseVisualStyleBackColor = true;
+            this.cbTrailStop.CheckedChanged += new System.EventHandler(this.cbTrailStop_CheckedChanged);
             // 
             // cbStopLoss
             // 
@@ -455,6 +469,7 @@
             this.cbStopLoss.TabIndex = 55;
             this.cbStopLoss.Text = "Stop loss";
             this.cbStopLoss.UseVisualStyleBackColor = true;
+            this.cbStopLoss.CheckedChanged += new System.EventHandler(this.cbStopLoss_CheckedChanged);
             // 
             // btnCancelAll
             // 
@@ -464,6 +479,7 @@
             this.btnCancelAll.TabIndex = 54;
             this.btnCancelAll.Text = "Cancel All";
             this.btnCancelAll.UseVisualStyleBackColor = true;
+            this.btnCancelAll.Click += new System.EventHandler(this.btnCancelAll_Click);
             // 
             // btnCancelLast
             // 
@@ -473,10 +489,11 @@
             this.btnCancelLast.TabIndex = 53;
             this.btnCancelLast.Text = "Cancel Last";
             this.btnCancelLast.UseVisualStyleBackColor = true;
+            this.btnCancelLast.Click += new System.EventHandler(this.btnCancelLast_Click);
             // 
             // btnAddLeg
             // 
-            this.btnAddLeg.Location = new System.Drawing.Point(251, 185);
+            this.btnAddLeg.Location = new System.Drawing.Point(378, 190);
             this.btnAddLeg.Name = "btnAddLeg";
             this.btnAddLeg.Size = new System.Drawing.Size(101, 23);
             this.btnAddLeg.TabIndex = 61;
@@ -484,37 +501,136 @@
             this.btnAddLeg.UseVisualStyleBackColor = true;
             this.btnAddLeg.Click += new System.EventHandler(this.btnAddLeg_Click);
             // 
-            // btnIncreasePos
+            // label5
             // 
-            this.btnIncreasePos.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
-            this.btnIncreasePos.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnIncreasePos.ForeColor = System.Drawing.Color.White;
-            this.btnIncreasePos.Location = new System.Drawing.Point(386, 181);
-            this.btnIncreasePos.Name = "btnIncreasePos";
-            this.btnIncreasePos.Size = new System.Drawing.Size(186, 37);
-            this.btnIncreasePos.TabIndex = 63;
-            this.btnIncreasePos.Text = "Increase position";
-            this.btnIncreasePos.UseVisualStyleBackColor = false;
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(700, 185);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(112, 16);
+            this.label5.TabIndex = 65;
+            this.label5.Text = "Trade price offset";
             // 
-            // btnSell1
+            // numTradeOffset
             // 
-            this.btnSell1.BackColor = System.Drawing.Color.Red;
-            this.btnSell1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSell1.ForeColor = System.Drawing.Color.White;
-            this.btnSell1.Location = new System.Drawing.Point(594, 181);
-            this.btnSell1.Name = "btnSell1";
-            this.btnSell1.Size = new System.Drawing.Size(195, 37);
-            this.btnSell1.TabIndex = 62;
-            this.btnSell1.Text = "Decrease position";
-            this.btnSell1.UseVisualStyleBackColor = false;
+            this.numTradeOffset.DecimalPlaces = 2;
+            this.numTradeOffset.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.numTradeOffset.Location = new System.Drawing.Point(703, 207);
+            this.numTradeOffset.Name = "numTradeOffset";
+            this.numTradeOffset.Size = new System.Drawing.Size(86, 22);
+            this.numTradeOffset.TabIndex = 64;
+            this.numTradeOffset.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
+            // 
+            // cbIsLimitStop
+            // 
+            this.cbIsLimitStop.AutoSize = true;
+            this.cbIsLimitStop.Location = new System.Drawing.Point(965, 280);
+            this.cbIsLimitStop.Name = "cbIsLimitStop";
+            this.cbIsLimitStop.Size = new System.Drawing.Size(109, 20);
+            this.cbIsLimitStop.TabIndex = 66;
+            this.cbIsLimitStop.Text = "Use limit stop";
+            this.cbIsLimitStop.UseVisualStyleBackColor = true;
+            // 
+            // btnBuy
+            // 
+            this.btnBuy.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
+            this.btnBuy.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnBuy.ForeColor = System.Drawing.Color.White;
+            this.btnBuy.Location = new System.Drawing.Point(498, 185);
+            this.btnBuy.Name = "btnBuy";
+            this.btnBuy.Size = new System.Drawing.Size(79, 37);
+            this.btnBuy.TabIndex = 68;
+            this.btnBuy.Text = "Buy";
+            this.btnBuy.UseVisualStyleBackColor = false;
+            this.btnBuy.Click += new System.EventHandler(this.btnBuy_Click);
+            // 
+            // btnSell
+            // 
+            this.btnSell.BackColor = System.Drawing.Color.Red;
+            this.btnSell.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSell.ForeColor = System.Drawing.Color.White;
+            this.btnSell.Location = new System.Drawing.Point(601, 185);
+            this.btnSell.Name = "btnSell";
+            this.btnSell.Size = new System.Drawing.Size(79, 37);
+            this.btnSell.TabIndex = 67;
+            this.btnSell.Text = "Sell";
+            this.btnSell.UseVisualStyleBackColor = false;
+            this.btnSell.Click += new System.EventHandler(this.btnSell_Click);
+            // 
+            // tbLast
+            // 
+            this.tbLast.Location = new System.Drawing.Point(729, 278);
+            this.tbLast.Name = "tbLast";
+            this.tbLast.Size = new System.Drawing.Size(76, 22);
+            this.tbLast.TabIndex = 74;
+            this.tbLast.Text = "0.00";
+            // 
+            // tbAsk
+            // 
+            this.tbAsk.Location = new System.Drawing.Point(598, 277);
+            this.tbAsk.Name = "tbAsk";
+            this.tbAsk.Size = new System.Drawing.Size(76, 22);
+            this.tbAsk.TabIndex = 73;
+            this.tbAsk.Text = "0.00";
+            // 
+            // tbBid
+            // 
+            this.tbBid.Location = new System.Drawing.Point(471, 278);
+            this.tbBid.Name = "tbBid";
+            this.tbBid.Size = new System.Drawing.Size(78, 22);
+            this.tbBid.TabIndex = 72;
+            this.tbBid.Text = "0.00";
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(439, 281);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(27, 16);
+            this.label9.TabIndex = 69;
+            this.label9.Text = "Bid";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(691, 281);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(32, 16);
+            this.label11.TabIndex = 71;
+            this.label11.Text = "Last";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(562, 281);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(30, 16);
+            this.label10.TabIndex = 70;
+            this.label10.Text = "Ask";
             // 
             // OptionsAnalysisForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1106, 724);
-            this.Controls.Add(this.btnIncreasePos);
-            this.Controls.Add(this.btnSell1);
+            this.Controls.Add(this.tbLast);
+            this.Controls.Add(this.tbAsk);
+            this.Controls.Add(this.tbBid);
+            this.Controls.Add(this.label9);
+            this.Controls.Add(this.label11);
+            this.Controls.Add(this.label10);
+            this.Controls.Add(this.btnBuy);
+            this.Controls.Add(this.btnSell);
+            this.Controls.Add(this.cbIsLimitStop);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.numTradeOffset);
             this.Controls.Add(this.btnAddLeg);
             this.Controls.Add(this.btnStopLossAdj);
             this.Controls.Add(this.btnClosePos);
@@ -552,6 +668,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTrailStop)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numStopLoss)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -596,7 +713,16 @@
         private System.Windows.Forms.Button btnCancelAll;
         private System.Windows.Forms.Button btnCancelLast;
         private System.Windows.Forms.Button btnAddLeg;
-        private System.Windows.Forms.Button btnIncreasePos;
-        private System.Windows.Forms.Button btnSell1;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.NumericUpDown numTradeOffset;
+        private System.Windows.Forms.CheckBox cbIsLimitStop;
+        private System.Windows.Forms.Button btnBuy;
+        private System.Windows.Forms.Button btnSell;
+        private System.Windows.Forms.TextBox tbLast;
+        private System.Windows.Forms.TextBox tbAsk;
+        private System.Windows.Forms.TextBox tbBid;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Label label10;
     }
 }

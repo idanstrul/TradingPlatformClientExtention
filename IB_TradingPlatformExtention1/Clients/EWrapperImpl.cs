@@ -97,7 +97,7 @@ namespace IB_TradingPlatformExtention1
             "," + price + "," + attribs.CanAutoExecute;
 
             // sends the string to Form1
-            client.OnGetTickPrice(_tickPrice); 
+            client.OnGetTickPrice(tickerId, field, price, attribs); 
         }
         //! [tickprice]
         
@@ -218,7 +218,7 @@ namespace IB_TradingPlatformExtention1
             Console.WriteLine("OrderStatus. Id: " + orderId + ", Status: " + status + ", Filled: " + Util.DecimalMaxString(filled) + ", Remaining: " + Util.DecimalMaxString(remaining)
                 + ", AvgFillPrice: " + Util.DoubleMaxString(avgFillPrice) + ", PermId: " + Util.LongMaxString(permId) + ", ParentId: " + Util.IntMaxString(parentId) + 
                 ", LastFillPrice: " + Util.DoubleMaxString(lastFillPrice) + ", ClientId: " + Util.IntMaxString(clientId) + ", WhyHeld: " + whyHeld + ", MktCapPrice: " + Util.DoubleMaxString(mktCapPrice));
-            client.UpdateOrder(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice);
+            client.OnGetOrderStatus(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice);
         }
         //! [orderstatus]
 
@@ -235,7 +235,7 @@ namespace IB_TradingPlatformExtention1
                 ", FAGroup: " + order.FaGroup + ", FAMethod: " + order.FaMethod + ", CustAcct: " + order.CustomerAccount + ", ProfCust: " + order.ProfessionalCustomer +
                 ", BondAccruedInterest: " + order.BondAccruedInterest + ", IncludeOvernight: " + order.IncludeOvernight + ", ExtOperator: " + order.ExtOperator + 
                 ", ManualOrderIndicator: " + Util.IntMaxString(order.ManualOrderIndicator));
-            client.UpdateOrder(order, contract);
+            client.OnGetOpenOrders(contract, order);
         }
         //! [openorder]
 
@@ -476,7 +476,7 @@ namespace IB_TradingPlatformExtention1
         {
             Console.WriteLine("Position. " + account + " - Symbol: " + contract.Symbol + ", SecType: " + contract.SecType + ", Currency: " + contract.Currency + 
                 ", Position: " + Util.DecimalMaxString(pos) + ", Avg cost: " + Util.DoubleMaxString(avgCost));
-            client.UpdatePosition(account, contract, pos, avgCost);
+            client.OnGetPositions(account, contract, pos, avgCost);
         }
         //! [position]
 
@@ -612,7 +612,6 @@ namespace IB_TradingPlatformExtention1
         public void securityDefinitionOptionParameterEnd(int reqId)
         {
             Console.WriteLine("Security Definition Option Parameter End. Request: " + reqId + "\n");
-            client.OnGetOptionChainDetailsEnd();
 
         }
         //! [securityDefinitionOptionParameterEnd]

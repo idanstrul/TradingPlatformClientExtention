@@ -22,7 +22,7 @@ namespace IB_TradingPlatformExtention1
 
         // This delegate enables asynchronous calls for setting
         // the text property on a ListBox control.
-        delegate void SetTextCallbackTickPrice(string field, string price);
+        delegate void SetTextCallbackTickPrice(int reqId, string field, string price);
         delegate void SetCallbackContractSamplesRecived(object[] contractIdentifiers);
 
         // Create the ibClient object to represent the connection
@@ -61,8 +61,9 @@ namespace IB_TradingPlatformExtention1
             }
         }
 
-        private void Client_OnPositionChanged()
+        private void Client_OnPositionChanged(int posIdx)
         {
+            if (posIdx != -1) return;
             AdjustStopLoss();
         }
 
@@ -77,8 +78,10 @@ namespace IB_TradingPlatformExtention1
 
         }
 
-        private void Client_OnTickPriceUpdated(string field, string price)
+        private void Client_OnTickPriceUpdated(int reqId, string field, string price)
         {
+            if (reqId != -1) return;
+
             if (this.tbLast.InvokeRequired)
             {
                 SetTextCallbackTickPrice d = new SetTextCallbackTickPrice(Client_OnTickPriceUpdated);
@@ -124,11 +127,9 @@ namespace IB_TradingPlatformExtention1
             client.Connect("127.0.0.1", 7496, 0);
         }
 
-        private void cbSymbol_SelectedIndexChanged(object sender, EventArgs e)
+        private void btnDisconnect_Click(object sender, EventArgs e)
         {
-            var selectedItem = cbSymbol.SelectedItem as dynamic;
-            client.SetCurrContract(selectedItem.ConId);
-            client.GetDataForCurrContract();
+            client.Disconnect();
         }
 
         private void cbSymbol_KeyPress(object sender, KeyPressEventArgs e)
@@ -143,13 +144,8 @@ namespace IB_TradingPlatformExtention1
         {
             if (e.KeyCode == Keys.Enter)
             {
-                client.SearchContracts(cbSymbol.Text.Trim());
+                client.SearchStockContracts(cbSymbol.Text.Trim());
             }
-        }
-
-        private void btnDisconnect_Click(object sender, EventArgs e)
-        {
-            client.Disconnect();
         }
 
         private void btnBuy1_Click(object sender, EventArgs e)
@@ -239,7 +235,7 @@ namespace IB_TradingPlatformExtention1
             double stopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value;
 
 
-            client.PlaceOrder(side, modifierKeys, totalQuantity, lmtPriceOffset, stopType, isOutsideRth, stopPrice);
+            client.PlaceOrder(-1, side, modifierKeys, totalQuantity, lmtPriceOffset, stopType, isOutsideRth, stopPrice);
         }
 
         private void btnStopLossAdj_Click(object sender, EventArgs e)
@@ -257,24 +253,24 @@ namespace IB_TradingPlatformExtention1
 
             double stopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value;
 
-            client.AdjustStopLoss(isOutsideRth, stopType, stopPrice, (double)numTradeOffset.Value);
+            client.AdjustStopLoss(-1, isOutsideRth, stopType, stopPrice, (double)numTradeOffset.Value);
 
         }
 
         private void btnClosePos_Click(object sender, EventArgs e)
         {
-            client.ClosePositionForCurrContract((double)this.numTradeOffset.Value, chkOutside.Checked);
+            client.ClosePositionForContract(-1, (double)this.numTradeOffset.Value, chkOutside.Checked);
         }
 
         private void btnCancelLast_Click(object sender, EventArgs e)
         {
-            client.CancelLastOrderForCurrContract();
+            client.CancelLastOrderForContract(-1);
         }
 
         private void btnCancelAll_Click(object sender, EventArgs e)
         {
             Keys modifierKeys = Form.ModifierKeys;
-            client.CancelAllOrdersForCurrContract(modifierKeys == Keys.Control);
+            client.CancelAllOrdersForContract(-1, modifierKeys == Keys.Control);
         }
 
         private void cbTrailStop_CheckedChanged(object sender, EventArgs e)
@@ -298,6 +294,12 @@ namespace IB_TradingPlatformExtention1
         {
             OptionsAnalysisForm OAform = new OptionsAnalysisForm(client);
             OAform.Show();
+        }
+
+        private void cbSymbol_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            var selectedItem = cbSymbol.SelectedItem as dynamic;
+            client.SetSelectEquityContract(selectedItem.ConId);
         }
     }
 }

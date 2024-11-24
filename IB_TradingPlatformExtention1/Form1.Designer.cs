@@ -99,7 +99,7 @@
             this.cbSymbol.Size = new System.Drawing.Size(409, 24);
             this.cbSymbol.TabIndex = 1;
             this.cbSymbol.ValueMember = "ConId";
-            this.cbSymbol.SelectedIndexChanged += new System.EventHandler(this.cbSymbol_SelectedIndexChanged);
+            this.cbSymbol.SelectionChangeCommitted += new System.EventHandler(this.cbSymbol_SelectionChangeCommitted);
             this.cbSymbol.KeyDown += new System.Windows.Forms.KeyEventHandler(this.cbSymbol_KeyDown);
             this.cbSymbol.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cbSymbol_KeyPress);
             // 
