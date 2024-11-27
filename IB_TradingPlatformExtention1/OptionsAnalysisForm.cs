@@ -5,6 +5,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -17,7 +18,8 @@ namespace IB_TradingPlatformExtention1
     {
         delegate void InitOptionLegCallback(int rowIdx);
         delegate void OnOptionChainDetailsReceivedEndCallback(int multiplier, HashSet<string> expirations, HashSet<double> strikes);
-        delegate void SetOptionLegTickPriceCallback(int rowIdx, string fieldName, string Value);
+        delegate void SetOptionLegTickPriceCallback(int rowIdx, string fieldName, string value);
+        delegate void SetOptionLegTickOptionComputationCallback(int idx, double impliedVolatility, double delta);
 
         private VerticalLineAnnotation verticalLine;
         private HorizontalLineAnnotation zeroLine;
@@ -33,7 +35,7 @@ namespace IB_TradingPlatformExtention1
 
         private IBApiClient client;
 
-        public OptionsAnalysisForm(IBApiClient _client)
+        public OptionsAnalysisForm(IBApiClient _client, decimal stockLastPrice)
         {
             InitializeComponent();
 
@@ -41,6 +43,7 @@ namespace IB_TradingPlatformExtention1
 
             client.OnOptionChainDetailsReceived += Client_OnOptionChainDetailsReceived;
             client.OnTickPriceUpdated += Client_OnTickPriceUpdated;
+            client.OnTickOptionComputationUpdated += Client_OnTickOptionComputationUpdated;
 
             verticalLine = new VerticalLineAnnotation
             {
@@ -111,6 +114,8 @@ namespace IB_TradingPlatformExtention1
                 Visible = false // Start hidden until hover
             };
             chartRiskProfile.Annotations.Add(probabilityAnnotation);
+
+            numSpotPrice.Value = stockLastPrice;
         }
 
         private void OptionsAnalysisForm_Load(object sender, EventArgs e)
@@ -140,7 +145,7 @@ namespace IB_TradingPlatformExtention1
                 OnOptionChainDetailsReceivedEndCallback d = new OnOptionChainDetailsReceivedEndCallback(Client_OnOptionChainDetailsReceived);
                 try
                 {
-                    this.Invoke(d, new object[] { });
+                    this.Invoke(d, new object[] { multiplier, expirations, strikes });
                 }
                 catch (Exception e)
                 {
@@ -234,7 +239,7 @@ namespace IB_TradingPlatformExtention1
 
                 if (selectedCell != null || rightCell != null || expirationCell != null && strikeCell != null || volatilityCell != null || quantityCell != null)
                 {
-                    selectedCell.Selected = true;
+                    selectedCell.Value = true;
                     rightCell.Value = "CALL";
                     quantityCell.Value = 1;
 
@@ -256,6 +261,25 @@ namespace IB_TradingPlatformExtention1
                     strikeCell.Value = closestStrike;
                 }
 
+                if (rowIdx != optionLegs.Count) throw new Exception();
+                optionLegs.Add(new OptionLeg
+                {
+                    Idx = rowIdx, // Add the row index
+                    isSelected = true,
+                    Expiration = closestExpiration,
+                    Strike = closestStrike,
+                    //Volatility = volatility,
+                    IsCall = true,
+                    Quantity = 1
+                });
+
+                client.GetOptionContractDetails(
+                    rowIdx, // Row index offset by 10 as per the requirement
+                    "CALL",
+                    closestExpiration.ToString("yyyyMMdd"), // Convert expiration to string in the desired format
+                    closestStrike // Strike is already a double
+                );
+
                 // Refresh the DataGridView to apply changes
                 dgOptTradeLegs.Refresh();
             }
@@ -265,11 +289,34 @@ namespace IB_TradingPlatformExtention1
         private void dgOptTradeLegs_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             // Ensure the event is triggered for valid rows and columns
-            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+            if (e.RowIndex < 0 || e.ColumnIndex < 0 || e.ColumnIndex >= optionLegs.Count)
                 return;
 
             // Get the affected row
             DataGridViewRow row = dgOptTradeLegs.Rows[e.RowIndex];
+            DataGridViewCell cell = row.Cells[e.ColumnIndex];
+            string colName = cell.OwningColumn.Name;
+
+            switch (colName)
+            {
+                case "colSelected":
+                    bool value = (bool)(cell as DataGridViewCheckBoxCell).Value;
+                    optionLegs[e.RowIndex].isSelected = value;
+                    UpdateComboContract();
+                    break;
+                case "colRight":
+                case "colExpiration":
+                case "colStrike":
+                    break;
+                case "colVolatility":
+                    break;
+                case "colQuantity":
+                    break;
+                default:
+                    break;
+            }
+
+            //#######################################################
 
             // Retrieve the cells for Right, Expiration, and Strike
             DataGridViewCell rightCell = row.Cells[1]; // Assuming "Right" is column index 1
@@ -300,6 +347,22 @@ namespace IB_TradingPlatformExtention1
             }
         }
 
+        public void UpdateComboContract()
+        {
+            List<int> comboContractIdices = new List<int>();
+            List<int> comboContractQuantities = new List<int>();
+            optionLegs.ForEach(ol =>
+            {
+                if (ol.isSelected)
+                {
+                    comboContractIdices.Add(ol.Idx);
+                    comboContractQuantities.Add(ol.Quantity);
+                }
+            });
+
+            client.SetComboContract(comboContractIdices, comboContractQuantities);
+        }
+
         private void btnAddLeg_Click(object sender, EventArgs e)
         {
             dgOptTradeLegs.Rows.Add();
@@ -316,8 +379,6 @@ namespace IB_TradingPlatformExtention1
 
         private void Client_OnTickPriceUpdated(int rowIdx, string fieldName, string Value)
         {
-            if (rowIdx == -1) return;
-
             if (this.dgOptTradeLegs.InvokeRequired)
             {
                 SetOptionLegTickPriceCallback d = new SetOptionLegTickPriceCallback(Client_OnTickPriceUpdated);
@@ -332,27 +393,67 @@ namespace IB_TradingPlatformExtention1
             }
             else
             {
-                if (rowIdx == -2)
+                switch (rowIdx)
+                {
+                    case -2:
+                        throw new NotImplementedException();
+                    case -1:
+                        if (fieldName == "Last")
+                            this.numSpotPrice.Value = decimal.Parse(Value);
+                        break;
+                    default:
+                        DataGridViewRow row = dgOptTradeLegs.Rows[rowIdx];
+                        DataGridViewCell cell = row.Cells[0];
+                        switch (fieldName)
+                        {
+                            case "Last":
+                                cell = row.Cells[8];
+                                break;
+                            case "Ask":
+                                cell = row.Cells[7];
+                                break;
+                            case "Bid":
+                                cell = row.Cells[6];
+                                break;
+                            default:
+                                break;
+                        }
+                        cell.Value = Value;
+                        break;
+                }
+
+            }
+        }
+
+        private void Client_OnTickOptionComputationUpdated(int reqId, double impliedVolatility, double delta)
+        {
+            if (this.dgOptTradeLegs.InvokeRequired)
+            {
+                SetOptionLegTickOptionComputationCallback d = new SetOptionLegTickOptionComputationCallback(Client_OnTickOptionComputationUpdated);
+                try
+                {
+                    this.Invoke(d, new object[] { reqId, impliedVolatility, delta });
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("This is from Client_OnTickPriceUpdated", e);
+                }
+            }
+            else
+            {
+                if (reqId == -2)
                 {
                     throw new NotImplementedException();
                 }
-                DataGridViewRow row = dgOptTradeLegs.Rows[rowIdx];
-                DataGridViewCell cell = row.Cells[0];
-                switch (fieldName)
-                {
-                    case "Last":
-                        cell = row.Cells[8];
-                        break;
-                    case "Ask":
-                        cell = row.Cells[7];
-                        break;
-                    case "Bid":
-                        cell = row.Cells[6];
-                        break;
-                    default:
-                        break;
-                }
-                cell.Value = Value;
+
+                if (reqId < 0 || reqId >= dgOptTradeLegs.Rows.Count) return;
+
+                DataGridViewRow row = dgOptTradeLegs.Rows[reqId];
+                DataGridViewCell ivCell = row.Cells[4];
+                DataGridViewCell deltaCell = row.Cells[10];
+
+                ivCell.Value = impliedVolatility;
+                deltaCell.Value = delta;
             }
         }
 
@@ -373,24 +474,34 @@ namespace IB_TradingPlatformExtention1
             double upperBound = s * (1 + range / 100);
             double step = s * 0.001;
 
-            foreach (DataGridViewRow row in dgOptTradeLegs.Rows)
+            for (int i = 0; i < dgOptTradeLegs.Rows.Count; i++)
             {
+                DataGridViewRow row = dgOptTradeLegs.Rows[i];
                 if (row.IsNewRow) continue;
 
+                // Check if the row is selected
+                bool isRowSelected = (bool)((row.Cells["colSelected"] as DataGridViewCheckBoxCell)?.Value ?? false);
+                if (!isRowSelected) continue;
+
+                // Parse values from the row
                 if (!DateTime.TryParse(row.Cells[2].Value?.ToString(), out DateTime expiration))
-                    throw new ArgumentException("Invalid expiration date.");
+                    throw new ArgumentException($"Invalid expiration date in row {i}.");
+
                 if (!double.TryParse(row.Cells[3].Value?.ToString(), out double strike))
-                    throw new ArgumentException("Invalid strike price.");
+                    throw new ArgumentException($"Invalid strike price in row {i}.");
+
                 if (!double.TryParse(row.Cells[4].Value?.ToString(), out double volatility))
-                    throw new ArgumentException("Invalid volatility.");
+                    throw new ArgumentException($"Invalid volatility in row {i}.");
+
                 if (!int.TryParse(row.Cells[5].Value?.ToString(), out int quantity))
-                    throw new ArgumentException("Invalid quantity.");
+                    throw new ArgumentException($"Invalid quantity in row {i}.");
 
                 bool isCall = row.Cells[1].Value?.ToString() == "CALL";
 
-                // Add this option leg to the list
+                // Add the option leg to the list with row index
                 optionLegs.Add(new OptionLeg
                 {
+                    Idx = i, // Add the row index
                     Expiration = expiration,
                     Strike = strike,
                     Volatility = volatility,
@@ -398,6 +509,7 @@ namespace IB_TradingPlatformExtention1
                     Quantity = quantity
                 });
             }
+
 
             // Calculate the initial cost of the strategy (premium)
             strategyInitialCost = BlackScholes.CalculateStrategyPremium(optionLegs, s, currTime, r);
@@ -527,9 +639,25 @@ namespace IB_TradingPlatformExtention1
             probabilityAnnotation.Visible = false;
         }
 
-        public void placeOrder(string action, Keys modifierKeys)
+        public void placeOrder(string side, Keys modifierKeys, decimal posSize)
         {
-            
+            if (optionLegs.Count == 0) { return; }
+            int contractIdx = optionLegs.Count > 1 ? -2 : optionLegs[0].Idx;
+
+            double lmtPriceOffset = (double)((side == "BUY") ? this.numTradeOffset.Value : -this.numTradeOffset.Value);
+
+            int stopType = 0;
+            bool isOutsideRth = cbIsLimitStop.Checked;
+
+            if (this.cbStopLoss.Checked) stopType = 1;
+            if (this.cbTrailStop.Checked) stopType = 2;
+
+            decimal totalQuantity = Math.Floor(posSize * Convert.ToDecimal(numQuantity.Value));
+
+            double stopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value;
+
+
+            client.PlaceOrder(contractIdx, side, modifierKeys, totalQuantity, lmtPriceOffset, stopType, isOutsideRth, stopPrice);
         }
 
         private void btnClosePos_Click(object sender, EventArgs e)
@@ -543,17 +671,17 @@ namespace IB_TradingPlatformExtention1
 
         private void btnCancelAll_Click(object sender, EventArgs e)
         {
-           
+
         }
 
         private void cbTrailStop_CheckedChanged(object sender, EventArgs e)
         {
-           
+
         }
 
         private void cbStopLoss_CheckedChanged(object sender, EventArgs e)
         {
-            
+
         }
 
         private void btnStopLossAdj_Click(object sender, EventArgs e)
@@ -575,10 +703,115 @@ namespace IB_TradingPlatformExtention1
         {
 
         }
+
+        private void dgOptTradeLegs_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+
+        }
+
+        // Event: When a cell enters edit mode (for immediate updates)
+        //private void dgOptTradeLegs_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        //{
+        //    string columnName = dgOptTradeLegs.CurrentCell?.OwningColumn?.Name;
+
+        //    // Handle ComboBox columns
+        //    if ((columnName == "colRight" || columnName == "colExpiration" || columnName == "colStrike") && e.Control is ComboBox comboBox)
+        //    {
+        //        // Remove existing handler to prevent multiple subscriptions
+        //        comboBox.SelectedIndexChanged -= ComboBox_SelectedIndexChanged;
+        //        comboBox.SelectedIndexChanged += ComboBox_SelectedIndexChanged;
+        //    }
+
+        //    // Handle TextBox columns for Volatility or Quantity
+        //    if ((columnName == "colVolatility" || columnName == "colQuantity") && e.Control is TextBox textBox)
+        //    {
+        //        // Remove existing handler to prevent multiple subscriptions
+        //        textBox.TextChanged -= TextBox_TextChanged;
+        //        textBox.TextChanged += TextBox_TextChanged;
+        //    }
+
+        //    // Handle CheckBox column for Select
+        //    if (columnName == "colSelect" && e.Control is CheckBox checkBox)
+        //    {
+        //        // Remove existing handler to prevent multiple subscriptions
+        //        checkBox.CheckedChanged -= CheckBox_CheckedChanged;
+        //        checkBox.CheckedChanged += CheckBox_CheckedChanged;
+        //    }
+        //}
+
+        //// Event: For ComboBox value changes
+        //private void ComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        //{
+        //    var cell = dgOptTradeLegs.CurrentCell;
+        //    if (cell != null)
+        //    {
+        //        string columnName = cell.OwningColumn.Name;
+        //        if (columnName == "colRight" || columnName == "colExpiration" || columnName == "colStrike")
+        //        {
+        //            OnLegContractChanged(cell.RowIndex);
+        //        }
+        //    }
+        //}
+
+        //// Event: For TextBox value changes
+        //private void TextBox_TextChanged(object sender, EventArgs e)
+        //{
+        //    var cell = dgOptTradeLegs.CurrentCell;
+        //    if (cell != null)
+        //    {
+        //        string columnName = cell.OwningColumn.Name;
+        //        if (columnName == "colVolatility")
+        //        {
+        //            OnLegIvAdjusted(cell.RowIndex, ((TextBox)sender).Text);
+        //        }
+        //        else if (columnName == "colQuantity")
+        //        {
+        //            OnLegQuantityAdjusted(cell.RowIndex, ((TextBox)sender).Text);
+        //        }
+        //    }
+        //}
+
+        //// Event: For CheckBox state changes
+        //private void CheckBox_CheckedChanged(object sender, EventArgs e)
+        //{
+        //    var cell = dgOptTradeLegs.CurrentCell;
+        //    if (cell != null && cell.OwningColumn.Name == "colSelect")
+        //    {
+        //        bool isSelected = ((CheckBox)sender).Checked;
+        //        OnSelectLeg(cell.RowIndex, isSelected);
+        //    }
+        //}
+
+        //// Functions to be triggered
+        //private void OnSelectLeg(int rowIndex, bool isSelected)
+        //{
+        //    Console.WriteLine($"Row {rowIndex} selected state: {isSelected}");
+        //    // Add your logic here
+        //}
+
+        //private void OnLegContractChanged(int rowIndex)
+        //{
+        //    Console.WriteLine($"Leg contract changed for row {rowIndex}");
+        //    // Add your logic here
+        //}
+
+        //private void OnLegIvAdjusted(int rowIndex, string newIv)
+        //{
+        //    Console.WriteLine($"IV adjusted for row {rowIndex}: {newIv}");
+        //    // Add your logic here
+        //}
+
+        //private void OnLegQuantityAdjusted(int rowIndex, string newQuantity)
+        //{
+        //    Console.WriteLine($"Quantity adjusted for row {rowIndex}: {newQuantity}");
+        //    // Add your logic here
+        //}
     }
 
     public class OptionLeg
     {
+        public int Idx { get; set; }
+        public bool isSelected { get; set; }
         public bool IsCall { get; set; }
         public DateTime Expiration { get; set; }
         public double Strike { get; set; }

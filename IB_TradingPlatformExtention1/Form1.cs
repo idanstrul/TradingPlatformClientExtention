@@ -87,7 +87,7 @@ namespace IB_TradingPlatformExtention1
                 SetTextCallbackTickPrice d = new SetTextCallbackTickPrice(Client_OnTickPriceUpdated);
                 try
                 {
-                    this.Invoke(d, new object[] { field, price });
+                    this.Invoke(d, new object[] { reqId, field, price });
                 }
                 catch (Exception e)
                 {
@@ -292,14 +292,15 @@ namespace IB_TradingPlatformExtention1
 
         private void btnOptionsAnalysis_Click(object sender, EventArgs e)
         {
-            OptionsAnalysisForm OAform = new OptionsAnalysisForm(client);
+            decimal stockLastPrice = decimal.Parse(this.tbLast.Text);
+            OptionsAnalysisForm OAform = new OptionsAnalysisForm(client, stockLastPrice);
             OAform.Show();
         }
 
         private void cbSymbol_SelectionChangeCommitted(object sender, EventArgs e)
         {
             var selectedItem = cbSymbol.SelectedItem as dynamic;
-            client.SetSelectEquityContract(selectedItem.ConId);
+            client.SetEquityContract(selectedItem.ConId);
         }
     }
 }
