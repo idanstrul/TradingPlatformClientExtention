@@ -265,15 +265,15 @@ namespace IB_TradingPlatformExtention1
                 optionLegs.Add(new OptionLeg
                 {
                     Idx = rowIdx, // Add the row index
-                    isSelected = true,
+                    IsSelected = true,
                     Expiration = closestExpiration,
                     Strike = closestStrike,
                     //Volatility = volatility,
-                    IsCall = true,
+                    Right = "CALL",
                     Quantity = 1
                 });
 
-                client.GetOptionContractDetails(
+                client.SetOptionLegContract(
                     rowIdx, // Row index offset by 10 as per the requirement
                     "CALL",
                     closestExpiration.ToString("yyyyMMdd"), // Convert expiration to string in the desired format
@@ -289,7 +289,7 @@ namespace IB_TradingPlatformExtention1
         private void dgOptTradeLegs_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             // Ensure the event is triggered for valid rows and columns
-            if (e.RowIndex < 0 || e.ColumnIndex < 0 || e.ColumnIndex >= optionLegs.Count)
+            if (e.RowIndex < 0 || e.ColumnIndex < 0 || e.RowIndex >= optionLegs.Count)
                 return;
 
             // Get the affected row
@@ -300,51 +300,48 @@ namespace IB_TradingPlatformExtention1
             switch (colName)
             {
                 case "colSelected":
-                    bool value = (bool)(cell as DataGridViewCheckBoxCell).Value;
-                    optionLegs[e.RowIndex].isSelected = value;
+                    optionLegs[e.RowIndex].IsSelected = (bool)(cell as DataGridViewCheckBoxCell).Value;
                     UpdateComboContract();
                     break;
                 case "colRight":
+                    optionLegs[e.RowIndex].Right = (string)(cell as DataGridViewComboBoxCell).Value;
+                    UpdateOptionLeg(e.RowIndex);
+                    break;
                 case "colExpiration":
+                    optionLegs[e.RowIndex].Expiration = (DateTime)(cell as DataGridViewComboBoxCell).Value;
+                    UpdateOptionLeg(e.RowIndex);
+                    break;
                 case "colStrike":
+                    optionLegs[e.RowIndex].Strike = (double)(cell as DataGridViewComboBoxCell).Value;
+                    UpdateOptionLeg(e.RowIndex);
                     break;
                 case "colVolatility":
+                    optionLegs[e.RowIndex].Volatility = (double)(cell as DataGridViewTextBoxCell).Value;
                     break;
                 case "colQuantity":
+                    optionLegs[e.RowIndex].Quantity = (int)(cell as DataGridViewTextBoxCell).Value;
+                    UpdateComboContract();
                     break;
                 default:
                     break;
             }
+        }
 
-            //#######################################################
-
-            // Retrieve the cells for Right, Expiration, and Strike
-            DataGridViewCell rightCell = row.Cells[1]; // Assuming "Right" is column index 1
-            DataGridViewCell expirationCell = row.Cells[2]; // Assuming "Expiration" is column index 2
-            DataGridViewCell strikeCell = row.Cells[3]; // Assuming "Strike" is column index 3
-
-            // Check if the changed column is one of interest
-            if (e.ColumnIndex == 1 || e.ColumnIndex == 2 || e.ColumnIndex == 3)
+        public void UpdateOptionLeg(int legIdx)
+        {
+            OptionLeg currOptionLeg = optionLegs[legIdx];
+            if (currOptionLeg != null)
             {
-                // Ensure that the required cell values are not null
-                string right = rightCell.Value as string;
-                DateTime? expiration = expirationCell.Value as DateTime?;
-                double? strike = strikeCell.Value as double?;
-
-                if (string.IsNullOrWhiteSpace(right) || expiration == null || strike == null)
-                {
-                    // Handle invalid data gracefully (e.g., log or show a warning)
-                    return;
-                }
-
-                // Call the client.GetOptionContractDetails method
-                client.GetOptionContractDetails(
-                    e.RowIndex, // Row index offset by 10 as per the requirement
-                    right,
-                    expiration.Value.ToString("yyyyMMdd"), // Convert expiration to string in the desired format
-                    strike.Value // Strike is already a double
+                client.SetOptionLegContract(
+                    legIdx,
+                    currOptionLeg.Right,
+                    currOptionLeg.Expiration.ToString("yyyyMMdd"),
+                    currOptionLeg.Strike
                 );
             }
+
+            ResetRowValues(legIdx);
+            if (currOptionLeg.IsSelected) { UpdateComboContract(); }
         }
 
         public void UpdateComboContract()
@@ -353,7 +350,7 @@ namespace IB_TradingPlatformExtention1
             List<int> comboContractQuantities = new List<int>();
             optionLegs.ForEach(ol =>
             {
-                if (ol.isSelected)
+                if (ol.IsSelected)
                 {
                     comboContractIdices.Add(ol.Idx);
                     comboContractQuantities.Add(ol.Quantity);
@@ -363,6 +360,77 @@ namespace IB_TradingPlatformExtention1
             client.SetComboContract(comboContractIdices, comboContractQuantities);
         }
 
+        private void ResetRowValues(int rowIdx, bool resetOnlyMarketData = true)
+        {
+            if (rowIdx < 0 || rowIdx >= dgOptTradeLegs.Rows.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(rowIdx), "Invalid row index.");
+            }
+
+            DataGridViewRow row = dgOptTradeLegs.Rows[rowIdx];
+
+            List<string> contractDefinitionCols = new List<string>
+                {
+                    "colSelected",
+                    "colRight",
+                    "colExpiration",
+                    "colStrike",
+                    "colOpenedIterest",
+                    "colQuantity"
+                };
+
+            // Loop through all cells in the row
+            foreach (DataGridViewCell cell in row.Cells)
+            {
+                if (cell.OwningColumn is DataGridViewButtonColumn) { continue; }
+
+                string colName = cell.OwningColumn.Name;
+
+                if (resetOnlyMarketData && contractDefinitionCols.Contains(colName)) { continue; }
+                // If we want to reset all cells in the row including contractDefinitionCols, we need to also 
+                // modify the optionLegs list to include the correct contract. Maybe we only need this function to 
+                // reset market data cells and not more then this. In that case can change the function (including
+                // it's name) to reset only market data cells. This to be desided in the future. 
+
+                // Reset value based on column type
+                switch (colName)
+                {
+                    case "colSelect": // Checkbox column
+                        cell.Value = false; // Default to unchecked
+                        break;
+
+                    case "colRight": // ComboBox column
+                    case "colExpiration":
+                    case "colStrike":
+                        cell.Value = null; // Default to no selection
+                        break;
+
+                    case "colVolatility": // TextBox column
+                        cell.Value = (double)numAtmIv.Value;
+                        break;
+                    case "colQuantity":
+                        cell.Value = 1; // Default to empty string
+                        break;
+
+                    case "colBid":
+                    case "colAsk":
+                    case "colLast":
+                    case "colOpenedInterest":
+                    case "colDelta":
+                        cell.Value = 0.00;
+                        break;
+
+                    default:
+                        cell.Value = null; // Default for other columns
+                        break;
+                }
+            }
+
+            // Refresh the DataGridView to apply changes
+            dgOptTradeLegs.Refresh();
+        }
+
+
         private void btnAddLeg_Click(object sender, EventArgs e)
         {
             dgOptTradeLegs.Rows.Add();
@@ -370,6 +438,7 @@ namespace IB_TradingPlatformExtention1
 
         private void dgOptTradeLegs_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.RowIndex != dgOptTradeLegs.Rows.Count - 1) return; // can't remove option legs that are not the last ones becuase then to start changing indices for all legs afterwards and because of market data registrations that creates a mass.
             // Ensure the click is valid and on the button column
             if (e.RowIndex >= 0 && e.ColumnIndex == dgOptTradeLegs.Columns["colRemoveLeg"].Index)
             {
@@ -402,23 +471,10 @@ namespace IB_TradingPlatformExtention1
                             this.numSpotPrice.Value = decimal.Parse(Value);
                         break;
                     default:
+                        if (string.IsNullOrWhiteSpace(fieldName)) { return; }
                         DataGridViewRow row = dgOptTradeLegs.Rows[rowIdx];
-                        DataGridViewCell cell = row.Cells[0];
-                        switch (fieldName)
-                        {
-                            case "Last":
-                                cell = row.Cells[8];
-                                break;
-                            case "Ask":
-                                cell = row.Cells[7];
-                                break;
-                            case "Bid":
-                                cell = row.Cells[6];
-                                break;
-                            default:
-                                break;
-                        }
-                        cell.Value = Value;
+                        string colName = "col" + fieldName;
+                        row.Cells[colName].Value = Value;
                         break;
                 }
 
@@ -496,8 +552,6 @@ namespace IB_TradingPlatformExtention1
                 if (!int.TryParse(row.Cells[5].Value?.ToString(), out int quantity))
                     throw new ArgumentException($"Invalid quantity in row {i}.");
 
-                bool isCall = row.Cells[1].Value?.ToString() == "CALL";
-
                 // Add the option leg to the list with row index
                 optionLegs.Add(new OptionLeg
                 {
@@ -505,7 +559,7 @@ namespace IB_TradingPlatformExtention1
                     Expiration = expiration,
                     Strike = strike,
                     Volatility = volatility,
-                    IsCall = isCall,
+                    Right = row.Cells[1].Value?.ToString(),
                     Quantity = quantity
                 });
             }
@@ -811,8 +865,8 @@ namespace IB_TradingPlatformExtention1
     public class OptionLeg
     {
         public int Idx { get; set; }
-        public bool isSelected { get; set; }
-        public bool IsCall { get; set; }
+        public bool IsSelected { get; set; }
+        public string Right { get; set; }
         public DateTime Expiration { get; set; }
         public double Strike { get; set; }
         public double Volatility { get; set; } // as a decimal (e.g., 0.20 for 20%)
@@ -856,12 +910,12 @@ namespace IB_TradingPlatformExtention1
         }
 
         // Black-Scholes formula
-        public static double CalculateOptionPrice(double S, double K, double T, double r, double sigma, bool isCall)
+        public static double CalculateOptionPrice(double S, double K, double T, double r, double sigma, string right)
         {
             double d1 = (Math.Log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * Math.Sqrt(T));
             double d2 = d1 - sigma * Math.Sqrt(T);
 
-            if (isCall)
+            if (right == "CALL")
             {
                 return S * Cdf(d1) - K * Math.Exp(-r * T) * Cdf(d2);
             }
@@ -871,9 +925,9 @@ namespace IB_TradingPlatformExtention1
             }
         }
 
-        public static double CalculateIntrinsicValue(double s, double k, bool isCall)
+        public static double CalculateIntrinsicValue(double s, double k, string right)
         {
-            if (isCall)
+            if (right == "CALL")
             {
                 return Math.Max(s - k, 0); // Call option intrinsic value
             }
@@ -918,8 +972,8 @@ namespace IB_TradingPlatformExtention1
 
                 // Determine the price of the option based on whether it's before expiration or at expiration
                 double optionPrice = timeToExp > 0
-                    ? CalculateOptionPrice(underlyingPrice, leg.Strike, timeToExp, riskFreeRate, leg.Volatility, leg.IsCall) * 100
-                    : CalculateIntrinsicValue(underlyingPrice, leg.Strike, leg.IsCall) * 100;
+                    ? CalculateOptionPrice(underlyingPrice, leg.Strike, timeToExp, riskFreeRate, leg.Volatility, leg.Right) * 100
+                    : CalculateIntrinsicValue(underlyingPrice, leg.Strike, leg.Right) * 100;
 
                 // Adjust premium based on whether the leg is a buy or sell
                 premium += leg.Quantity * optionPrice;

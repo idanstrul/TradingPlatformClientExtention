@@ -9,6 +9,8 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 using System.Windows.Forms;
 using IB_TradingPlatformExtention1.Interfaces;
 using System.Windows.Forms.DataVisualization.Charting;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using System.Security.Principal;
 
 namespace IB_TradingPlatformExtention1
 {
@@ -189,8 +191,20 @@ namespace IB_TradingPlatformExtention1
 
             var stopLossOrders = CurrTradeInstruments.GetStopLossOrdersForPosition(contractIdx);
 
-            double trailStopPrice = TrailStopPrice != null ? (double)TrailStopPrice : position.PositionAmount > 0 ?
-                lastTickDetails.Bid - stopPrice : lastTickDetails.Ask + stopPrice;
+            double? trailStopPrice = TrailStopPrice;
+            if (trailStopPrice == null)
+            {
+                if (lastTickDetails != null)
+                {
+                    trailStopPrice = position.PositionAmount > 0 ?
+                    lastTickDetails.Bid - stopPrice : lastTickDetails.Ask + stopPrice;
+                } else
+                {
+                    trailStopPrice = position.PositionAmount > 0 ?
+                    position.AverageCost - stopPrice : position.AverageCost + stopPrice;
+                }
+
+            }
 
             Order stopLoss = new Order
             {
@@ -207,7 +221,7 @@ namespace IB_TradingPlatformExtention1
             if (stopType == 2)
             {
                 stopLoss.OrderType = (isOutsideRth) ? "TRAIL LIMIT" : "TRAIL";
-                stopLoss.TrailStopPrice = trailStopPrice;
+                stopLoss.TrailStopPrice = (double)trailStopPrice;
                 if (stopLoss.OrderType == "TRAIL LIMIT") stopLoss.LmtPriceOffset = -4 * limitPriceOffset;
             }
             else if (stopType == 1)
@@ -392,7 +406,8 @@ namespace IB_TradingPlatformExtention1
                 Symbol = underline.Symbol,
                 Currency = underline.Currency,
                 SecType = "BAG",
-                Exchange = "SMART"
+                Exchange = "SMART",
+                ComboLegs = new List<ComboLeg>()
             };
 
             for (int i = 0; i < comboContractIdices.Count; i++)
@@ -449,37 +464,34 @@ namespace IB_TradingPlatformExtention1
 
         public void OnGetTickPrice(int reqId, int fieldId, double price, TickAttrib attribs)
         {
-            TradeInstrumentDetails details = CurrTradeInstruments.GetCurrTradeInstrumentByIdx(reqId);
             string fieldName = "";
 
             switch (fieldId)
             {
                 case 1: // Delayed Bid quote 66, if you want realtime use tickerPrice == 1
                     fieldName = "Bid";
-                    details.LastTickDetails.Bid = price;
                     break;
                 case 2: // Delayed Ask quote 67, if you want realtime use tickerPrice == 2
                     fieldName = "Ask";
-                    details.LastTickDetails.Ask = price;
                     break;
                 case 3:
                     break;
                 case 4: // Delayed Last quote 68, if you want realtime use tickerPrice == 4
                     fieldName = "Last";
-                    details.LastTickDetails.Last = price;
                     break;
                 default:
                     break;
             }
 
+            CurrTradeInstruments.UpdateLastTickDetails(reqId, fieldName, price);
             OnTickPriceUpdated?.Invoke(reqId, fieldName, price.ToString());
         }
 
         public void OnGetPositions(string account, Contract contract, decimal pos, double avgCost)
         {
             int posIdx = CurrTradeInstruments.GetCurrTradeInstrumentIdxForContract(contract);
-            OnPositionChanged?.Invoke(posIdx);
             CurrTradeInstruments.UpdatePosition(account, contract, pos, avgCost);
+            OnPositionChanged?.Invoke(posIdx);
         }
 
         public void OnGetOpenOrders(Contract contract, Order order)
@@ -508,9 +520,8 @@ namespace IB_TradingPlatformExtention1
             OnOptionChainDetailsReceived?.Invoke(multiplierVal, expirations, strikes);
         }
 
-        public void GetOptionContractDetails(int reqId, string right, string expiration, double strike)
+        public void SetOptionLegContract(int reqId, string right, string expiration, double strike)
         {
-            List<TradeInstrumentDetails> currOptionStrategy = CurrTradeInstruments.OptionLegs;
             Contract optionContract = new Contract
             {
                 Symbol = CurrTradeInstruments.Equity.Contract.Symbol,
@@ -657,6 +668,31 @@ namespace IB_TradingPlatformExtention1
                 .ToList();
         }
 
+        public void UpdateLastTickDetails(int reqId, string fieldName, double price)
+        {
+            TradeInstrumentDetails currTradeInstrument = GetCurrTradeInstrumentByIdx(reqId);
+            if (currTradeInstrument == null) return;
+            if (currTradeInstrument.LastTickDetails == null)
+            {
+                currTradeInstrument.LastTickDetails = new LastTickDetails();
+            }
+
+            switch (fieldName)
+            {
+                case "Bid":
+                    currTradeInstrument.LastTickDetails.Bid = price;
+                    break;
+                case "Ask":
+                    currTradeInstrument.LastTickDetails.Ask = price;
+                    break;
+                case "Last":
+                    currTradeInstrument.LastTickDetails.Last = price;
+                    break;
+                default:
+                    break;
+            }
+        }
+
         public void UpdatePosition(string account, Contract contract, decimal position, double avgCost)
         {
             int posIdx = GetCurrTradeInstrumentIdxForContract(contract);
@@ -742,7 +778,7 @@ namespace IB_TradingPlatformExtention1
         public Contract Contract { get; set; }
         public LastTickDetails LastTickDetails { get; set; }
         public Position Position { get; set; }
-        public List<OpenOrder> OpenOrders { get; set; }
+        public List<OpenOrder> OpenOrders { get; set; } = new List<OpenOrder>();
 
         // Override Equals
         public override bool Equals(object obj)
