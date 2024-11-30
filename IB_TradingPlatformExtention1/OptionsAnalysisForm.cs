@@ -44,6 +44,7 @@ namespace IB_TradingPlatformExtention1
             client.OnOptionChainDetailsReceived += Client_OnOptionChainDetailsReceived;
             client.OnTickPriceUpdated += Client_OnTickPriceUpdated;
             client.OnTickOptionComputationUpdated += Client_OnTickOptionComputationUpdated;
+            client.OnPositionChanged += Client_OnPositionChanged;
 
             verticalLine = new VerticalLineAnnotation
             {
@@ -273,18 +274,12 @@ namespace IB_TradingPlatformExtention1
                     Quantity = 1
                 });
 
-                client.SetOptionLegContract(
-                    rowIdx, // Row index offset by 10 as per the requirement
-                    "CALL",
-                    closestExpiration.ToString("yyyyMMdd"), // Convert expiration to string in the desired format
-                    closestStrike // Strike is already a double
-                );
+                UpdateOptionLeg(rowIdx);
 
                 // Refresh the DataGridView to apply changes
                 dgOptTradeLegs.Refresh();
             }
         }
-
 
         private void dgOptTradeLegs_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
@@ -358,6 +353,7 @@ namespace IB_TradingPlatformExtention1
             });
 
             client.SetComboContract(comboContractIdices, comboContractQuantities);
+            PlotRiskProfile();
         }
 
         private void ResetRowValues(int rowIdx, bool resetOnlyMarketData = true)
@@ -430,6 +426,14 @@ namespace IB_TradingPlatformExtention1
             dgOptTradeLegs.Refresh();
         }
 
+        private int GetContractIdx()
+        {
+            List<OptionLeg> selectedOptions = optionLegs.Where(opl => opl.IsSelected).ToList();
+
+            if (selectedOptions.Count == 0) { return -3; }
+            return selectedOptions.Count > 1 ? -2 : optionLegs[0].Idx;
+        }
+
 
         private void btnAddLeg_Click(object sender, EventArgs e)
         {
@@ -465,7 +469,21 @@ namespace IB_TradingPlatformExtention1
                 switch (rowIdx)
                 {
                     case -2:
-                        throw new NotImplementedException();
+                        switch (fieldName)
+                        {
+                            case "Bid":
+                                tbBid.Text = Value;
+                                break;
+                            case "Ask":
+                                tbAsk.Text = Value;
+                                break;
+                            case "Last":
+                                tbLast.Text = Value;
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
                     case -1:
                         if (fieldName == "Last")
                             this.numSpotPrice.Value = decimal.Parse(Value);
@@ -513,9 +531,19 @@ namespace IB_TradingPlatformExtention1
             }
         }
 
+        private void Client_OnPositionChanged(int posIdx)
+        {
+            if (posIdx == -1) return;
+            AdjustStopLoss();
+        }
+
         private void btnPlotRiskProfile_Click(object sender, EventArgs e)
         {
-            optionLegs.Clear();
+            PlotRiskProfile();
+        }
+
+        private void PlotRiskProfile()
+        {
             strategyInitialCost = 0;
 
             double s = (double)numSpotPrice.Value;
@@ -526,53 +554,22 @@ namespace IB_TradingPlatformExtention1
             List<double> pnlAtExp = new List<double>();
             List<double> pricePoints = new List<double>();
 
+            if (s == 0) return;
+
             double lowerBound = s * (1 - range / 100);
             double upperBound = s * (1 + range / 100);
             double step = s * 0.001;
 
-            for (int i = 0; i < dgOptTradeLegs.Rows.Count; i++)
-            {
-                DataGridViewRow row = dgOptTradeLegs.Rows[i];
-                if (row.IsNewRow) continue;
-
-                // Check if the row is selected
-                bool isRowSelected = (bool)((row.Cells["colSelected"] as DataGridViewCheckBoxCell)?.Value ?? false);
-                if (!isRowSelected) continue;
-
-                // Parse values from the row
-                if (!DateTime.TryParse(row.Cells[2].Value?.ToString(), out DateTime expiration))
-                    throw new ArgumentException($"Invalid expiration date in row {i}.");
-
-                if (!double.TryParse(row.Cells[3].Value?.ToString(), out double strike))
-                    throw new ArgumentException($"Invalid strike price in row {i}.");
-
-                if (!double.TryParse(row.Cells[4].Value?.ToString(), out double volatility))
-                    throw new ArgumentException($"Invalid volatility in row {i}.");
-
-                if (!int.TryParse(row.Cells[5].Value?.ToString(), out int quantity))
-                    throw new ArgumentException($"Invalid quantity in row {i}.");
-
-                // Add the option leg to the list with row index
-                optionLegs.Add(new OptionLeg
-                {
-                    Idx = i, // Add the row index
-                    Expiration = expiration,
-                    Strike = strike,
-                    Volatility = volatility,
-                    Right = row.Cells[1].Value?.ToString(),
-                    Quantity = quantity
-                });
-            }
-
+            List<OptionLeg> selectedOptions = optionLegs.Where(opl => opl.IsSelected).ToList();
 
             // Calculate the initial cost of the strategy (premium)
-            strategyInitialCost = BlackScholes.CalculateStrategyPremium(optionLegs, s, currTime, r);
+            strategyInitialCost = BlackScholes.CalculateStrategyPremium(selectedOptions, s, currTime, r);
 
             // Calculate PnL for each price point
             for (double underlyingPrice = lowerBound; underlyingPrice <= upperBound; underlyingPrice += step)
             {
-                double totalPnlBeforeExp = BlackScholes.CalculateStrategyPremium(optionLegs, underlyingPrice, currTime, r); ;
-                double totalPnlAtExp = BlackScholes.CalculateStrategyPremium(optionLegs, underlyingPrice, DateTime.MaxValue, r);
+                double totalPnlBeforeExp = BlackScholes.CalculateStrategyPremium(selectedOptions, underlyingPrice, currTime, r); ;
+                double totalPnlAtExp = BlackScholes.CalculateStrategyPremium(selectedOptions, underlyingPrice, DateTime.MaxValue, r);
 
                 pnlAtExp.Add(totalPnlAtExp - strategyInitialCost);
                 pnlBeforeExp.Add(totalPnlBeforeExp - strategyInitialCost);
@@ -693,10 +690,12 @@ namespace IB_TradingPlatformExtention1
             probabilityAnnotation.Visible = false;
         }
 
-        public void placeOrder(string side, Keys modifierKeys, decimal posSize)
+        public void placeOrder(string side, Keys modifierKeys)
         {
-            if (optionLegs.Count == 0) { return; }
-            int contractIdx = optionLegs.Count > 1 ? -2 : optionLegs[0].Idx;
+            int contractIdx = GetContractIdx();
+
+            if (contractIdx == -3) { return; }
+            int posSize = contractIdx == -2 ? 1 : optionLegs[0].Quantity;
 
             double lmtPriceOffset = (double)((side == "BUY") ? this.numTradeOffset.Value : -this.numTradeOffset.Value);
 
@@ -716,52 +715,83 @@ namespace IB_TradingPlatformExtention1
 
         private void btnClosePos_Click(object sender, EventArgs e)
         {
+            int contractIdx = GetContractIdx();
+            if (contractIdx == -3) { return; }
+
+            client.ClosePositionForContract(contractIdx, (double)this.numTradeOffset.Value, cbIsLimitStop.Checked);
         }
 
         private void btnCancelLast_Click(object sender, EventArgs e)
         {
-
+            int contractIdx = GetContractIdx();
+            if (contractIdx == -3) { return; }
+            client.CancelLastOrderForContract(contractIdx);
         }
 
         private void btnCancelAll_Click(object sender, EventArgs e)
         {
-
+            int contractIdx = GetContractIdx();
+            if (contractIdx == -3) { return; }
+            Keys modifierKeys = Form.ModifierKeys;
+            client.CancelAllOrdersForContract(contractIdx, modifierKeys == Keys.Control);
         }
 
         private void cbTrailStop_CheckedChanged(object sender, EventArgs e)
         {
-
+            if (cbTrailStop.Checked)
+            {
+                this.cbStopLoss.Checked = false;
+            }
         }
 
         private void cbStopLoss_CheckedChanged(object sender, EventArgs e)
         {
-
+            if (cbStopLoss.Checked)
+            {
+                this.cbTrailStop.Checked = false;
+                numStopLoss.Value = Math.Round((decimal.Parse(tbAsk.Text) + decimal.Parse(tbBid.Text)) / 2, 2);
+            }
         }
 
         private void btnStopLossAdj_Click(object sender, EventArgs e)
         {
-
+            AdjustStopLoss();
         }
 
         private void AdjustStopLoss()
         {
+            int contractIdx = GetContractIdx();
 
+            if (contractIdx == -3) { return; }
+            bool isOutsideRth = cbIsLimitStop.Checked;
+            int stopType = 0;
+
+            if (this.cbStopLoss.Checked) stopType = 1;
+            if (this.cbTrailStop.Checked) stopType = 2;
+
+            double stopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value;
+
+            client.AdjustStopLoss(contractIdx, isOutsideRth, stopType, stopPrice, (double)numTradeOffset.Value);
         }
 
         private void btnSell_Click(object sender, EventArgs e)
         {
-
+            string side = "SELL";
+            Keys modifierKeys = Form.ModifierKeys;
+            placeOrder(side, modifierKeys);
         }
 
         private void btnBuy_Click(object sender, EventArgs e)
         {
-
+            string side = "BUY";
+            Keys modifierKeys = Form.ModifierKeys;
+            placeOrder(side, modifierKeys);
         }
 
-        private void dgOptTradeLegs_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
-        {
+        //private void dgOptTradeLegs_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        //{
 
-        }
+        //}
 
         // Event: When a cell enters edit mode (for immediate updates)
         //private void dgOptTradeLegs_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)

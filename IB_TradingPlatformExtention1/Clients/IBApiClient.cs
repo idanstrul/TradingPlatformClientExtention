@@ -198,7 +198,8 @@ namespace IB_TradingPlatformExtention1
                 {
                     trailStopPrice = position.PositionAmount > 0 ?
                     lastTickDetails.Bid - stopPrice : lastTickDetails.Ask + stopPrice;
-                } else
+                }
+                else
                 {
                     trailStopPrice = position.PositionAmount > 0 ?
                     position.AverageCost - stopPrice : position.AverageCost + stopPrice;
@@ -277,8 +278,6 @@ namespace IB_TradingPlatformExtention1
             if (currContract == null) return;
             Position positionToClose = details.Position;
             LastTickDetails lastTickDetails = details.LastTickDetails;
-
-            if (currContract == null) return;
 
             CancelAllOrdersForContract(contractIdx, false);
 
@@ -618,7 +617,11 @@ namespace IB_TradingPlatformExtention1
         public TradeInstrumentDetails GetTradeInsrumentForOrderId(int orderId)
         {
             List<TradeInstrumentDetails> currTradeInstruments = GetCurrTradeInstrumentsAsList();
-            return currTradeInstruments.Find(ti => ti.OpenOrders.Exists(o => o.Order.OrderId == orderId));
+            return currTradeInstruments.Find(ti =>
+            {
+                if (ti?.OpenOrders is null) return false;
+                return ti.OpenOrders.Exists(o => o.Order.OrderId == orderId);
+            });
         }
 
 
@@ -742,14 +745,15 @@ namespace IB_TradingPlatformExtention1
 
         public void UpdateOrder(int orderId, string status, decimal filled, decimal remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, string whyHeld, double mktCapPrice)
         {
+            TradeInstrumentDetails currTradeInstrument = GetTradeInsrumentForOrderId(orderId);
+            if (currTradeInstrument == null) return;
+
             if (status == "Filled" || status == "Cancelled" || status == "ApiCancelled" || status == "Inactive")
             {
                 RemoveOrder(orderId);
                 return;
             }
-
-            TradeInstrumentDetails currTradeInstrument = GetTradeInsrumentForOrderId(orderId);
-
+            
             var existingOrder = currTradeInstrument.OpenOrders.Find(o => o.Order.OrderId == orderId);
             if (existingOrder != null)
             {
@@ -769,6 +773,7 @@ namespace IB_TradingPlatformExtention1
         public void RemoveOrder(int orderId)
         {
             TradeInstrumentDetails currTradeInstrument = GetTradeInsrumentForOrderId(orderId);
+            if (currTradeInstrument == null) return;
             currTradeInstrument.OpenOrders.RemoveAll(o => o.Order.OrderId == orderId);
         }
     }

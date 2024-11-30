@@ -254,7 +254,6 @@ namespace IB_TradingPlatformExtention1
             double stopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value;
 
             client.AdjustStopLoss(-1, isOutsideRth, stopType, stopPrice, (double)numTradeOffset.Value);
-
         }
 
         private void btnClosePos_Click(object sender, EventArgs e)
