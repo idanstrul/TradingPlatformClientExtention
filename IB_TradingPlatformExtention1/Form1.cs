@@ -69,13 +69,26 @@ namespace IB_TradingPlatformExtention1
 
         private void Client_OnDisconnected()
         {
-            throw new NotImplementedException();
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(Client_OnDisconnected));
+                return;
+            }
+
+            lblConnectionStatus.Text = "Disconnected";
+            lblConnectionStatus.ForeColor = Color.Red;
         }
 
         private void Client_OnConnected()
         {
-            //throw new NotImplementedException();
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(Client_OnConnected));
+                return;
+            }
 
+            lblConnectionStatus.Text = "Connected";
+            lblConnectionStatus.ForeColor = Color.Green;
         }
 
         private void Client_OnTickPriceUpdated(int reqId, string field, string price)
@@ -115,7 +128,8 @@ namespace IB_TradingPlatformExtention1
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            lblConnectionStatus.Text = "Disconnected";
+            lblConnectionStatus.ForeColor = Color.Red;
         }
 
         private void btnConnect_Click(object sender, EventArgs e)

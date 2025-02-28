@@ -80,6 +80,7 @@ namespace IB_TradingPlatformExtention1
         public virtual void connectionClosed()
         {
             Console.WriteLine("Connection closed.\n");
+            client.OnConnectionClosed();
         }
         
         public virtual void currentTime(long time) 

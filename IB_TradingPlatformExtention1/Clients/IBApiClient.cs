@@ -27,6 +27,7 @@ namespace IB_TradingPlatformExtention1
 
         // Events to notify the form when data changes
         public event Action<int, string, string> OnTickPriceUpdated;
+        public event Action<bool> OnDelayedMarketData;
         public event Action<int, double, double> OnTickOptionComputationUpdated;
         public event Action<int> OnPositionChanged;
         public event Action<object[]> OnContractSamplesReceived;
@@ -75,7 +76,6 @@ namespace IB_TradingPlatformExtention1
         public void Disconnect()
         {
             wrapper.ClientSocket.eDisconnect();
-            OnDisconnected?.Invoke();
         }
 
         public void PlaceOrder(int contractIdx, string side, Keys modifierKeys, decimal totalQuantity, double lmtPriceOffset, int stopType, bool isOutsideRth, double stopPrice)
@@ -465,25 +465,49 @@ namespace IB_TradingPlatformExtention1
         {
             string fieldName = "";
 
+            List<int> delayedTypes = new List<int> { 66, 67, 68 };
+            OnDelayedMarketData?.Invoke(delayedTypes.Contains(fieldId));
+
             switch (fieldId)
             {
+                case 66:
                 case 1: // Delayed Bid quote 66, if you want realtime use tickerPrice == 1
                     fieldName = "Bid";
                     break;
+                case 67:
                 case 2: // Delayed Ask quote 67, if you want realtime use tickerPrice == 2
                     fieldName = "Ask";
                     break;
-                case 3:
-                    break;
+                case 68:
                 case 4: // Delayed Last quote 68, if you want realtime use tickerPrice == 4
                     fieldName = "Last";
                     break;
                 default:
                     break;
+
+
+                    //what tick types do we need? 
+                    // Bid price - 1, ask price 2, last price - 4, close price -9 if nothing else is available,
+                    // option computation: bid - 10, ask - 11, last - 12, model -13. needs one of them, probably model but need to verify.
+                    // option implied volatility - 24, not sure what is that becuase there is IV for bid, ask, last, model I think.
+                    // option call open interest - 27, option put open interest - 28. also not sure what is that. 
+                    // option call volume - 29, option put volume - 30, maybe gonna need it. 
+                    // mark price - 37, maybe. 
+                    // custom option computation - 53, not think it's needed but just to know this is option computation based on some custom price.
+                    // Last RTH Trade - 57, maybe if nothing else is available. 
+                    // Delayed: Bid - 66, ask - 67, last - 68.
+                    // Delayed close - 75, maybe if nothing else is available. 
+                    // Delayed option computation: bid - 80, ask - 81, last - 82, model - 83, 
+
             }
 
             CurrTradeInstruments.UpdateLastTickDetails(reqId, fieldName, price);
             OnTickPriceUpdated?.Invoke(reqId, fieldName, price.ToString());
+        }
+
+        public void OnConnectionClosed()
+        {
+            OnDisconnected?.Invoke();
         }
 
         public void OnGetPositions(string account, Contract contract, decimal pos, double avgCost)
@@ -550,7 +574,26 @@ namespace IB_TradingPlatformExtention1
 
         public void OnGetTickOptionComputation(int tickerId, int field, int tickAttrib, double impliedVolatility, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice)
         {
-            OnTickOptionComputationUpdated.Invoke(tickerId, impliedVolatility, delta);
+
+            List<int> delayedTypes = new List<int> { 80, 81, 82, 83 };
+            OnDelayedMarketData.Invoke(delayedTypes.Contains(field));
+
+            //what tick types do we need? 
+            // Bid price - 1, ask price 2, last price - 4, close price -9 if nothing else is available,
+            // option computation: bid - 10, ask - 11, last - 12, model -13. needs one of them, probably model but need to verify.
+            // option implied volatility - 24, not sure what is that becuase there is IV for bid, ask, last, model I think.
+            // option call open interest - 27, option put open interest - 28. also not sure what is that. 
+            // option call volume - 29, option put volume - 30, maybe gonna need it. 
+            // mark price - 37, maybe. 
+            // custom option computation - 53, not think it's needed but just to know this is option computation based on some custom price.
+            // Last RTH Trade - 57, maybe if nothing else is available. 
+            // Delayed: Bid - 66, ask - 67, last - 68.
+            // Delayed close - 75, maybe if nothing else is available. 
+            // Delayed option computation: bid - 80, ask - 81, last - 82, model - 83, 
+            if (field == 13 || field == 83)
+            {
+                OnTickOptionComputationUpdated.Invoke(tickerId, impliedVolatility, delta);
+            }
         }
 
         public void RemoveOptionLeg(int legIdx)
@@ -753,7 +796,7 @@ namespace IB_TradingPlatformExtention1
                 RemoveOrder(orderId);
                 return;
             }
-            
+
             var existingOrder = currTradeInstrument.OpenOrders.Find(o => o.Order.OrderId == orderId);
             if (existingOrder != null)
             {

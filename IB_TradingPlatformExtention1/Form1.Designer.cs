@@ -71,6 +71,7 @@
             this.btnCancelAll = new System.Windows.Forms.Button();
             this.btnCancelLast = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.lblConnectionStatus = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -536,11 +537,21 @@
             this.tabPage2.Text = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // lblConnectionStatus
+            // 
+            this.lblConnectionStatus.AutoSize = true;
+            this.lblConnectionStatus.Location = new System.Drawing.Point(256, 20);
+            this.lblConnectionStatus.Name = "lblConnectionStatus";
+            this.lblConnectionStatus.Size = new System.Drawing.Size(44, 16);
+            this.lblConnectionStatus.TabIndex = 36;
+            this.lblConnectionStatus.Text = "label4";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(546, 388);
+            this.Controls.Add(this.lblConnectionStatus);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.btnDisconnect);
             this.Controls.Add(this.btnConnect);
@@ -555,6 +566,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numStopLoss)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -597,6 +609,7 @@
         private System.Windows.Forms.Button btnClosePos;
         private System.Windows.Forms.Button btnStopLossAdj;
         private System.Windows.Forms.Button btnOptionsAnalysis;
+        private System.Windows.Forms.Label lblConnectionStatus;
     }
 }
 
