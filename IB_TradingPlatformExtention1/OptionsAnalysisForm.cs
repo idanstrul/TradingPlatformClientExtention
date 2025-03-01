@@ -45,6 +45,7 @@ namespace IB_TradingPlatformExtention1
             client.OnTickPriceUpdated += Client_OnTickPriceUpdated;
             client.OnTickOptionComputationUpdated += Client_OnTickOptionComputationUpdated;
             client.OnPositionChanged += Client_OnPositionChanged;
+            client.OnDelayedMarketData += Client_OnDelayedMarketData;
 
             verticalLine = new VerticalLineAnnotation
             {
@@ -137,6 +138,11 @@ namespace IB_TradingPlatformExtention1
 
             client.GetOptionChain();
 
+        }
+
+        private void Client_OnDelayedMarketData(bool obj)
+        {
+            throw new NotImplementedException();
         }
 
         private void Client_OnOptionChainDetailsReceived(int multiplier, HashSet<string> expirations, HashSet<double> strikes)
