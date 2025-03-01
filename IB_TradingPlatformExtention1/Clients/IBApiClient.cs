@@ -29,14 +29,12 @@ namespace IB_TradingPlatformExtention1
         public event Action<int, string, string> OnTickPriceUpdated;
         public event Action<bool> OnDelayedMarketData;
         public event Action<int, double, double> OnTickOptionComputationUpdated;
-        public event Action<int> OnPositionChanged;
-        public event Action<object[]> OnContractSamplesReceived;
+        public event Action OnPositionChanged;
         public event Action OnContractSelected;
-        public event Action<int, HashSet<string>, HashSet<double>> OnOptionChainDetailsReceived;
         public event Action OnConnected;
         public event Action OnDisconnected;
 
-        public TradeInstruments CurrTradeInstruments = new TradeInstruments();
+        public TradeInstrumentDetails CurrTradeInstrument = null;
 
         public IBApiClient()
         {
@@ -44,7 +42,7 @@ namespace IB_TradingPlatformExtention1
             this.wrapper = new EWrapperImpl(this);
         }
 
-        public void Connect(string host, int port, int clientId)
+        public void Connect(string host, int port, int clientId, int displayGroupId)
         {
             // Connect to TWS
             wrapper.ClientSocket.eConnect(host, port, clientId);
@@ -70,6 +68,7 @@ namespace IB_TradingPlatformExtention1
             orderId = wrapper.NextOrderId;
 
             // Notify the form that connection is established
+            wrapper.ClientSocket.subscribeToGroupEvents(9002, displayGroupId);
             OnConnected?.Invoke();
         }
 
@@ -80,18 +79,17 @@ namespace IB_TradingPlatformExtention1
 
         public void PlaceOrder(int contractIdx, string side, Keys modifierKeys, decimal totalQuantity, double lmtPriceOffset, int stopType, bool isOutsideRth, double stopPrice)
         {
-            TradeInstrumentDetails details = CurrTradeInstruments.GetCurrTradeInstrumentByIdx(contractIdx);
-            Contract currContract = details?.Contract;
+            Contract currContract = CurrTradeInstrument?.Contract;
             if (currContract == null) return;
-            LastTickDetails lastTickDetails = details.LastTickDetails;
-            Position pos = details.Position;
+            LastTickDetails lastTickDetails = CurrTradeInstrument.LastTickDetails;
+            Position pos = CurrTradeInstrument.Position;
 
             if (currContract == null) return;
 
             double lmtPrice = ((side == "BUY" && modifierKeys != Keys.Alt) || (side == "SELL" && modifierKeys == Keys.Alt) ?
                 lastTickDetails.Ask : lastTickDetails.Bid) + lmtPriceOffset;
 
-            List<OpenOrder> currStopLossOrders = CurrTradeInstruments.GetStopLossOrdersForPosition(contractIdx);
+            List<OpenOrder> currStopLossOrders = this.CurrTradeInstrument.GetStopLossOrdersForPosition();
 
             Order order = new Order
             {
@@ -159,7 +157,7 @@ namespace IB_TradingPlatformExtention1
             // Place the order
             wrapper.ClientSocket.placeOrder(order.OrderId, currContract, order);
 
-            CurrTradeInstruments.UpdateOrder(currContract, order);
+            this.CurrTradeInstrument.UpdateOrder(currContract, order);
 
             // increase the order id value
             orderId++;
@@ -171,7 +169,7 @@ namespace IB_TradingPlatformExtention1
                 stopLossOrder.Transmit = true;
                 wrapper.ClientSocket.placeOrder(stopLossOrder.OrderId, currContract, stopLossOrder);
 
-                CurrTradeInstruments.UpdateOrder(currContract, stopLossOrder);
+                this.CurrTradeInstrument.UpdateOrder(currContract, stopLossOrder);
 
                 orderId++;
             }
@@ -179,17 +177,16 @@ namespace IB_TradingPlatformExtention1
 
         public void AdjustStopLoss(int contractIdx, bool isOutsideRth, int stopType, double stopPrice, double limitPriceOffset)
         {
-            TradeInstrumentDetails details = CurrTradeInstruments.GetCurrTradeInstrumentByIdx(contractIdx);
-            Contract currContract = details?.Contract;
+            Contract currContract = CurrTradeInstrument?.Contract;
             if (currContract == null) return;
-            Position position = details.Position;
-            LastTickDetails lastTickDetails = details.LastTickDetails;
+            Position position = CurrTradeInstrument.Position;
+            LastTickDetails lastTickDetails = CurrTradeInstrument.LastTickDetails;
 
             if (currContract == null) return;
 
             if (position == null || position.PositionAmount == 0) return;
 
-            var stopLossOrders = CurrTradeInstruments.GetStopLossOrdersForPosition(contractIdx);
+            var stopLossOrders = this.CurrTradeInstrument.GetStopLossOrdersForPosition();
 
             double? trailStopPrice = TrailStopPrice;
             if (trailStopPrice == null)
@@ -265,7 +262,7 @@ namespace IB_TradingPlatformExtention1
             wrapper.ClientSocket.placeOrder(stopLoss.OrderId, currContract, stopLoss);
 
             TrailStopPrice = null;
-            CurrTradeInstruments.UpdateOrder(currContract, stopLoss);
+            this.CurrTradeInstrument.UpdateOrder(currContract, stopLoss);
 
             orderId++;
 
@@ -273,11 +270,10 @@ namespace IB_TradingPlatformExtention1
 
         public void ClosePositionForContract(int contractIdx, double tradePriceOffset, bool isOutsideRth)
         {
-            TradeInstrumentDetails details = CurrTradeInstruments.GetCurrTradeInstrumentByIdx(contractIdx);
-            Contract currContract = details?.Contract;
+            Contract currContract = CurrTradeInstrument?.Contract;
             if (currContract == null) return;
-            Position positionToClose = details.Position;
-            LastTickDetails lastTickDetails = details.LastTickDetails;
+            Position positionToClose = CurrTradeInstrument.Position;
+            LastTickDetails lastTickDetails = CurrTradeInstrument.LastTickDetails;
 
             CancelAllOrdersForContract(contractIdx, false);
 
@@ -302,7 +298,7 @@ namespace IB_TradingPlatformExtention1
                 // Place the order
                 wrapper.ClientSocket.placeOrder(closeOrder.OrderId, currContract, closeOrder);
 
-                CurrTradeInstruments.UpdateOrder(currContract, closeOrder);
+                this.CurrTradeInstrument.UpdateOrder(currContract, closeOrder);
 
                 // increase the order id value
                 orderId++;
@@ -313,11 +309,10 @@ namespace IB_TradingPlatformExtention1
             }
         }
 
-        public void CancelLastOrderForContract(int contractIdx)
+        public void CancelLastOrderForContract()
         {
-            TradeInstrumentDetails details = CurrTradeInstruments.GetCurrTradeInstrumentByIdx(contractIdx);
-            if (details == null) { return; }
-            List<OpenOrder> openOrders = details.OpenOrders;
+            if (CurrTradeInstrument == null) { return; }
+            List<OpenOrder> openOrders = CurrTradeInstrument.OpenOrders;
             if (openOrders.Count == 0) return;
 
             OpenOrder prevOrder = openOrders
@@ -334,8 +329,6 @@ namespace IB_TradingPlatformExtention1
         public void CancelAllOrdersForContract(int contractIdx, bool isGlobalCancel)
         {
             //if (CurrContract == null) return;
-            TradeInstrumentDetails details = CurrTradeInstruments.GetCurrTradeInstrumentByIdx(contractIdx);
-
             if (isGlobalCancel)
             {
                 wrapper.ClientSocket.reqGlobalCancel(new OrderCancel());
@@ -343,14 +336,14 @@ namespace IB_TradingPlatformExtention1
             }
             else
             {
-                if (details == null) { return; }
+                if (CurrTradeInstrument == null) { return; }
                 //var ordersToCancel = OpenOrders
                 //.Where(order => order.Contract.Symbol == CurrContract.Symbol &&
                 //                order.Contract.SecType == CurrContract.SecType &&
                 //                order.Contract.Exchange == CurrContract.Exchange)
                 //.ToList();
 
-                foreach (var openOrder in details.OpenOrders)
+                foreach (var openOrder in CurrTradeInstrument.OpenOrders)
                 {
                     wrapper.ClientSocket.cancelOrder(openOrder.Order.OrderId, new OrderCancel());
                 }
@@ -358,27 +351,25 @@ namespace IB_TradingPlatformExtention1
 
         }
 
-        // ######################################
-
-        public void SearchStockContracts(string symbol)
+        public void OnDisplayGroupUpdated(int reqId, string contractInfo)
         {
-            wrapper.ClientSocket.reqMatchingSymbols(-3, symbol);
+            string[] parts = contractInfo.Split('@');
+
+            int conId = int.Parse(parts[0]);
+            string exchange = parts[1];
+
+            Contract contract = new Contract
+            {
+                ConId = conId,
+                Exchange = exchange,
+            };
+            wrapper.ClientSocket.reqContractDetails(reqId, contract);
         }
 
-        public void OnGetContractSamples(ContractDescription[] contractDescriptions)
+        public void OnGetContractDetails(ContractDetails contractDetails)
         {
-            USContracts = contractDescriptions
-                .Select(x => x.Contract)
-                .Where(x => x.Currency == "USD").ToList();
-
-            var ContractIdentifiers = USContracts.Select(x =>
-            {
-                string description = x.Symbol + " (" + x.Description + ", " + (x.Exchange ?? "SMART") + " / " + x.PrimaryExch + ")";
-
-                return new { ConId = x.ConId, Description = description };
-            }).ToArray();
-
-            OnContractSamplesReceived.Invoke(ContractIdentifiers);
+            InitTradeInstrument(-1, contractDetails.Contract);
+            OnContractSelected?.Invoke();
         }
 
         public void SetEquityContract(int conId)
@@ -388,49 +379,61 @@ namespace IB_TradingPlatformExtention1
             OnContractSelected?.Invoke();
         }
 
-        public void SetComboContract(List<int> comboContractIdices, List<int> comboContractQuantities)
-        {
-            if (comboContractIdices.Count <= 1)
-            {
-                CurrTradeInstruments.Combo = null;
-                wrapper.ClientSocket.cancelMktData(-2);
-                return;
-            };
+        //public void SetComboContract(List<int> comboContractIdices, List<int> comboContractQuantities)
+        //{
+        //    if (comboContractIdices.Count <= 1)
+        //    {
+        //        CurrTradeInstrument.Combo = null;
+        //        wrapper.ClientSocket.cancelMktData(-2);
+        //        return;
+        //    };
 
-            Contract underline = CurrTradeInstruments.GetCurrTradeInstrumentByIdx(-1)?.Contract;
-            if (underline == null) { throw new Exception(); }
+        //    Contract underline = CurrTradeInstrument.GetCurrTradeInstrumentByIdx(-1)?.Contract;
+        //    if (underline == null) { throw new Exception(); }
 
-            Contract comboContract = new Contract()
-            {
-                Symbol = underline.Symbol,
-                Currency = underline.Currency,
-                SecType = "BAG",
-                Exchange = "SMART",
-                ComboLegs = new List<ComboLeg>()
-            };
+        //    Contract comboContract = new Contract()
+        //    {
+        //        Symbol = underline.Symbol,
+        //        Currency = underline.Currency,
+        //        SecType = "BAG",
+        //        Exchange = "SMART",
+        //        ComboLegs = new List<ComboLeg>()
+        //    };
 
-            for (int i = 0; i < comboContractIdices.Count; i++)
-            {
-                Contract currContract = CurrTradeInstruments.GetCurrTradeInstrumentByIdx(comboContractIdices[i])?.Contract;
-                if (currContract == null) throw new Exception();
+        //    for (int i = 0; i < comboContractIdices.Count; i++)
+        //    {
+        //        Contract currContract = CurrTradeInstrument.GetCurrTradeInstrumentByIdx(comboContractIdices[i])?.Contract;
+        //        if (currContract == null) throw new Exception();
 
-                ComboLeg leg = new ComboLeg()
-                {
-                    ConId = currContract.ConId,
-                    Exchange = "SMART",
-                    Ratio = Math.Abs(comboContractQuantities[i]),
-                    Action = comboContractQuantities[i] > 0 ? "BUY" : "SELL"
-                };
+        //        ComboLeg leg = new ComboLeg()
+        //        {
+        //            ConId = currContract.ConId,
+        //            Exchange = "SMART",
+        //            Ratio = Math.Abs(comboContractQuantities[i]),
+        //            Action = comboContractQuantities[i] > 0 ? "BUY" : "SELL"
+        //        };
 
-                comboContract.ComboLegs.Add(leg);
-            }
+        //        comboContract.ComboLegs.Add(leg);
+        //    }
 
-            InitTradeInstrument(-2, comboContract);
-        }
+        //    InitTradeInstrument(-2, comboContract);
+        //}
 
         public void InitTradeInstrument(int idx, Contract contract, bool reqData = true)
         {
-            CurrTradeInstruments.InitTradeInstrument(idx, contract);
+
+            //public void InitTradeInstrument(Contract selectedContract)
+            //{
+            //    if (selectedContract == null) return;
+            //    TradeInstrumentDetails newTradeInstrument = new TradeInstrumentDetails
+            //    {
+            //        Contract = selectedContract
+            //    };
+            //}
+            CurrTradeInstrument = new TradeInstrumentDetails
+            {
+                Contract = contract,
+            };
             wrapper.ClientSocket.cancelMktData(idx);
             if (!reqData) return;
             wrapper.ClientSocket.cancelPositions();
@@ -441,7 +444,7 @@ namespace IB_TradingPlatformExtention1
 
         public void RequestMarketDataForContract(int contractIdx)
         {
-            Contract currContract = CurrTradeInstruments.GetCurrTradeInstrumentByIdx(contractIdx)?.Contract;
+            Contract currContract = CurrTradeInstrument?.Contract;
             if (currContract == null) return;
 
             currContract.Exchange = currContract.Exchange ?? "SMART";
@@ -501,7 +504,7 @@ namespace IB_TradingPlatformExtention1
 
             }
 
-            CurrTradeInstruments.UpdateLastTickDetails(reqId, fieldName, price);
+            CurrTradeInstrument.UpdateLastTickDetails(fieldName, price);
             OnTickPriceUpdated?.Invoke(reqId, fieldName, price.ToString());
         }
 
@@ -512,65 +515,21 @@ namespace IB_TradingPlatformExtention1
 
         public void OnGetPositions(string account, Contract contract, decimal pos, double avgCost)
         {
-            int posIdx = CurrTradeInstruments.GetCurrTradeInstrumentIdxForContract(contract);
-            CurrTradeInstruments.UpdatePosition(account, contract, pos, avgCost);
-            OnPositionChanged?.Invoke(posIdx);
+            CurrTradeInstrument.UpdatePosition(account, contract, pos, avgCost);
+            OnPositionChanged?.Invoke();
         }
 
         public void OnGetOpenOrders(Contract contract, Order order)
         {
-            CurrTradeInstruments.UpdateOrder(contract, order);
+            CurrTradeInstrument.UpdateOrder(contract, order);
         }
 
-        public void OnGetOrderStatus(int orderId, string status, decimal filled, decimal remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, string whyHeld, double mktCapPrice)
+        public void OnGetOrderStatus(string status, decimal filled, decimal remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, string whyHeld, double mktCapPrice)
         {
-            CurrTradeInstruments.UpdateOrder(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice);
+            CurrTradeInstrument.UpdateOrder(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice);
         }
 
         // ###################################### Options: 
-
-        public void GetOptionChain()
-        {
-            Contract underline = CurrTradeInstruments.Equity?.Contract;
-            if (underline == null) return;
-            wrapper.ClientSocket.reqSecDefOptParams(0, underline.Symbol, "", underline.SecType, underline.ConId);
-        }
-
-        public void OnGetOptionChainDetails(int reqId, string exchange, int underlyingConId, string tradingClass, string multiplier, HashSet<string> expirations, HashSet<double> strikes)
-        {
-            if (exchange != "SMART") return;
-            int.TryParse(multiplier, out var multiplierVal);
-            OnOptionChainDetailsReceived?.Invoke(multiplierVal, expirations, strikes);
-        }
-
-        public void SetOptionLegContract(int reqId, string right, string expiration, double strike)
-        {
-            Contract optionContract = new Contract
-            {
-                Symbol = CurrTradeInstruments.Equity.Contract.Symbol,
-                SecType = "OPT",
-                Exchange = "SMART",
-                Currency = CurrTradeInstruments.Equity.Contract.Currency,
-                Right = right,
-                LastTradeDateOrContractMonth = expiration,
-                Strike = strike,
-            };
-
-            InitTradeInstrument(reqId, optionContract, false);
-            wrapper.ClientSocket.reqContractDetails(reqId, optionContract);
-        }
-
-        public void OnGetOptionContractDetails(int reqId, ContractDetails contractDetails)
-        {
-            List<TradeInstrumentDetails> currOptionStrategy = CurrTradeInstruments.OptionLegs;
-            if (reqId >= currOptionStrategy.Count) return;
-            Contract c1 = currOptionStrategy[reqId].Contract;
-            if (c1 == null) return;
-            Contract c2 = contractDetails.Contract;
-            if (c1.Symbol != c2.Symbol || c1.LastTradeDateOrContractMonth != c2.LastTradeDateOrContractMonth || c1.Strike != c2.Strike) return;
-            // Replace the existing item at the index
-            InitTradeInstrument(reqId, contractDetails.Contract);
-        }
 
         public void OnGetTickOptionComputation(int tickerId, int field, int tickAttrib, double impliedVolatility, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice)
         {
@@ -595,113 +554,19 @@ namespace IB_TradingPlatformExtention1
                 OnTickOptionComputationUpdated.Invoke(tickerId, impliedVolatility, delta);
             }
         }
-
-        public void RemoveOptionLeg(int legIdx)
-        {
-            if (legIdx >= CurrTradeInstruments.OptionLegs.Count) return;
-            wrapper.ClientSocket.cancelMktData(legIdx);
-            CurrTradeInstruments.OptionLegs.RemoveAt(legIdx);
-        }
     }
 
-    public class TradeInstruments
+    public class TradeInstrumentDetails
     {
-        public TradeInstrumentDetails Equity { get; set; }
-        public List<TradeInstrumentDetails> OptionLegs { get; set; } = new List<TradeInstrumentDetails>();
-        public TradeInstrumentDetails Combo { get; set; }
+        public Contract Contract { get; set; }
+        public LastTickDetails LastTickDetails { get; set; }
+        public Position Position { get; set; }
+        public List<OpenOrder> OpenOrders { get; set; } = new List<OpenOrder>();
 
-        public List<TradeInstrumentDetails> GetCurrTradeInstrumentsAsList()
+        public List<OpenOrder> GetStopLossOrdersForPosition()
         {
-            List<TradeInstrumentDetails> currTradeInstruments = new List<TradeInstrumentDetails>
-            {
-                Combo,
-                Equity
-            };
-            if (OptionLegs != null) currTradeInstruments.AddRange(OptionLegs);
-            return currTradeInstruments;
-        }
-
-        public int GetCurrTradeInstrumentIdxForContract(Contract contract)
-        {
-            List<TradeInstrumentDetails> currTradeInstruments = GetCurrTradeInstrumentsAsList();
-            int idx = currTradeInstruments.FindIndex(x => CheckIfContractsEqual(x?.Contract, contract));
-            return idx - 2;
-        }
-
-        public bool CheckIfContractsEqual(Contract contract1, Contract contract2)
-        {
-            if (contract1 == null || contract2 == null) return false;
-
-            bool isEqual = contract1 == contract2;
-
-            return contract1.ConId == contract2.ConId ||
-                (contract1.Symbol == contract2.Symbol
-                && contract1.SecType == contract2.SecType
-                && (contract1.Exchange == "SMART" || contract1.Exchange == contract2.Exchange)
-                && contract1.LastTradeDateOrContractMonth == contract2.LastTradeDateOrContractMonth
-                && contract1.Strike == contract2.Strike);
-        }
-
-        public TradeInstrumentDetails GetCurrTradeInstrumentByIdx(int idx)
-        {
-            switch (idx)
-            {
-                case -3:
-                    return null;
-                case -2:
-                    return Combo;
-                case -1:
-                    return Equity;
-                default:
-                    return OptionLegs[idx];
-            }
-        }
-
-        public TradeInstrumentDetails GetTradeInsrumentForOrderId(int orderId)
-        {
-            List<TradeInstrumentDetails> currTradeInstruments = GetCurrTradeInstrumentsAsList();
-            return currTradeInstruments.Find(ti =>
-            {
-                if (ti?.OpenOrders is null) return false;
-                return ti.OpenOrders.Exists(o => o.Order.OrderId == orderId);
-            });
-        }
-
-
-        public void InitTradeInstrument(int idx, Contract selectedContract)
-        {
-            if (selectedContract == null) return;
-            TradeInstrumentDetails newTradeInstrument = new TradeInstrumentDetails
-            {
-                Contract = selectedContract
-            };
-            switch (idx)
-            {
-                //case -3:
-                //    return null;
-                case -2:
-                    Combo = newTradeInstrument;
-                    break;
-                case -1:
-                    Equity = newTradeInstrument;
-                    break;
-                default:
-                    if (idx == OptionLegs.Count) OptionLegs.Add(newTradeInstrument);
-                    else OptionLegs[idx] = newTradeInstrument;
-                    break;
-            }
-            //if (Equity == null) Equity = new TradeInstrumentDetails();
-            //Equity.Contract = selectedContract;
-            //OnContractSelected?.Invoke();
-        }
-
-        public List<OpenOrder> GetStopLossOrdersForPosition(int positionIdx)
-        {
-            TradeInstrumentDetails details = GetCurrTradeInstrumentByIdx(positionIdx);
-            Position position = details.Position;
-            List<OpenOrder> openOrders = details.OpenOrders;
-            if (position == null) return null;
-            return openOrders.Where(order =>
+            if (Position == null) return null;
+            return OpenOrders.Where(order =>
                 //order.Contract.Symbol == position.Contract.Symbol &&
                 //order.Contract.SecType == position.Contract.SecType &&
                 //order.Contract.Exchange == position.Contract.Exchange &&
@@ -709,30 +574,28 @@ namespace IB_TradingPlatformExtention1
                  order.Order.OrderType == "STP LMT" ||
                  order.Order.OrderType == "TRAIL" ||
                  order.Order.OrderType == "TRAIL LIMIT") &&
-                 ((order.Order.Action == "BUY" && position.PositionAmount < 0) ||
-                 (order.Order.Action == "SELL" && position.PositionAmount > 0)))
+                 ((order.Order.Action == "BUY" && Position.PositionAmount < 0) ||
+                 (order.Order.Action == "SELL" && Position.PositionAmount > 0)))
                 .ToList();
         }
 
-        public void UpdateLastTickDetails(int reqId, string fieldName, double price)
+        public void UpdateLastTickDetails(string fieldName, double price)
         {
-            TradeInstrumentDetails currTradeInstrument = GetCurrTradeInstrumentByIdx(reqId);
-            if (currTradeInstrument == null) return;
-            if (currTradeInstrument.LastTickDetails == null)
+            if (LastTickDetails == null)
             {
-                currTradeInstrument.LastTickDetails = new LastTickDetails();
+                LastTickDetails = new LastTickDetails();
             }
 
             switch (fieldName)
             {
                 case "Bid":
-                    currTradeInstrument.LastTickDetails.Bid = price;
+                    LastTickDetails.Bid = price;
                     break;
                 case "Ask":
-                    currTradeInstrument.LastTickDetails.Ask = price;
+                    LastTickDetails.Ask = price;
                     break;
                 case "Last":
-                    currTradeInstrument.LastTickDetails.Last = price;
+                    LastTickDetails.Last = price;
                     break;
                 default:
                     break;
@@ -741,18 +604,14 @@ namespace IB_TradingPlatformExtention1
 
         public void UpdatePosition(string account, Contract contract, decimal position, double avgCost)
         {
-            int posIdx = GetCurrTradeInstrumentIdxForContract(contract);
-            TradeInstrumentDetails currTradeInstrument = GetCurrTradeInstrumentByIdx(posIdx);
-
-            if (currTradeInstrument == null) return;
-            if (currTradeInstrument.Position != null)
+            if (Position != null)
             {
-                currTradeInstrument.Position.PositionAmount = position;
-                currTradeInstrument.Position.AverageCost = avgCost;
+                Position.PositionAmount = position;
+                Position.AverageCost = avgCost;
             }
             else
             {
-                currTradeInstrument.Position = new Position
+                Position = new Position
                 {
                     Account = account,
                     PositionAmount = position,
@@ -763,22 +622,14 @@ namespace IB_TradingPlatformExtention1
 
         public void UpdateOrder(Contract contract, Order order)
         {
-            int idx = GetCurrTradeInstrumentIdxForContract(contract);
-            TradeInstrumentDetails currTradeInstrument1 = GetCurrTradeInstrumentByIdx(idx);
-            TradeInstrumentDetails currTradeInstrument2 = GetTradeInsrumentForOrderId(order.OrderId);
-            if (currTradeInstrument1 == null) return;
-            if (currTradeInstrument2 != null && currTradeInstrument1 != currTradeInstrument2)
-            {
-                throw new Exception();
-            }
-            var existingOrder = currTradeInstrument1.OpenOrders.Find(o => o.Order.OrderId == order.OrderId);
+            var existingOrder = OpenOrders.Find(o => o.Order.OrderId == order.OrderId);
             if (existingOrder != null)
             {
                 existingOrder.Order = order;
             }
             else
             {
-                currTradeInstrument1.OpenOrders
+                OpenOrders
                     .Add(new OpenOrder
                     {
                         Order = order,
@@ -788,16 +639,13 @@ namespace IB_TradingPlatformExtention1
 
         public void UpdateOrder(int orderId, string status, decimal filled, decimal remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, string whyHeld, double mktCapPrice)
         {
-            TradeInstrumentDetails currTradeInstrument = GetTradeInsrumentForOrderId(orderId);
-            if (currTradeInstrument == null) return;
-
             if (status == "Filled" || status == "Cancelled" || status == "ApiCancelled" || status == "Inactive")
             {
                 RemoveOrder(orderId);
                 return;
             }
 
-            var existingOrder = currTradeInstrument.OpenOrders.Find(o => o.Order.OrderId == orderId);
+            var existingOrder = OpenOrders.Find(o => o.Order.OrderId == orderId);
             if (existingOrder != null)
             {
                 existingOrder.Status = status;
@@ -815,18 +663,8 @@ namespace IB_TradingPlatformExtention1
 
         public void RemoveOrder(int orderId)
         {
-            TradeInstrumentDetails currTradeInstrument = GetTradeInsrumentForOrderId(orderId);
-            if (currTradeInstrument == null) return;
-            currTradeInstrument.OpenOrders.RemoveAll(o => o.Order.OrderId == orderId);
+            OpenOrders.RemoveAll(o => o.Order.OrderId == orderId);
         }
-    }
-
-    public class TradeInstrumentDetails
-    {
-        public Contract Contract { get; set; }
-        public LastTickDetails LastTickDetails { get; set; }
-        public Position Position { get; set; }
-        public List<OpenOrder> OpenOrders { get; set; } = new List<OpenOrder>();
 
         // Override Equals
         public override bool Equals(object obj)

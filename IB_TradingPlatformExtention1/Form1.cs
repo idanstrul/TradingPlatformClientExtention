@@ -36,34 +36,10 @@ namespace IB_TradingPlatformExtention1
             client.OnConnected += Client_OnConnected;
             client.OnDisconnected += Client_OnDisconnected;
             client.OnPositionChanged += Client_OnPositionChanged;
-            client.OnContractSamplesReceived += Client_OnContractSamplesReceived;
         }
 
-        private void Client_OnContractSamplesReceived(object[] contractIdentifiers)
+        private void Client_OnPositionChanged()
         {
-            if (this.cbSymbol.InvokeRequired)
-            {
-                SetCallbackContractSamplesRecived d = new SetCallbackContractSamplesRecived(Client_OnContractSamplesReceived);
-                try
-                {
-                    this.Invoke(d, new object[] { contractIdentifiers });
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("This is from Client_OnContractSamplesRecived", e);
-                }
-            }
-            else
-            {
-                cbSymbol.Items.Clear();
-                cbSymbol.Items.AddRange(contractIdentifiers);
-                cbSymbol.DroppedDown = true;
-            }
-        }
-
-        private void Client_OnPositionChanged(int posIdx)
-        {
-            if (posIdx != -1) return;
             AdjustStopLoss();
         }
 
@@ -138,28 +114,12 @@ namespace IB_TradingPlatformExtention1
             // host       - IP address or host name of the host running TWS
             // port       - listening port 7496 or 7497
             // clientId   - client application identifier can be any number
-            client.Connect("127.0.0.1", 7496, 0);
+            client.Connect("127.0.0.1", 7496, 0, 4);
         }
 
         private void btnDisconnect_Click(object sender, EventArgs e)
         {
             client.Disconnect();
-        }
-
-        private void cbSymbol_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (char.IsLower(e.KeyChar))
-            {
-                e.KeyChar = char.ToUpper(e.KeyChar);
-            }
-        }
-
-        private void cbSymbol_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                client.SearchStockContracts(cbSymbol.Text.Trim());
-            }
         }
 
         private void btnBuy1_Click(object sender, EventArgs e)
@@ -277,7 +237,7 @@ namespace IB_TradingPlatformExtention1
 
         private void btnCancelLast_Click(object sender, EventArgs e)
         {
-            client.CancelLastOrderForContract(-1);
+            client.CancelLastOrderForContract();
         }
 
         private void btnCancelAll_Click(object sender, EventArgs e)
@@ -301,19 +261,6 @@ namespace IB_TradingPlatformExtention1
                 this.cbTrailStop.Checked = false;
                 numStopLoss.Value = Math.Round((decimal.Parse(tbAsk.Text) + decimal.Parse(tbBid.Text)) / 2, 2);
             }
-        }
-
-        private void btnOptionsAnalysis_Click(object sender, EventArgs e)
-        {
-            decimal stockLastPrice = decimal.Parse(this.tbLast.Text);
-            OptionsAnalysisForm OAform = new OptionsAnalysisForm(client, stockLastPrice);
-            OAform.Show();
-        }
-
-        private void cbSymbol_SelectionChangeCommitted(object sender, EventArgs e)
-        {
-            var selectedItem = cbSymbol.SelectedItem as dynamic;
-            client.SetEquityContract(selectedItem.ConId);
         }
     }
 }

@@ -221,7 +221,7 @@ namespace IB_TradingPlatformExtention1
             Console.WriteLine("OrderStatus. Id: " + orderId + ", Status: " + status + ", Filled: " + Util.DecimalMaxString(filled) + ", Remaining: " + Util.DecimalMaxString(remaining)
                 + ", AvgFillPrice: " + Util.DoubleMaxString(avgFillPrice) + ", PermId: " + Util.LongMaxString(permId) + ", ParentId: " + Util.IntMaxString(parentId) + 
                 ", LastFillPrice: " + Util.DoubleMaxString(lastFillPrice) + ", ClientId: " + Util.IntMaxString(clientId) + ", WhyHeld: " + whyHeld + ", MktCapPrice: " + Util.DoubleMaxString(mktCapPrice));
-            client.OnGetOrderStatus(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice);
+            client.OnGetOrderStatus(status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice);
         }
         //! [orderstatus]
 
@@ -257,7 +257,7 @@ namespace IB_TradingPlatformExtention1
             printContractDetailsMsg(contractDetails);
             Console.WriteLine("ContractDetails end. ReqId: " + reqId);
 
-            client.OnGetOptionContractDetails(reqId, contractDetails);
+            client.OnGetContractDetails(contractDetails);
         }
         //! [contractdetails]
 
@@ -569,6 +569,7 @@ namespace IB_TradingPlatformExtention1
         public virtual void displayGroupUpdated(int reqId, string contractInfo)
         {
             Console.WriteLine("displayGroupUpdated. Request: " + reqId + ", ContractInfo: " + contractInfo);
+            client.OnDisplayGroupUpdated(reqId, contractInfo);
         }
         //! [displaygroupupdated]
 
@@ -606,8 +607,6 @@ namespace IB_TradingPlatformExtention1
         {
             Console.WriteLine("Security Definition Option Parameter. Request: {0}, Exchange: {1}, Undrelying contract id: {2}, Trading class: {3}, Multiplier: {4}, Expirations: {5}, Strikes: {6}",
                               reqId, exchange, Util.IntMaxString(underlyingConId), tradingClass, multiplier, string.Join(", ", expirations), string.Join(", ", strikes));
-
-            client.OnGetOptionChainDetails(reqId, exchange, underlyingConId, tradingClass, multiplier, expirations, strikes);
         }
         //! [securityDefinitionOptionParameter]
 
@@ -670,8 +669,6 @@ namespace IB_TradingPlatformExtention1
                     contractDescription.Contract.PrimaryExch, contractDescription.Contract.Currency, derivSecTypes, contractDescription.Contract.Description, contractDescription.Contract.IssuerId);
                 
             }
-            client.OnGetContractSamples(contractDescriptions);
-
         }
         //! [symbolSamples]
 
