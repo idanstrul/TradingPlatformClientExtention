@@ -40,7 +40,7 @@ namespace IB_TradingPlatformExtention1
 
         private void Client_OnPositionChanged()
         {
-            AdjustStopLoss();
+            AdjustStopLoss(true);
         }
 
         private void Client_OnDisconnected()
@@ -196,7 +196,7 @@ namespace IB_TradingPlatformExtention1
 
         public void placeOrder(string side, Keys modifierKeys, decimal posSize)
         {
-            double lmtPriceOffset = (double)((side == "BUY") ? this.numTradeOffset.Value : -this.numTradeOffset.Value);
+            double lmtPriceOffset = (double)this.numTradeOffset.Value;
 
             int stopType = 0;
             bool isOutsideRth = chkOutside.Checked;
@@ -217,7 +217,7 @@ namespace IB_TradingPlatformExtention1
             AdjustStopLoss();
         }
 
-        private void AdjustStopLoss()
+        private void AdjustStopLoss(bool keepTrailStopPrice = false)
         {
             bool isOutsideRth = chkOutside.Checked;
             int stopType = 0;
@@ -227,7 +227,7 @@ namespace IB_TradingPlatformExtention1
 
             double stopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value;
 
-            client.AdjustStopLoss(-1, isOutsideRth, stopType, stopPrice, (double)numTradeOffset.Value);
+            client.AdjustStopLoss(-1, isOutsideRth, stopType, stopPrice, (double)numTradeOffset.Value, keepTrailStopPrice);
         }
 
         private void btnClosePos_Click(object sender, EventArgs e)

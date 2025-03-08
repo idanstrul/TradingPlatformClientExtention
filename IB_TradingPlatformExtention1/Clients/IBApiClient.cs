@@ -87,7 +87,7 @@ namespace IB_TradingPlatformExtention1
             if (currContract == null) return;
 
             double lmtPrice = ((side == "BUY" && modifierKeys != Keys.Alt) || (side == "SELL" && modifierKeys == Keys.Alt) ?
-                lastTickDetails.Ask : lastTickDetails.Bid) + lmtPriceOffset;
+                lastTickDetails.Ask : lastTickDetails.Bid) + (side == "BUY" ? lmtPriceOffset : -lmtPriceOffset);
 
             List<OpenOrder> currStopLossOrders = this.CurrTradeInstrument.GetStopLossOrdersForPosition();
 
@@ -113,7 +113,7 @@ namespace IB_TradingPlatformExtention1
 
                 stopLossOrder = new Order
                 {
-                    OcaGroup = contractIdx.ToString(), // currContract.Symbol + "_" + currContract.SecType + "_" + orderId,
+                    OcaGroup = currContract.Symbol + "_" + currContract.SecType + "_" + orderId,
                     OcaType = 2,
                     TriggerMethod = 7,
                     ParentId = orderId,
@@ -142,6 +142,8 @@ namespace IB_TradingPlatformExtention1
                 // Is this order is for increasing or decreasing position size
                 bool isIncreasePos = (pos.PositionAmount > 0 && side == "BUY") || (pos.PositionAmount < 0 && side == "SELL");
                 order.Transmit = true;
+
+                if (!isIncreasePos && pos.PositionAmount < totalQuantity) order.TotalQuantity = pos.PositionAmount;
 
                 if (!isIncreasePos && currStopLossOrders.Count > 0)
                 {
@@ -175,7 +177,7 @@ namespace IB_TradingPlatformExtention1
             }
         }
 
-        public void AdjustStopLoss(int contractIdx, bool isOutsideRth, int stopType, double stopPrice, double limitPriceOffset)
+        public void AdjustStopLoss(int contractIdx, bool isOutsideRth, int stopType, double stopPrice, double limitPriceOffset, bool keepTrailStopPrice = false)
         {
             Contract currContract = CurrTradeInstrument?.Contract;
             if (currContract == null) return;
@@ -206,7 +208,7 @@ namespace IB_TradingPlatformExtention1
 
             Order stopLoss = new Order
             {
-                OcaGroup = contractIdx.ToString(), //currContract.Symbol + "_" + currContract.SecType + "_" + orderId,
+                OcaGroup = currContract.Symbol + "_" + currContract.SecType + "_" + orderId,
                 OcaType = 2,
                 OrderId = orderId,
                 Action = position.PositionAmount > 0 ? "SELL" : "BUY",
@@ -220,12 +222,12 @@ namespace IB_TradingPlatformExtention1
             {
                 stopLoss.OrderType = (isOutsideRth) ? "TRAIL LIMIT" : "TRAIL";
                 stopLoss.TrailStopPrice = (double)trailStopPrice;
-                if (stopLoss.OrderType == "TRAIL LIMIT") stopLoss.LmtPriceOffset = -4 * limitPriceOffset;
+                if (stopLoss.OrderType == "TRAIL LIMIT") stopLoss.LmtPriceOffset = 4 * limitPriceOffset;
             }
             else if (stopType == 1)
             {
-                stopLoss.OrderType = (isOutsideRth) ? "STP LMT" : "STP"; //or "STP LMT"
-                if (stopLoss.OrderType == "STP LMT") stopLoss.LmtPrice = stopPrice - 4 * limitPriceOffset;
+                stopLoss.OrderType = (isOutsideRth) ? "STP LMT" : "STP";
+                if (stopLoss.OrderType == "STP LMT") stopLoss.LmtPrice = stopPrice + (stopLoss.Action == "BUY" ? 4 : -4) * limitPriceOffset;
             }
 
             //In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true
@@ -244,7 +246,7 @@ namespace IB_TradingPlatformExtention1
                     (currStopType == "TRAIL" && stopType == 2 && !isOutsideRth) ||
                     (currStopType == "TRAIL LIMIT" && stopType == 2 && isOutsideRth))
                 {
-                    stopLoss.TrailStopPrice = stopLossOrders.First().Order.TrailStopPrice;
+                    if (keepTrailStopPrice) stopLoss.TrailStopPrice = stopLossOrders.First().Order.TrailStopPrice;
                     stopLoss.OrderId = stopLossOrders.First().Order.OrderId;
                 }
                 else
@@ -515,18 +517,20 @@ namespace IB_TradingPlatformExtention1
 
         public void OnGetPositions(string account, Contract contract, decimal pos, double avgCost)
         {
+            if (CurrTradeInstrument.Contract.ConId != contract.ConId) return;
             CurrTradeInstrument.UpdatePosition(account, contract, pos, avgCost);
             OnPositionChanged?.Invoke();
         }
 
         public void OnGetOpenOrders(Contract contract, Order order)
         {
-            CurrTradeInstrument.UpdateOrder(contract, order);
+            if (CurrTradeInstrument.Contract.ConId != contract.ConId) return;
+            CurrTradeInstrument?.UpdateOrder(contract, order);
         }
 
-        public void OnGetOrderStatus(string status, decimal filled, decimal remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, string whyHeld, double mktCapPrice)
+        public void OnGetOrderStatus(int _orderId, string status, decimal filled, decimal remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, string whyHeld, double mktCapPrice)
         {
-            CurrTradeInstrument.UpdateOrder(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice);
+            CurrTradeInstrument?.UpdateOrder(_orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice);
         }
 
         // ###################################### Options: 
@@ -639,26 +643,25 @@ namespace IB_TradingPlatformExtention1
 
         public void UpdateOrder(int orderId, string status, decimal filled, decimal remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, string whyHeld, double mktCapPrice)
         {
+            var existingOrder = OpenOrders.Find(o => o.Order.OrderId == orderId);
+            if (existingOrder == null) return;
+
             if (status == "Filled" || status == "Cancelled" || status == "ApiCancelled" || status == "Inactive")
             {
                 RemoveOrder(orderId);
                 return;
             }
 
-            var existingOrder = OpenOrders.Find(o => o.Order.OrderId == orderId);
-            if (existingOrder != null)
-            {
-                existingOrder.Status = status;
-                existingOrder.Filled = filled;
-                existingOrder.Remaining = remaining;
-                existingOrder.AvgFillPrice = avgFillPrice;
-                existingOrder.PermId = permId;
-                existingOrder.ParentId = parentId;
-                existingOrder.LastFillPrice = lastFillPrice;
-                existingOrder.ClientId = clientId;
-                existingOrder.WhyHeld = whyHeld;
-                existingOrder.MktCapPrice = mktCapPrice;
-            }
+            existingOrder.Status = status;
+            existingOrder.Filled = filled;
+            existingOrder.Remaining = remaining;
+            existingOrder.AvgFillPrice = avgFillPrice;
+            existingOrder.PermId = permId;
+            existingOrder.ParentId = parentId;
+            existingOrder.LastFillPrice = lastFillPrice;
+            existingOrder.ClientId = clientId;
+            existingOrder.WhyHeld = whyHeld;
+            existingOrder.MktCapPrice = mktCapPrice;
         }
 
         public void RemoveOrder(int orderId)
