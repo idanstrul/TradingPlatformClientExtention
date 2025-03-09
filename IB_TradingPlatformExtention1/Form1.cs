@@ -19,6 +19,7 @@ namespace IB_TradingPlatformExtention1
     {
 
         private IBApiClient client;
+        private bool isConnected = false;
 
         // This delegate enables asynchronous calls for setting
         // the text property on a ListBox control.
@@ -36,6 +37,32 @@ namespace IB_TradingPlatformExtention1
             client.OnConnected += Client_OnConnected;
             client.OnDisconnected += Client_OnDisconnected;
             client.OnPositionChanged += Client_OnPositionChanged;
+            client.OnContractSelected += Client_OnContractSelected;
+            client.OnDelayedMarketData += Client_OnDelayedMarketData;
+        }
+
+        private void Client_OnDelayedMarketData(bool isDelayed)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action<bool>(Client_OnDelayedMarketData), new object[] { isDelayed });
+                return;
+            }
+            lblDelayedDataWarning.Text = isDelayed ? "Delayed market data!" : "";
+        }
+
+        private void Client_OnContractSelected(string symbol, string longName)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action<string, string>(Client_OnContractSelected), new object[] { symbol, longName });
+                return;
+            }
+            this.tbLast.Text = "";
+            this.tbAsk.Text = "";
+            this.tbBid.Text = "";
+            lblDelayedDataWarning.Text = "";
+            tbSelectedContract.Text = symbol + (longName.Length > 0 ? " - " + longName : "");
         }
 
         private void Client_OnPositionChanged()
@@ -51,6 +78,13 @@ namespace IB_TradingPlatformExtention1
                 return;
             }
 
+            isConnected = false;
+            btnConnect.Text = "Connect";
+            this.tbLast.Text = "";
+            this.tbAsk.Text = "";
+            this.tbBid.Text = "";
+            lblDelayedDataWarning.Text = "";
+            tbSelectedContract.Text = "";
             lblConnectionStatus.Text = "Disconnected";
             lblConnectionStatus.ForeColor = Color.Red;
         }
@@ -63,6 +97,8 @@ namespace IB_TradingPlatformExtention1
                 return;
             }
 
+            isConnected = true;
+            btnConnect.Text = "Disconnect";
             lblConnectionStatus.Text = "Connected";
             lblConnectionStatus.ForeColor = Color.Green;
         }
@@ -110,16 +146,18 @@ namespace IB_TradingPlatformExtention1
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
-            // Parameters to connect to TWS are:
-            // host       - IP address or host name of the host running TWS
-            // port       - listening port 7496 or 7497
-            // clientId   - client application identifier can be any number
-            client.Connect("127.0.0.1", 7496, 0, 4);
-        }
+            if (!isConnected)
+            {
+                // Parameters to connect to TWS are:
+                // host       - IP address or host name of the host running TWS
+                // port       - listening port 7496 or 7497
+                // clientId   - client application identifier can be any number
+                client.Connect("127.0.0.1", 7496, 0, 4);
+            } else
+            {
+                client.Disconnect();
+            }
 
-        private void btnDisconnect_Click(object sender, EventArgs e)
-        {
-            client.Disconnect();
         }
 
         private void btnBuy1_Click(object sender, EventArgs e)

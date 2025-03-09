@@ -30,7 +30,7 @@ namespace IB_TradingPlatformExtention1
         public event Action<bool> OnDelayedMarketData;
         public event Action<int, double, double> OnTickOptionComputationUpdated;
         public event Action OnPositionChanged;
-        public event Action OnContractSelected;
+        public event Action<string, string> OnContractSelected;
         public event Action OnConnected;
         public event Action OnDisconnected;
 
@@ -371,15 +371,25 @@ namespace IB_TradingPlatformExtention1
         public void OnGetContractDetails(ContractDetails contractDetails)
         {
             InitTradeInstrument(-1, contractDetails.Contract);
-            OnContractSelected?.Invoke();
+            if(contractDetails.Contract.SecType == "OPT")
+            {
+                string[] ConNameParts = contractDetails.Contract.LocalSymbol.Split(new string[] {"   "}, StringSplitOptions.None);
+                string[] ConDetailsParts = ConNameParts[1].Split(new string[] {"C", "P"}, StringSplitOptions.None);
+                string longName = "Option " + (contractDetails.Contract.Right == "C" ? "*CALL*" : "*PUT*") + " " + contractDetails.Contract.Strike + " " + ConDetailsParts[0];
+                OnContractSelected?.Invoke(ConNameParts[0], longName);
+            }
+            else
+            {
+                OnContractSelected?.Invoke(contractDetails.Contract.LocalSymbol, contractDetails.LongName);
+            }
         }
 
-        public void SetEquityContract(int conId)
-        {
-            Contract selectedContract = USContracts.Where(x => x.ConId == conId).FirstOrDefault();
-            InitTradeInstrument(-1, selectedContract);
-            OnContractSelected?.Invoke();
-        }
+        //public void SetEquityContract(int conId)
+        //{
+        //    Contract selectedContract = USContracts.Where(x => x.ConId == conId).FirstOrDefault();
+        //    InitTradeInstrument(-1, selectedContract);
+        //    OnContractSelected?.Invoke();
+        //}
 
         //public void SetComboContract(List<int> comboContractIdices, List<int> comboContractQuantities)
         //{
@@ -470,7 +480,7 @@ namespace IB_TradingPlatformExtention1
         {
             string fieldName = "";
 
-            List<int> delayedTypes = new List<int> { 66, 67, 68 };
+            List<int> delayedTypes = new List<int> { 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 80, 81, 82, 83, 88, 103, 104};
             OnDelayedMarketData?.Invoke(delayedTypes.Contains(fieldId));
 
             switch (fieldId)
