@@ -33,6 +33,7 @@ namespace IB_TradingPlatformExtention1
         public event Action<string, string> OnContractSelected;
         public event Action OnConnected;
         public event Action OnDisconnected;
+        public event Action<string> OnLogError;
 
         public TradeInstrumentDetails CurrTradeInstrument = null;
 
@@ -128,6 +129,7 @@ namespace IB_TradingPlatformExtention1
                 {
                     stopLossOrder.OrderType = (isOutsideRth) ? "TRAIL LIMIT" : "TRAIL";
                     stopLossOrder.TrailStopPrice = trailStopPrice;
+                    TrailStopPrice = trailStopPrice;
                     if (stopLossOrder.OrderType == "TRAIL LIMIT") stopLossOrder.LmtPriceOffset = -4 * lmtPriceOffset;
                 }
                 else if (stopType == 1)
@@ -137,7 +139,7 @@ namespace IB_TradingPlatformExtention1
                 }
             }
 
-            if (pos != null)
+            if (pos != null && pos.PositionAmount != 0)
             {
                 // Is this order is for increasing or decreasing position size
                 bool isIncreasePos = (pos.PositionAmount > 0 && side == "BUY") || (pos.PositionAmount < 0 && side == "SELL");
@@ -145,15 +147,27 @@ namespace IB_TradingPlatformExtention1
 
                 if (!isIncreasePos && pos.PositionAmount < totalQuantity) order.TotalQuantity = pos.PositionAmount;
 
-                if (!isIncreasePos && currStopLossOrders.Count > 0)
+                if (currStopLossOrders.Count > 0)
                 {
                     Order currStopLossOrder = currStopLossOrders.First().Order;
+
                     if (currStopLossOrder.OrderType == "TRAIL" || currStopLossOrder.OrderType == "TRAIL LIMIT")
                     {
                         TrailStopPrice = currStopLossOrder.TrailStopPrice;
                     }
-                    order.OcaGroup = currStopLossOrders.First().Order.OcaGroup;
+
+                    if (!isIncreasePos)
+                    {
+                        order.OcaGroup = currStopLossOrder.OcaGroup;
+                    }
+                    else
+                    if (currContract.SecType == "OPT")
+                    {
+                        wrapper.ClientSocket.cancelOrder(currStopLossOrders.First().Order.OrderId, new OrderCancel());
+                    }
                 }
+
+                
             }
 
             // Place the order
@@ -189,9 +203,12 @@ namespace IB_TradingPlatformExtention1
             if (position == null || position.PositionAmount == 0) return;
 
             var stopLossOrders = this.CurrTradeInstrument.GetStopLossOrdersForPosition();
+            double? trailStopPrice;
+            if (keepTrailStopPrice && TrailStopPrice != null)
+            {
+                trailStopPrice = TrailStopPrice;
 
-            double? trailStopPrice = TrailStopPrice;
-            if (trailStopPrice == null)
+            } else
             {
                 if (lastTickDetails != null)
                 {
@@ -203,7 +220,8 @@ namespace IB_TradingPlatformExtention1
                     trailStopPrice = position.PositionAmount > 0 ?
                     position.AverageCost - stopPrice : position.AverageCost + stopPrice;
                 }
-
+            
+                if (stopType == 2) TrailStopPrice = trailStopPrice;
             }
 
             Order stopLoss = new Order
@@ -246,7 +264,10 @@ namespace IB_TradingPlatformExtention1
                     (currStopType == "TRAIL" && stopType == 2 && !isOutsideRth) ||
                     (currStopType == "TRAIL LIMIT" && stopType == 2 && isOutsideRth))
                 {
-                    if (keepTrailStopPrice) stopLoss.TrailStopPrice = stopLossOrders.First().Order.TrailStopPrice;
+                    if (keepTrailStopPrice) { 
+                        stopLoss.TrailStopPrice = stopLossOrders.First().Order.TrailStopPrice;
+                        TrailStopPrice = stopLossOrders.First().Order.TrailStopPrice;
+                    }
                     stopLoss.OrderId = stopLossOrders.First().Order.OrderId;
                 }
                 else
@@ -263,7 +284,6 @@ namespace IB_TradingPlatformExtention1
 
             wrapper.ClientSocket.placeOrder(stopLoss.OrderId, currContract, stopLoss);
 
-            TrailStopPrice = null;
             this.CurrTradeInstrument.UpdateOrder(currContract, stopLoss);
 
             orderId++;
@@ -355,6 +375,7 @@ namespace IB_TradingPlatformExtention1
 
         public void OnDisplayGroupUpdated(int reqId, string contractInfo)
         {
+            if (contractInfo == "none") return;
             string[] parts = contractInfo.Split('@');
 
             int conId = int.Parse(parts[0]);
@@ -373,7 +394,7 @@ namespace IB_TradingPlatformExtention1
             InitTradeInstrument(-1, contractDetails.Contract);
             if(contractDetails.Contract.SecType == "OPT")
             {
-                string[] ConNameParts = contractDetails.Contract.LocalSymbol.Split(new string[] {"   "}, StringSplitOptions.None);
+                string[] ConNameParts = contractDetails.Contract.LocalSymbol.Split(new string[] {"   ", "  ", " "}, StringSplitOptions.None);
                 string[] ConDetailsParts = ConNameParts[1].Split(new string[] {"C", "P"}, StringSplitOptions.None);
                 string longName = "Option " + (contractDetails.Contract.Right == "C" ? "*CALL*" : "*PUT*") + " " + contractDetails.Contract.Strike + " " + ConDetailsParts[0];
                 OnContractSelected?.Invoke(ConNameParts[0], longName);
@@ -382,6 +403,11 @@ namespace IB_TradingPlatformExtention1
             {
                 OnContractSelected?.Invoke(contractDetails.Contract.LocalSymbol, contractDetails.LongName);
             }
+        }
+
+        public void OnError(string errorMessage)
+        {
+            OnLogError?.Invoke(errorMessage);
         }
 
         //public void SetEquityContract(int conId)
@@ -534,7 +560,7 @@ namespace IB_TradingPlatformExtention1
 
         public void OnGetOpenOrders(Contract contract, Order order)
         {
-            if (CurrTradeInstrument.Contract.ConId != contract.ConId) return;
+            if (CurrTradeInstrument?.Contract?.ConId != contract.ConId) return;
             CurrTradeInstrument?.UpdateOrder(contract, order);
         }
 
@@ -563,10 +589,10 @@ namespace IB_TradingPlatformExtention1
             // Delayed: Bid - 66, ask - 67, last - 68.
             // Delayed close - 75, maybe if nothing else is available. 
             // Delayed option computation: bid - 80, ask - 81, last - 82, model - 83, 
-            if (field == 13 || field == 83)
-            {
-                OnTickOptionComputationUpdated.Invoke(tickerId, impliedVolatility, delta);
-            }
+            //if (field == 13 || field == 83)
+            //{
+            //    OnTickOptionComputationUpdated.Invoke(tickerId, impliedVolatility, delta);
+            //}
         }
     }
 

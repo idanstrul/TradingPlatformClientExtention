@@ -39,6 +39,19 @@ namespace IB_TradingPlatformExtention1
             client.OnPositionChanged += Client_OnPositionChanged;
             client.OnContractSelected += Client_OnContractSelected;
             client.OnDelayedMarketData += Client_OnDelayedMarketData;
+            client.OnLogError += Client_OnLogError;
+        }
+
+        private void Client_OnLogError(string errorMessage)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action<string>(Client_OnLogError), new object[] { errorMessage });
+                return;
+            }
+            tbErrorList.AppendText(errorMessage + Environment.NewLine);
+            tbErrorList.SelectionStart = tbErrorList.Text.Length;
+            tbErrorList.ScrollToCaret();
         }
 
         private void Client_OnDelayedMarketData(bool isDelayed)
@@ -61,6 +74,11 @@ namespace IB_TradingPlatformExtention1
             this.tbLast.Text = "";
             this.tbAsk.Text = "";
             this.tbBid.Text = "";
+            this.cbStopLoss.Checked = false;
+            this.cbTrailStop.Checked = false;
+            this.numStopLoss.Value = 0;
+            this.numTrailStop.Value = 0.2M;
+            this.numTradeOffset.Value = 0.05M;
             lblDelayedDataWarning.Text = "";
             tbSelectedContract.Text = symbol + (longName.Length > 0 ? " - " + longName : "");
         }

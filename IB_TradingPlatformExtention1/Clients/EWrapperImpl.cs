@@ -74,6 +74,8 @@ namespace IB_TradingPlatformExtention1
             {
                 Console.WriteLine("Error. Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + "\n");
             }
+
+            client.OnError("Error. Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + (String.IsNullOrWhiteSpace(advancedOrderRejectJson) ? "\n" : ", AdvancedOrderRejectJson: " + advancedOrderRejectJson + "\n"));
         }
         //! [error]
 
