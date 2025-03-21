@@ -17,7 +17,7 @@ namespace IB_TradingPlatformExtention1
     public class IBApiClient
     {
 
-        public List<Contract> USContracts { get; private set; } = new List<Contract>();
+        private DebounceDispatcher debounceDispatcher = new DebounceDispatcher();
         private double? TrailStopPrice = null;
         private EWrapperImpl wrapper;
         private EReader reader;
@@ -85,12 +85,9 @@ namespace IB_TradingPlatformExtention1
             LastTickDetails lastTickDetails = CurrTradeInstrument.LastTickDetails;
             Position pos = CurrTradeInstrument.Position;
 
-            if (currContract == null) return;
-
             double lmtPrice = ((side == "BUY" && modifierKeys != Keys.Alt) || (side == "SELL" && modifierKeys == Keys.Alt) ?
                 lastTickDetails.Ask : lastTickDetails.Bid) + (side == "BUY" ? lmtPriceOffset : -lmtPriceOffset);
 
-            List<OpenOrder> currStopLossOrders = this.CurrTradeInstrument.GetStopLossOrdersForPosition();
 
             Order order = new Order
             {
@@ -103,71 +100,100 @@ namespace IB_TradingPlatformExtention1
                 OutsideRth = isOutsideRth,
             };
 
-            Order stopLossOrder = null;
+            //Order stopLossOrder = null;
 
-            if (stopType > 0)
-            {
-                order.Transmit = false;
+            //if (stopType > 0)
+            //{
+            //    order.Transmit = false;
 
-                double trailStopPrice = side == "BUY" ?
-                lastTickDetails.Bid - stopPrice : lastTickDetails.Ask + stopPrice;
+            //    double trailStopPrice = side == "BUY" ?
+            //    lastTickDetails.Bid - stopPrice : lastTickDetails.Ask + stopPrice;
 
-                stopLossOrder = new Order
-                {
-                    OcaGroup = currContract.Symbol + "_" + currContract.SecType + "_" + orderId,
-                    OcaType = 2,
-                    TriggerMethod = 7,
-                    ParentId = orderId,
-                    OrderId = orderId + 1,
-                    Action = side == "BUY" ? "SELL" : "BUY",
-                    TotalQuantity = totalQuantity,
-                    OutsideRth = isOutsideRth,
-                    AuxPrice = stopPrice,
-                };
+            //    stopLossOrder = new Order
+            //    {
+            //        OcaGroup = currContract.Symbol + "_" + currContract.SecType + "_" + orderId,
+            //        OcaType = 2,
+            //        TriggerMethod = 7,
+            //        ParentId = orderId,
+            //        OrderId = orderId + 1,
+            //        Action = side == "BUY" ? "SELL" : "BUY",
+            //        TotalQuantity = totalQuantity,
+            //        OutsideRth = isOutsideRth,
+            //        AuxPrice = stopPrice,
+            //    };
 
-                if (stopType == 2)
-                {
-                    stopLossOrder.OrderType = (isOutsideRth) ? "TRAIL LIMIT" : "TRAIL";
-                    stopLossOrder.TrailStopPrice = trailStopPrice;
-                    TrailStopPrice = trailStopPrice;
-                    if (stopLossOrder.OrderType == "TRAIL LIMIT") stopLossOrder.LmtPriceOffset = -4 * lmtPriceOffset;
-                }
-                else if (stopType == 1)
-                {
-                    stopLossOrder.OrderType = (isOutsideRth) ? "STP LMT" : "STP";
-                    if (stopLossOrder.OrderType == "STP LMT") stopLossOrder.LmtPrice = stopPrice - 4 * lmtPriceOffset;
-                }
-            }
+            //    if (stopType == 2)
+            //    {
+            //        stopLossOrder.OrderType = (isOutsideRth) ? "TRAIL LIMIT" : "TRAIL";
+            //        stopLossOrder.TrailStopPrice = trailStopPrice;
+            //        TrailStopPrice = trailStopPrice;
+            //        if (stopLossOrder.OrderType == "TRAIL LIMIT") stopLossOrder.LmtPriceOffset = -4 * lmtPriceOffset;
+            //    }
+            //    else if (stopType == 1)
+            //    {
+            //        stopLossOrder.OrderType = (isOutsideRth) ? "STP LMT" : "STP";
+            //        if (stopLossOrder.OrderType == "STP LMT") stopLossOrder.LmtPrice = stopPrice - 4 * lmtPriceOffset;
+            //    }
+            //}
 
             if (pos != null && pos.PositionAmount != 0)
             {
                 // Is this order is for increasing or decreasing position size
                 bool isIncreasePos = (pos.PositionAmount > 0 && side == "BUY") || (pos.PositionAmount < 0 && side == "SELL");
-                order.Transmit = true;
+                //order.Transmit = true;
+                List<OpenOrder> currStopLossOrders = this.CurrTradeInstrument.GetStopLossOrdersForPosition();
+                List<OpenOrder> currTakeProfitOrders = this.CurrTradeInstrument.GetTakeProfitOrdersForPosition();
 
-                if (!isIncreasePos && pos.PositionAmount < totalQuantity) order.TotalQuantity = pos.PositionAmount;
+                if (!isIncreasePos && Math.Abs(pos.PositionAmount) < totalQuantity) order.TotalQuantity = Math.Abs(pos.PositionAmount);
 
-                if (currStopLossOrders.Count > 0)
+                if (isIncreasePos)
                 {
-                    Order currStopLossOrder = currStopLossOrders.First().Order;
-
-                    if (currStopLossOrder.OrderType == "TRAIL" || currStopLossOrder.OrderType == "TRAIL LIMIT")
+                    foreach (var slOrder in currStopLossOrders)
                     {
-                        TrailStopPrice = currStopLossOrder.TrailStopPrice;
+                        wrapper.ClientSocket.cancelOrder(slOrder.Order.OrderId, new OrderCancel());
+                    }
+                    foreach (var tpOrder in currTakeProfitOrders)
+                    {
+                        wrapper.ClientSocket.cancelOrder(tpOrder.Order.OrderId, new OrderCancel());
+                    }
+                }
+                else if (currStopLossOrders.Count > 0 || currTakeProfitOrders.Count > 0)
+                {
+                    if (currTakeProfitOrders.Count > 0)
+                    {
+                        Order currTakeProfitOrder = currTakeProfitOrders.First().Order;
+                        order.OrderId = currTakeProfitOrder.OrderId;
+                        order.TotalQuantity = (currTakeProfitOrder.TotalQuantity == Math.Abs(pos.PositionAmount)) ? totalQuantity : currTakeProfitOrder.TotalQuantity + totalQuantity;
+                        wrapper.ClientSocket.cancelOrder(currTakeProfitOrder.OrderId, new OrderCancel());
                     }
 
-                    if (!isIncreasePos)
+                    if (currStopLossOrders.Count > 0)
                     {
-                        order.OcaGroup = currStopLossOrder.OcaGroup;
-                    }
-                    else
-                    if (currContract.SecType == "OPT")
-                    {
-                        wrapper.ClientSocket.cancelOrder(currStopLossOrders.First().Order.OrderId, new OrderCancel());
+                        order.OcaGroup = currStopLossOrders.First().Order.OcaGroup;
                     }
                 }
 
-                
+                //if (currStopLossOrders.Count > 0)
+                //{
+                //    Order currStopLossOrder = currStopLossOrders.First().Order;
+
+                //    if (currStopLossOrder.OrderType == "TRAIL" || currStopLossOrder.OrderType == "TRAIL LIMIT")
+                //    {
+                //        TrailStopPrice = currStopLossOrder.TrailStopPrice;
+                //    }
+
+                //    if (!isIncreasePos)
+                //    {
+                //        order.OcaGroup = currStopLossOrder.OcaGroup;
+                //    }
+                //    else
+                //    if (currContract.SecType == "OPT")
+                //    {
+                //        wrapper.ClientSocket.cancelOrder(currStopLossOrders.First().Order.OrderId, new OrderCancel());
+                //    }
+                //}
+
+
             }
 
             // Place the order
@@ -178,37 +204,40 @@ namespace IB_TradingPlatformExtention1
             // increase the order id value
             orderId++;
 
-            if (!order.Transmit)
-            {
-                //In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true
-                //to activate all its predecessors
-                stopLossOrder.Transmit = true;
-                wrapper.ClientSocket.placeOrder(stopLossOrder.OrderId, currContract, stopLossOrder);
+            //if (!order.Transmit)
+            //{
+            //    //In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true
+            //    //to activate all its predecessors
+            //    stopLossOrder.Transmit = true;
+            //    wrapper.ClientSocket.placeOrder(stopLossOrder.OrderId, currContract, stopLossOrder);
 
-                this.CurrTradeInstrument.UpdateOrder(currContract, stopLossOrder);
+            //    this.CurrTradeInstrument.UpdateOrder(currContract, stopLossOrder);
 
-                orderId++;
-            }
+            //    orderId++;
+            //}
         }
 
         public void AdjustStopLoss(int contractIdx, bool isOutsideRth, int stopType, double stopPrice, double limitPriceOffset, bool keepTrailStopPrice = false)
+        {
+            debounceDispatcher.Debounce(() => ExecuteAdjustStopLoss(contractIdx, isOutsideRth, stopType, stopPrice, limitPriceOffset, keepTrailStopPrice), 100);
+        }
+
+        public void ExecuteAdjustStopLoss(int contractIdx, bool isOutsideRth, int stopType, double stopPrice, double limitPriceOffset, bool keepTrailStopPrice = false)
         {
             Contract currContract = CurrTradeInstrument?.Contract;
             if (currContract == null) return;
             Position position = CurrTradeInstrument.Position;
             LastTickDetails lastTickDetails = CurrTradeInstrument.LastTickDetails;
 
-            if (currContract == null) return;
-
             if (position == null || position.PositionAmount == 0) return;
 
-            var stopLossOrders = this.CurrTradeInstrument.GetStopLossOrdersForPosition();
             double? trailStopPrice;
             if (keepTrailStopPrice && TrailStopPrice != null)
             {
                 trailStopPrice = TrailStopPrice;
 
-            } else
+            }
+            else
             {
                 if (lastTickDetails != null)
                 {
@@ -220,7 +249,7 @@ namespace IB_TradingPlatformExtention1
                     trailStopPrice = position.PositionAmount > 0 ?
                     position.AverageCost - stopPrice : position.AverageCost + stopPrice;
                 }
-            
+
                 if (stopType == 2) TrailStopPrice = trailStopPrice;
             }
 
@@ -233,7 +262,8 @@ namespace IB_TradingPlatformExtention1
                 TriggerMethod = 7,
                 TotalQuantity = Math.Abs(position.PositionAmount),
                 OutsideRth = isOutsideRth,
-                AuxPrice = stopPrice
+                AuxPrice = stopPrice,
+                Transmit = true
             };
 
             if (stopType == 2)
@@ -248,37 +278,36 @@ namespace IB_TradingPlatformExtention1
                 if (stopLoss.OrderType == "STP LMT") stopLoss.LmtPrice = stopPrice + (stopLoss.Action == "BUY" ? 4 : -4) * limitPriceOffset;
             }
 
-            //In this case, the low side order will be the last child being sent. Therefore, it needs to set this attribute to true
-            //to activate all its predecessors
-            stopLoss.Transmit = true;
+            var stopLossOrders = this.CurrTradeInstrument.GetStopLossOrdersForPosition();
+            stopLossOrders.ForEach(order => wrapper.ClientSocket.cancelOrder(order.Order.OrderId, new OrderCancel()));
 
 
-            if (stopLossOrders.Count == 1)
-            {
-                //_stopLossOrder.ParentId = stopLossOrders.First().ParentId;
-                stopLoss.OcaGroup = stopLossOrders.First().Order.OcaGroup;
-                string currStopType = stopLossOrders.First().Order.OrderType;
+            //if (stopLossOrders.Count == 1)
+            //{
+            //    //_stopLossOrder.ParentId = stopLossOrders.First().ParentId;
+            //    stopLoss.OcaGroup = stopLossOrders.First().Order.OcaGroup;
+            //    string currStopType = stopLossOrders.First().Order.OrderType;
 
-                if ((currStopType == "STP" && stopType == 1 && !isOutsideRth) ||
-                    (currStopType == "STP LMT" && stopType == 1 && isOutsideRth) ||
-                    (currStopType == "TRAIL" && stopType == 2 && !isOutsideRth) ||
-                    (currStopType == "TRAIL LIMIT" && stopType == 2 && isOutsideRth))
-                {
-                    if (keepTrailStopPrice) { 
-                        stopLoss.TrailStopPrice = stopLossOrders.First().Order.TrailStopPrice;
-                        TrailStopPrice = stopLossOrders.First().Order.TrailStopPrice;
-                    }
-                    stopLoss.OrderId = stopLossOrders.First().Order.OrderId;
-                }
-                else
-                {
-                    wrapper.ClientSocket.cancelOrder(stopLossOrders.First().Order.OrderId, new OrderCancel());
-                }
-            }
-            else if (stopLossOrders.Count > 1)
-            {
-                stopLossOrders.ForEach(order => wrapper.ClientSocket.cancelOrder(order.Order.OrderId, new OrderCancel()));
-            }
+            //    if ((currStopType == "STP" && stopType == 1 && !isOutsideRth) ||
+            //        (currStopType == "STP LMT" && stopType == 1 && isOutsideRth) ||
+            //        (currStopType == "TRAIL" && stopType == 2 && !isOutsideRth) ||
+            //        (currStopType == "TRAIL LIMIT" && stopType == 2 && isOutsideRth))
+            //    {
+            //        if (keepTrailStopPrice) { 
+            //            stopLoss.TrailStopPrice = stopLossOrders.First().Order.TrailStopPrice;
+            //            TrailStopPrice = stopLossOrders.First().Order.TrailStopPrice;
+            //        }
+            //        stopLoss.OrderId = stopLossOrders.First().Order.OrderId;
+            //    }
+            //    else
+            //    {
+            //        wrapper.ClientSocket.cancelOrder(stopLossOrders.First().Order.OrderId, new OrderCancel());
+            //    }
+            //}
+            //else if (stopLossOrders.Count > 1)
+            //{
+            //    stopLossOrders.ForEach(order => wrapper.ClientSocket.cancelOrder(order.Order.OrderId, new OrderCancel()));
+            //}
 
             if (stopType == 0) return;
 
@@ -392,10 +421,10 @@ namespace IB_TradingPlatformExtention1
         public void OnGetContractDetails(ContractDetails contractDetails)
         {
             InitTradeInstrument(-1, contractDetails.Contract);
-            if(contractDetails.Contract.SecType == "OPT")
+            if (contractDetails.Contract.SecType == "OPT")
             {
-                string[] ConNameParts = contractDetails.Contract.LocalSymbol.Split(new string[] {"   ", "  ", " "}, StringSplitOptions.None);
-                string[] ConDetailsParts = ConNameParts[1].Split(new string[] {"C", "P"}, StringSplitOptions.None);
+                string[] ConNameParts = contractDetails.Contract.LocalSymbol.Split(new string[] { "   ", "  ", " " }, StringSplitOptions.None);
+                string[] ConDetailsParts = ConNameParts[1].Split(new string[] { "C", "P" }, StringSplitOptions.None);
                 string longName = "Option " + (contractDetails.Contract.Right == "C" ? "*CALL*" : "*PUT*") + " " + contractDetails.Contract.Strike + " " + ConDetailsParts[0];
                 OnContractSelected?.Invoke(ConNameParts[0], longName);
             }
@@ -506,7 +535,7 @@ namespace IB_TradingPlatformExtention1
         {
             string fieldName = "";
 
-            List<int> delayedTypes = new List<int> { 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 80, 81, 82, 83, 88, 103, 104};
+            List<int> delayedTypes = new List<int> { 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 80, 81, 82, 83, 88, 103, 104 };
             OnDelayedMarketData?.Invoke(delayedTypes.Contains(fieldId));
 
             switch (fieldId)
@@ -614,6 +643,19 @@ namespace IB_TradingPlatformExtention1
                  order.Order.OrderType == "STP LMT" ||
                  order.Order.OrderType == "TRAIL" ||
                  order.Order.OrderType == "TRAIL LIMIT") &&
+                 ((order.Order.Action == "BUY" && Position.PositionAmount < 0) ||
+                 (order.Order.Action == "SELL" && Position.PositionAmount > 0)))
+                .ToList();
+        }
+
+        public List<OpenOrder> GetTakeProfitOrdersForPosition()
+        {
+            if (Position == null) return null;
+            return OpenOrders.Where(order =>
+                //order.Contract.Symbol == position.Contract.Symbol &&
+                //order.Contract.SecType == position.Contract.SecType &&
+                //order.Contract.Exchange == position.Contract.Exchange &&
+                order.Order.OrderType == "LMT" &&
                  ((order.Order.Action == "BUY" && Position.PositionAmount < 0) ||
                  (order.Order.Action == "SELL" && Position.PositionAmount > 0)))
                 .ToList();
@@ -787,6 +829,33 @@ namespace IB_TradingPlatformExtention1
         public int ClientId { get; set; }
         public string WhyHeld { get; set; }
         public double MktCapPrice { get; set; }
+    }
+
+    public class DebounceDispatcher
+    {
+        private System.Timers.Timer timer;
+        private Action debouncedAction;
+
+        public void Debounce(Action action, int interval)
+        {
+            debouncedAction = action;
+
+            if (timer == null)
+            {
+                timer = new System.Timers.Timer();
+                timer.Elapsed += (sender, e) => ExecuteDebouncedAction();
+            }
+
+            timer.Interval = interval;
+            timer.Stop();
+            timer.Start();
+        }
+
+        private void ExecuteDebouncedAction()
+        {
+            timer.Stop();
+            debouncedAction?.Invoke();
+        }
     }
 }
 
