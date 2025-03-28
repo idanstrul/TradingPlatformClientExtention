@@ -76,8 +76,10 @@ namespace IB_TradingPlatformExtention1
             this.tbBid.Text = "";
             this.cbStopLoss.Checked = false;
             this.cbTrailStop.Checked = false;
+            this.cbTakeProfit.Checked = false;
             this.numStopLoss.Value = 0;
             this.numTrailStop.Value = 0.2M;
+            this.numTakeProfit.Value = 0;
             this.numTradeOffset.Value = 0.05M;
             lblDelayedDataWarning.Text = "";
             tbSelectedContract.Text = symbol + (longName.Length > 0 ? " - " + longName : "");
@@ -85,7 +87,7 @@ namespace IB_TradingPlatformExtention1
 
         private void Client_OnPositionChanged()
         {
-            AdjustStopLoss(true);
+            AdjustStopLoss();
         }
 
         private void Client_OnDisconnected()
@@ -263,17 +265,18 @@ namespace IB_TradingPlatformExtention1
             decimal totalQuantity = Math.Floor(posSize * Convert.ToDecimal(numQuantity.Value));
 
             double stopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value;
+            double takeProfitPrice = cbTakeProfit.Checked ? (double)numTakeProfit.Value : 0;
 
 
-            client.PlaceOrder(-1, side, modifierKeys, totalQuantity, lmtPriceOffset, stopType, isOutsideRth, stopPrice);
+            client.PlaceOrder(-1, side, modifierKeys, totalQuantity, lmtPriceOffset, stopType, isOutsideRth, stopPrice, takeProfitPrice);
         }
 
         private void btnStopLossAdj_Click(object sender, EventArgs e)
         {
-            AdjustStopLoss();
+            AdjustStopLoss(true);
         }
 
-        private void AdjustStopLoss(bool keepTrailStopPrice = false)
+        private void AdjustStopLoss(bool isHardAdjust = false)
         {
             bool isOutsideRth = chkOutside.Checked;
             int stopType = 0;
@@ -282,8 +285,9 @@ namespace IB_TradingPlatformExtention1
             if (this.cbTrailStop.Checked) stopType = 2;
 
             double stopPrice = stopType == 1 ? (double)numStopLoss.Value : (double)numTrailStop.Value;
+            double takeProfitPrice = cbTakeProfit.Checked ? (double)numTakeProfit.Value : 0;
 
-            client.AdjustStopLoss(-1, isOutsideRth, stopType, stopPrice, (double)numTradeOffset.Value, keepTrailStopPrice);
+            client.AdjustStopLoss(-1, isOutsideRth, stopType, stopPrice, takeProfitPrice, (double)numTradeOffset.Value, isHardAdjust);
         }
 
         private void btnClosePos_Click(object sender, EventArgs e)
@@ -316,6 +320,14 @@ namespace IB_TradingPlatformExtention1
             {
                 this.cbTrailStop.Checked = false;
                 numStopLoss.Value = Math.Round((decimal.Parse(tbAsk.Text) + decimal.Parse(tbBid.Text)) / 2, 2);
+            }
+        }
+
+        private void cbTakeProfit_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbTakeProfit.Checked)
+            {
+                numTakeProfit.Value = Math.Round((decimal.Parse(tbAsk.Text) + decimal.Parse(tbBid.Text)) / 2, 2);
             }
         }
     }

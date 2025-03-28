@@ -70,10 +70,13 @@
             this.label10 = new System.Windows.Forms.Label();
             this.tbErrorList = new System.Windows.Forms.TextBox();
             this.lblErrorList = new System.Windows.Forms.Label();
+            this.numTakeProfit = new System.Windows.Forms.NumericUpDown();
+            this.cbTakeProfit = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.numTrailStop)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numStopLoss)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numTakeProfit)).BeginInit();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -149,7 +152,7 @@
             // 
             // btnStopLossAdj
             // 
-            this.btnStopLossAdj.Location = new System.Drawing.Point(620, 448);
+            this.btnStopLossAdj.Location = new System.Drawing.Point(603, 433);
             this.btnStopLossAdj.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnStopLossAdj.Name = "btnStopLossAdj";
             this.btnStopLossAdj.Size = new System.Drawing.Size(112, 36);
@@ -177,7 +180,7 @@
             0,
             0,
             131072});
-            this.numTrailStop.Location = new System.Drawing.Point(482, 427);
+            this.numTrailStop.Location = new System.Drawing.Point(466, 438);
             this.numTrailStop.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numTrailStop.Name = "numTrailStop";
             this.numTrailStop.Size = new System.Drawing.Size(129, 31);
@@ -207,7 +210,7 @@
             0,
             0,
             131072});
-            this.numStopLoss.Location = new System.Drawing.Point(482, 470);
+            this.numStopLoss.Location = new System.Drawing.Point(466, 481);
             this.numStopLoss.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numStopLoss.Maximum = new decimal(new int[] {
             1000000,
@@ -221,7 +224,7 @@
             // cbTrailStop
             // 
             this.cbTrailStop.AutoSize = true;
-            this.cbTrailStop.Location = new System.Drawing.Point(345, 430);
+            this.cbTrailStop.Location = new System.Drawing.Point(329, 441);
             this.cbTrailStop.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cbTrailStop.Name = "cbTrailStop";
             this.cbTrailStop.Size = new System.Drawing.Size(133, 29);
@@ -233,7 +236,7 @@
             // cbStopLoss
             // 
             this.cbStopLoss.AutoSize = true;
-            this.cbStopLoss.Location = new System.Drawing.Point(345, 473);
+            this.cbStopLoss.Location = new System.Drawing.Point(329, 484);
             this.cbStopLoss.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cbStopLoss.Name = "cbStopLoss";
             this.cbStopLoss.Size = new System.Drawing.Size(133, 29);
@@ -524,11 +527,44 @@
             this.lblErrorList.TabIndex = 85;
             this.lblErrorList.Text = "Error list:";
             // 
+            // numTakeProfit
+            // 
+            this.numTakeProfit.DecimalPlaces = 2;
+            this.numTakeProfit.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
+            this.numTakeProfit.Location = new System.Drawing.Point(466, 397);
+            this.numTakeProfit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.numTakeProfit.Maximum = new decimal(new int[] {
+            1000000,
+            0,
+            0,
+            0});
+            this.numTakeProfit.Name = "numTakeProfit";
+            this.numTakeProfit.Size = new System.Drawing.Size(129, 31);
+            this.numTakeProfit.TabIndex = 88;
+            // 
+            // cbTakeProfit
+            // 
+            this.cbTakeProfit.AutoSize = true;
+            this.cbTakeProfit.Location = new System.Drawing.Point(329, 400);
+            this.cbTakeProfit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cbTakeProfit.Name = "cbTakeProfit";
+            this.cbTakeProfit.Size = new System.Drawing.Size(133, 29);
+            this.cbTakeProfit.TabIndex = 87;
+            this.cbTakeProfit.Text = "Stop loss";
+            this.cbTakeProfit.UseVisualStyleBackColor = true;
+            this.cbTakeProfit.CheckedChanged += new System.EventHandler(this.cbTakeProfit_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(819, 686);
+            this.Controls.Add(this.numTakeProfit);
+            this.Controls.Add(this.cbTakeProfit);
             this.Controls.Add(this.tbErrorList);
             this.Controls.Add(this.lblErrorList);
             this.Controls.Add(this.tbSelectedContract);
@@ -573,6 +609,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numStopLoss)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numTakeProfit)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -616,6 +653,8 @@
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.TextBox tbErrorList;
         private System.Windows.Forms.Label lblErrorList;
+        private System.Windows.Forms.NumericUpDown numTakeProfit;
+        private System.Windows.Forms.CheckBox cbTakeProfit;
     }
 }
 
