@@ -29,10 +29,12 @@ namespace IB_TradingPlatformExtention1
         public event Action<bool> OnDelayedMarketData;
         public event Action<int, double, double> OnTickOptionComputationUpdated;
         public event Action OnPositionChanged;
-        public event Action<string, string> OnContractSelected;
+        public event Action OnOrdersUpdated;
+        public event Action OnContractSelected;
         public event Action OnConnected;
         public event Action OnDisconnected;
         public event Action<string> OnLogError;
+        public event Action<string> OnFunctionRan;
 
         public TradeInstrumentDetails CurrTradeInstrument = null;
 
@@ -152,7 +154,7 @@ namespace IB_TradingPlatformExtention1
                         wrapper.ClientSocket.cancelOrder(slOrder.Order.OrderId, new OrderCancel());
                     }
 
-                    if(tpOrder != null) wrapper.ClientSocket.cancelOrder(tpOrder.Order.OrderId, new OrderCancel());
+                    if (tpOrder != null) wrapper.ClientSocket.cancelOrder(tpOrder.Order.OrderId, new OrderCancel());
                 }
                 else
                 {
@@ -220,6 +222,7 @@ namespace IB_TradingPlatformExtention1
 
             //    orderId++;
             //}
+            OnFunctionRan?.Invoke("PlaceOrder - Contract: " + currContract.Symbol + ", Side: " + side + ", Quantity: " + totalQuantity + ", LmtPrice: " + lmtPrice);
         }
 
         public void AdjustStopLoss(int contractIdx, bool isOutsideRth, int stopType, double stopPrice, double takeProfitPrice, double limitPriceOffset, bool isHardAdjust = false)
@@ -251,7 +254,7 @@ namespace IB_TradingPlatformExtention1
             if (sizeIncreaseOrders.Count > 0) return;
 
             stopLossOrders.ForEach(order => wrapper.ClientSocket.cancelOrder(order.Order.OrderId, new OrderCancel()));
-            if(tpOrder != null) wrapper.ClientSocket.cancelOrder(tpOrder.Order.OrderId, new OrderCancel());
+            if (tpOrder != null) wrapper.ClientSocket.cancelOrder(tpOrder.Order.OrderId, new OrderCancel());
             string ocaGrup = otherTPOrders.FirstOrDefault()?.Order.OcaGroup ?? currContract.Symbol + "_" + currContract.SecType + "_" + orderId;
 
             if (stopType == 0)
@@ -373,6 +376,8 @@ namespace IB_TradingPlatformExtention1
                 this.CurrTradeInstrument.UpdateOrder(currContract, takeProfit);
                 orderId++;
             }
+
+            OnFunctionRan?.Invoke("AdjustStopLoss - Contract: " + currContract.Symbol + ", StopPrice: " + stopPrice + ", TakeProfitPrice: " + takeProfitPrice);
         }
 
         public void ClosePositionForContract(int contractIdx, double tradePriceOffset, bool isOutsideRth)
@@ -414,6 +419,8 @@ namespace IB_TradingPlatformExtention1
             {
                 Console.WriteLine("No open position found for the specified contract.");
             }
+
+            OnFunctionRan?.Invoke("ClosePositionForContract - Contract: " + currContract.Symbol + ", Position: " + positionToClose.PositionAmount);
         }
 
         public void CancelLastOrderForContract()
@@ -427,10 +434,13 @@ namespace IB_TradingPlatformExtention1
            //                && order.Contract.SecType == CurrContract.SecType
            //                && order.Contract.Exchange == CurrContract.Exchange)
            .OrderByDescending(order => order.Order.OrderId)
+           .Where(order => order.Order.OrderId != CurrTradeInstrument.StopLossOrderDetails?.OrderId &&
+                   order.Order.OrderId != CurrTradeInstrument.TakeProfitOrderDetails?.OrderId)
            .FirstOrDefault();
 
             //if (prevOrder != null)
             wrapper.ClientSocket.cancelOrder(prevOrder.Order.OrderId, new OrderCancel());
+            OnFunctionRan?.Invoke("CancelLastOrderForContract - OrderId: " + prevOrder.Order.OrderId);
         }
 
         public void CancelAllOrdersForContract(int contractIdx, bool isGlobalCancel)
@@ -450,11 +460,15 @@ namespace IB_TradingPlatformExtention1
                 //                order.Contract.Exchange == CurrContract.Exchange)
                 //.ToList();
 
-                foreach (var openOrder in CurrTradeInstrument.OpenOrders)
+                foreach (var openOrder in CurrTradeInstrument.OpenOrders.Where(
+                    order => order.Order.OrderId != CurrTradeInstrument.StopLossOrderDetails?.OrderId
+                    && order.Order.OrderId != CurrTradeInstrument.TakeProfitOrderDetails?.OrderId))
                 {
                     wrapper.ClientSocket.cancelOrder(openOrder.Order.OrderId, new OrderCancel());
                 }
             }
+
+            OnFunctionRan?.Invoke("CancelAllOrdersForContract - isGlobalCancel" + isGlobalCancel.ToString());
 
         }
 
@@ -476,23 +490,70 @@ namespace IB_TradingPlatformExtention1
 
         public void OnGetContractDetails(ContractDetails contractDetails)
         {
-            InitTradeInstrument(-1, contractDetails.Contract);
+            string contractName;
             if (contractDetails.Contract.SecType == "OPT")
             {
                 string[] ConNameParts = contractDetails.Contract.LocalSymbol.Split(new string[] { "   ", "  ", " " }, StringSplitOptions.None);
                 string[] ConDetailsParts = ConNameParts[1].Split(new string[] { "C", "P" }, StringSplitOptions.None);
                 string longName = "Option " + (contractDetails.Contract.Right == "C" ? "*CALL*" : "*PUT*") + " " + contractDetails.Contract.Strike + " " + ConDetailsParts[0];
-                OnContractSelected?.Invoke(ConNameParts[0], longName);
+                contractName = ConNameParts[0] + (longName.Length > 0 ? " - " + longName : "");
             }
             else
             {
-                OnContractSelected?.Invoke(contractDetails.Contract.LocalSymbol, contractDetails.LongName);
+                contractName = contractDetails.Contract.LocalSymbol + (contractDetails.LongName.Length > 0 ? " - " + contractDetails.LongName : "");
             }
+
+            InitTradeInstrument(-1, contractDetails.Contract, contractName);
+            OnContractSelected?.Invoke();
+
+        }
+
+        public string GetContractName()
+        {
+            return CurrTradeInstrument?.ContractName;
+        }
+
+        public string GetPositionDetails()
+        {
+            if (CurrTradeInstrument == null) return "";
+            Position position = CurrTradeInstrument.Position;
+            if (position == null) return "";
+            return position.PositionAmount + " @ " + position.AverageCost;
+        }
+
+        public string GetStopLossDetails()
+        {
+            if (CurrTradeInstrument == null) return "";
+            StopLossOrderDetails stopLossOrderDetails = CurrTradeInstrument.StopLossOrderDetails;
+            if (stopLossOrderDetails == null) return "";
+            return "OrderId: " + stopLossOrderDetails.OrderId + ", Trail stop price" + stopLossOrderDetails.TrailStopPrice.ToString();
+        }
+
+        public string GetTakeProfitDetails()
+        {
+            if (CurrTradeInstrument == null) return "";
+            TakeProfitOrderDetails takeProfitOrderDetails = CurrTradeInstrument.TakeProfitOrderDetails;
+            if (takeProfitOrderDetails == null) return "";
+            return "OrderId: " + takeProfitOrderDetails.OrderId;
+        }
+
+        public string GetOpenOrdersDetails()
+        {
+            if (CurrTradeInstrument == null) return "";
+            List<OpenOrder> openOrders = CurrTradeInstrument.OpenOrders;
+            if (openOrders.Count == 0) return "";
+            StringBuilder sb = new StringBuilder();
+            foreach (var order in openOrders)
+            {
+                sb.AppendLine("OrderId: " + order.Order.OrderId + ", Action: " + order.Order.Action + ", Type: " + order.Order.OrderType + ", Quantity: " + order.Order.TotalQuantity + ", Price: " + order.Order.LmtPrice);
+            }
+            return sb.ToString();
         }
 
         public void OnError(string errorMessage)
         {
             OnLogError?.Invoke(errorMessage);
+            OnFunctionRan?.Invoke("OnError: " + errorMessage);
         }
 
         //public void SetEquityContract(int conId)
@@ -542,7 +603,7 @@ namespace IB_TradingPlatformExtention1
         //    InitTradeInstrument(-2, comboContract);
         //}
 
-        public void InitTradeInstrument(int idx, Contract contract, bool reqData = true)
+        public void InitTradeInstrument(int idx, Contract contract, string contractName, bool reqData = true)
         {
 
             //public void InitTradeInstrument(Contract selectedContract)
@@ -556,6 +617,7 @@ namespace IB_TradingPlatformExtention1
             CurrTradeInstrument = new TradeInstrumentDetails
             {
                 Contract = contract,
+                ContractName = contractName
             };
             wrapper.ClientSocket.cancelMktData(idx);
             if (!reqData) return;
@@ -641,17 +703,22 @@ namespace IB_TradingPlatformExtention1
             if (CurrTradeInstrument.Contract.ConId != contract.ConId) return;
             CurrTradeInstrument.UpdatePosition(account, contract, pos, avgCost);
             OnPositionChanged?.Invoke();
+            OnFunctionRan?.Invoke("OnGetPositions: " + pos + " @ " + avgCost);
         }
 
         public void OnGetOpenOrders(Contract contract, Order order)
         {
             if (CurrTradeInstrument?.Contract?.ConId != contract.ConId) return;
             CurrTradeInstrument?.UpdateOrder(contract, order);
+            OnOrdersUpdated?.Invoke();
+            OnFunctionRan?.Invoke("OnGetOpenOrders: ( OrderId: " + order.OrderId + ", Action: " + order.Action + ", Type: " + order.OrderType + ", Quntity: " + order.TotalQuantity + ", LMTPrice: " + order.LmtPrice);
         }
 
         public void OnGetOrderStatus(int _orderId, string status, decimal filled, decimal remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, string whyHeld, double mktCapPrice)
         {
             CurrTradeInstrument?.UpdateOrder(_orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice);
+            OnOrdersUpdated?.Invoke();
+            OnFunctionRan?.Invoke("OnGetOrderStatus: ( OrderId: " + _orderId + ", Status: " + status + ", Filled: " + filled + ", Remaining: " + remaining + ", AvgFillPrice: " + avgFillPrice + ", PermId: " + permId + ", ParentId: " + parentId + ", LastFillPrice: " + lastFillPrice + ", ClientId: " + clientId + ", WhyHeld: " + whyHeld + ", MktCapPrice: " + mktCapPrice);
         }
 
         // ###################################### Options: 
@@ -683,6 +750,7 @@ namespace IB_TradingPlatformExtention1
 
     public class TradeInstrumentDetails
     {
+        public string ContractName { get; set; }
         public Contract Contract { get; set; }
         public LastTickDetails LastTickDetails { get; set; }
         public Position Position { get; set; }
@@ -779,6 +847,10 @@ namespace IB_TradingPlatformExtention1
             if (existingOrder != null)
             {
                 existingOrder.Order = order;
+                if (StopLossOrderDetails.OrderId == order.OrderId)
+                {
+                    StopLossOrderDetails.TrailStopPrice = order.TrailStopPrice;
+                }
             }
             else
             {

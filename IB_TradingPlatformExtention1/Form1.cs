@@ -39,19 +39,6 @@ namespace IB_TradingPlatformExtention1
             client.OnPositionChanged += Client_OnPositionChanged;
             client.OnContractSelected += Client_OnContractSelected;
             client.OnDelayedMarketData += Client_OnDelayedMarketData;
-            client.OnLogError += Client_OnLogError;
-        }
-
-        private void Client_OnLogError(string errorMessage)
-        {
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new Action<string>(Client_OnLogError), new object[] { errorMessage });
-                return;
-            }
-            tbErrorList.AppendText(errorMessage + Environment.NewLine);
-            tbErrorList.SelectionStart = tbErrorList.Text.Length;
-            tbErrorList.ScrollToCaret();
         }
 
         private void Client_OnDelayedMarketData(bool isDelayed)
@@ -64,11 +51,11 @@ namespace IB_TradingPlatformExtention1
             lblDelayedDataWarning.Text = isDelayed ? "Delayed market data!" : "";
         }
 
-        private void Client_OnContractSelected(string symbol, string longName)
+        private void Client_OnContractSelected()
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new Action<string, string>(Client_OnContractSelected), new object[] { symbol, longName });
+                this.Invoke(new Action(Client_OnContractSelected), new object[] {  });
                 return;
             }
             this.tbLast.Text = "";
@@ -82,7 +69,7 @@ namespace IB_TradingPlatformExtention1
             this.numTakeProfit.Value = 0;
             this.numTradeOffset.Value = 0.05M;
             lblDelayedDataWarning.Text = "";
-            tbSelectedContract.Text = symbol + (longName.Length > 0 ? " - " + longName : "");
+            tbSelectedContract.Text = client.GetContractName();
         }
 
         private void Client_OnPositionChanged()
@@ -329,6 +316,12 @@ namespace IB_TradingPlatformExtention1
             {
                 numTakeProfit.Value = Math.Round((decimal.Parse(tbAsk.Text) + decimal.Parse(tbBid.Text)) / 2, 2);
             }
+        }
+
+        private void btnDebugForm_Click(object sender, EventArgs e)
+        {
+            DebugForm debugForm = new DebugForm(client);
+            debugForm.Show();
         }
     }
 }

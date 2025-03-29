@@ -68,10 +68,9 @@
             this.label9 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
-            this.tbErrorList = new System.Windows.Forms.TextBox();
-            this.lblErrorList = new System.Windows.Forms.Label();
             this.numTakeProfit = new System.Windows.Forms.NumericUpDown();
             this.cbTakeProfit = new System.Windows.Forms.CheckBox();
+            this.btnDebugForm = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numTrailStop)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numStopLoss)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTradeOffset)).BeginInit();
@@ -152,7 +151,7 @@
             // 
             // btnStopLossAdj
             // 
-            this.btnStopLossAdj.Location = new System.Drawing.Point(603, 433);
+            this.btnStopLossAdj.Location = new System.Drawing.Point(601, 440);
             this.btnStopLossAdj.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnStopLossAdj.Name = "btnStopLossAdj";
             this.btnStopLossAdj.Size = new System.Drawing.Size(112, 36);
@@ -163,10 +162,10 @@
             // 
             // btnClosePos
             // 
-            this.btnClosePos.Location = new System.Drawing.Point(60, 488);
+            this.btnClosePos.Location = new System.Drawing.Point(60, 490);
             this.btnClosePos.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnClosePos.Name = "btnClosePos";
-            this.btnClosePos.Size = new System.Drawing.Size(188, 36);
+            this.btnClosePos.Size = new System.Drawing.Size(188, 44);
             this.btnClosePos.TabIndex = 82;
             this.btnClosePos.Text = "Close position";
             this.btnClosePos.UseVisualStyleBackColor = true;
@@ -180,7 +179,7 @@
             0,
             0,
             131072});
-            this.numTrailStop.Location = new System.Drawing.Point(466, 438);
+            this.numTrailStop.Location = new System.Drawing.Point(464, 445);
             this.numTrailStop.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numTrailStop.Name = "numTrailStop";
             this.numTrailStop.Size = new System.Drawing.Size(129, 31);
@@ -196,7 +195,7 @@
             this.btnCancelAll.Location = new System.Drawing.Point(60, 441);
             this.btnCancelAll.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancelAll.Name = "btnCancelAll";
-            this.btnCancelAll.Size = new System.Drawing.Size(188, 36);
+            this.btnCancelAll.Size = new System.Drawing.Size(188, 44);
             this.btnCancelAll.TabIndex = 69;
             this.btnCancelAll.Text = "Cancel all orders";
             this.btnCancelAll.UseVisualStyleBackColor = true;
@@ -210,7 +209,7 @@
             0,
             0,
             131072});
-            this.numStopLoss.Location = new System.Drawing.Point(466, 481);
+            this.numStopLoss.Location = new System.Drawing.Point(464, 488);
             this.numStopLoss.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numStopLoss.Maximum = new decimal(new int[] {
             1000000,
@@ -224,7 +223,7 @@
             // cbTrailStop
             // 
             this.cbTrailStop.AutoSize = true;
-            this.cbTrailStop.Location = new System.Drawing.Point(329, 441);
+            this.cbTrailStop.Location = new System.Drawing.Point(310, 448);
             this.cbTrailStop.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cbTrailStop.Name = "cbTrailStop";
             this.cbTrailStop.Size = new System.Drawing.Size(133, 29);
@@ -236,7 +235,7 @@
             // cbStopLoss
             // 
             this.cbStopLoss.AutoSize = true;
-            this.cbStopLoss.Location = new System.Drawing.Point(329, 484);
+            this.cbStopLoss.Location = new System.Drawing.Point(310, 491);
             this.cbStopLoss.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cbStopLoss.Name = "cbStopLoss";
             this.cbStopLoss.Size = new System.Drawing.Size(133, 29);
@@ -363,7 +362,7 @@
             this.btnCancelLast.Location = new System.Drawing.Point(60, 392);
             this.btnCancelLast.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancelLast.Name = "btnCancelLast";
-            this.btnCancelLast.Size = new System.Drawing.Size(189, 36);
+            this.btnCancelLast.Size = new System.Drawing.Size(189, 44);
             this.btnCancelLast.TabIndex = 68;
             this.btnCancelLast.Text = "Cancel last order ";
             this.btnCancelLast.UseVisualStyleBackColor = true;
@@ -504,29 +503,6 @@
             this.label10.TabIndex = 60;
             this.label10.Text = "Ask";
             // 
-            // tbErrorList
-            // 
-            this.tbErrorList.BackColor = System.Drawing.Color.White;
-            this.tbErrorList.ForeColor = System.Drawing.Color.DarkRed;
-            this.tbErrorList.Location = new System.Drawing.Point(160, 534);
-            this.tbErrorList.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tbErrorList.Multiline = true;
-            this.tbErrorList.Name = "tbErrorList";
-            this.tbErrorList.ReadOnly = true;
-            this.tbErrorList.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tbErrorList.Size = new System.Drawing.Size(612, 138);
-            this.tbErrorList.TabIndex = 86;
-            // 
-            // lblErrorList
-            // 
-            this.lblErrorList.AutoSize = true;
-            this.lblErrorList.Location = new System.Drawing.Point(61, 539);
-            this.lblErrorList.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblErrorList.Name = "lblErrorList";
-            this.lblErrorList.Size = new System.Drawing.Size(98, 25);
-            this.lblErrorList.TabIndex = 85;
-            this.lblErrorList.Text = "Error list:";
-            // 
             // numTakeProfit
             // 
             this.numTakeProfit.DecimalPlaces = 2;
@@ -535,7 +511,7 @@
             0,
             0,
             131072});
-            this.numTakeProfit.Location = new System.Drawing.Point(466, 397);
+            this.numTakeProfit.Location = new System.Drawing.Point(464, 404);
             this.numTakeProfit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numTakeProfit.Maximum = new decimal(new int[] {
             1000000,
@@ -549,24 +525,34 @@
             // cbTakeProfit
             // 
             this.cbTakeProfit.AutoSize = true;
-            this.cbTakeProfit.Location = new System.Drawing.Point(329, 400);
+            this.cbTakeProfit.Location = new System.Drawing.Point(310, 407);
             this.cbTakeProfit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cbTakeProfit.Name = "cbTakeProfit";
-            this.cbTakeProfit.Size = new System.Drawing.Size(133, 29);
+            this.cbTakeProfit.Size = new System.Drawing.Size(146, 29);
             this.cbTakeProfit.TabIndex = 87;
-            this.cbTakeProfit.Text = "Stop loss";
+            this.cbTakeProfit.Text = "Take profit";
             this.cbTakeProfit.UseVisualStyleBackColor = true;
             this.cbTakeProfit.CheckedChanged += new System.EventHandler(this.cbTakeProfit_CheckedChanged);
+            // 
+            // btnDebugForm
+            // 
+            this.btnDebugForm.Location = new System.Drawing.Point(617, 183);
+            this.btnDebugForm.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnDebugForm.Name = "btnDebugForm";
+            this.btnDebugForm.Size = new System.Drawing.Size(189, 44);
+            this.btnDebugForm.TabIndex = 89;
+            this.btnDebugForm.Text = "Open debug form";
+            this.btnDebugForm.UseVisualStyleBackColor = true;
+            this.btnDebugForm.Click += new System.EventHandler(this.btnDebugForm_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(819, 686);
+            this.ClientSize = new System.Drawing.Size(819, 553);
+            this.Controls.Add(this.btnDebugForm);
             this.Controls.Add(this.numTakeProfit);
             this.Controls.Add(this.cbTakeProfit);
-            this.Controls.Add(this.tbErrorList);
-            this.Controls.Add(this.lblErrorList);
             this.Controls.Add(this.tbSelectedContract);
             this.Controls.Add(this.tbLast);
             this.Controls.Add(this.tbAsk);
@@ -651,10 +637,9 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.TextBox tbErrorList;
-        private System.Windows.Forms.Label lblErrorList;
         private System.Windows.Forms.NumericUpDown numTakeProfit;
         private System.Windows.Forms.CheckBox cbTakeProfit;
+        private System.Windows.Forms.Button btnDebugForm;
     }
 }
 
